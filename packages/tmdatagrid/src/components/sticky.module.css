@@ -5,9 +5,11 @@
    A box-shadow is drawn per cell, and its blur fades in at each cell's own top
    and bottom edge - stacked down a column that reads as banding at every row
    seam. Instead: a gradient pseudo element pinned to `top: 0; bottom: 0` so
-   consecutive cells butt together into one unbroken band. Mantine sets
-   `color-scheme` on the root, so light-dark() resolves without a second
-   selector.
+   consecutive cells butt together into one unbroken band.
+
+   The dark scheme is a second rule under Mantine's `data-mantine-color-scheme`
+   attribute, not the `light-dark` function: scripts/package-stylesheets.test.mjs
+   says why.
 
    No border. A 1px line the colour of the grid's own borders drew a hard rule
    between the pinned lanes and the data, so the pinned columns read as a
@@ -31,8 +33,8 @@
   left: 100%;
   background: linear-gradient(
     to right,
-    light-dark(rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.26)),
-    light-dark(rgba(0, 0, 0, 0.025), rgba(0, 0, 0, 0.09)) 45%,
+    rgba(0, 0, 0, 0.07),
+    rgba(0, 0, 0, 0.025) 45%,
     transparent
   );
 }
@@ -41,8 +43,26 @@
   right: 100%;
   background: linear-gradient(
     to left,
-    light-dark(rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.26)),
-    light-dark(rgba(0, 0, 0, 0.025), rgba(0, 0, 0, 0.09)) 45%,
+    rgba(0, 0, 0, 0.07),
+    rgba(0, 0, 0, 0.025) 45%,
+    transparent
+  );
+}
+
+:where([data-mantine-color-scheme="dark"]) .stickyLeft::after {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.26),
+    rgba(0, 0, 0, 0.09) 45%,
+    transparent
+  );
+}
+
+:where([data-mantine-color-scheme="dark"]) .stickyRight::after {
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.26),
+    rgba(0, 0, 0, 0.09) 45%,
     transparent
   );
 }
