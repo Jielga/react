@@ -1,5 +1,7 @@
 import type { TableState } from "@tanstack/react-table";
 import type { TMDataGridFeatures } from "../useTMDataGrid";
+import { sameStateValue } from "./controlledState";
+import { filterNarrowsRows } from "./filterOperators";
 
 type GridState = TableState<TMDataGridFeatures>;
 
@@ -65,11 +67,32 @@ export type TMDataGridPersistKey<TSlice extends string> =
 /** Same values as Mantine's `StorageType`, which the package does not re-export. */
 export type TMDataGridStorageMode = "localStorage" | "sessionStorage";
 
+/**
+ * Reads and writes the one URL search param that `urlKey` names. Replaces the
+ * default, which reads `window.location.search` and writes with
+ * `history.replaceState`, for a router that owns the URL.
+ */
+export type TMDataGridUrlStorage = {
+  /** The param's current value, or `null` when the URL has none. */
+  get(name: string): string | null;
+  /** Sets the param to `value`, or removes it when `value` is `null`. */
+  set(name: string, value: string | null): void;
+};
+
 export type TMDataGridPersistence = {
   /** Key for filters, global filter, sorting and pagination. */
   dataKey?: TMDataGridPersistKey<TMDataGridDataSlice>;
   /** Key for column visibility, sizing, order and pinning. */
   settingsKey?: TMDataGridPersistKey<TMDataGridSettingsSlice>;
+  /**
+   * Search param for data slices kept in the URL, so a link opens the grid on
+   * the same state. Takes the slices it lists away from `dataKey`. The param
+   * holds only the slices that differ from the initial state, and carries no
+   * version stamp.
+   */
+  urlKey?: TMDataGridPersistKey<TMDataGridDataSlice>;
+  /** Where `urlKey` reads and writes. Defaults to the browser's URL. */
+  urlStorage?: TMDataGridUrlStorage;
   /** Which storage area to use. Defaults to `"localStorage"`. */
   storageMode?: TMDataGridStorageMode;
   /** Serializes a payload before it is stored. Defaults to `JSON.stringify`. */
@@ -102,6 +125,59 @@ function resolveKey<TSlice extends string>(
   if (!key) return null;
   // An empty list means nothing was selected, which is not the same as "all".
   return { key, slices: slices as ReadonlyArray<keyof GridState> };
+}
+
+/**
+ * The browser's URL. Writes replace the current history entry and never push
+ * one: a filter change is not a navigation, and Back should leave the page
+ * rather than undo filters one at a time. Path, hash, every other param and
+ * `history.state` are kept - a router keeps its own bookkeeping there.
+ */
+const defaultUrlStorage: TMDataGridUrlStorage = {
+  get: (name) => new URLSearchParams(window.location.search).get(name),
+  set: (name, value) => {
+    // Spliced by hand rather than through `URLSearchParams`, whose serializer
+    // re-encodes every param (`/a%20b` comes back as `%2Fa+b`). Only the
+    // grid's own pair changes; every other entry is kept byte for byte.
+    const { pathname, search, hash, href } = window.location;
+    const entries = search
+      .replace(/^\?/, "")
+      .split("&")
+      .filter((entry) => entry !== "");
+    const kept = entries.filter((entry) => paramEntryKey(entry) !== name);
+    if (value === null && kept.length === entries.length) return;
+    if (value !== null) {
+      kept.push(`${encodeURIComponent(name)}=${encodeURIComponent(value)}`);
+    }
+    const next = `${pathname}${kept.length === 0 ? "" : `?${kept.join("&")}`}${hash}`;
+    if (new URL(next, href).href === href) return;
+    window.history.replaceState(window.history.state, "", next);
+  },
+};
+
+/** The decoded key of one `key=value` query entry, `+` read as a space. */
+function paramEntryKey(entry: string): string {
+  const separator = entry.indexOf("=");
+  const raw = (separator === -1 ? entry : entry.slice(0, separator)).replaceAll(
+    "+",
+    " ",
+  );
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    // A malformed escape cannot be the grid's own key, which it encoded.
+    return raw;
+  }
+}
+
+function resolveUrlStorage(
+  persistence: TMDataGridPersistence | undefined,
+): TMDataGridUrlStorage | null {
+  if (!persistence) return null;
+  if (persistence.urlStorage) return persistence.urlStorage;
+  // Absent under SSR, like web storage. Access that throws is caught where the
+  // param is read or written.
+  return typeof window === "undefined" ? null : defaultUrlStorage;
 }
 
 function resolveStorage(
@@ -213,30 +289,44 @@ function isValidSlice(slice: keyof GridState, value: unknown): boolean {
   return guard === undefined || guard(value);
 }
 
-function readSlices(
-  storage: Storage | null,
-  resolved: ResolvedKey | null,
-  deserialize: (value: string) => unknown,
-): Partial<GridState> {
-  if (!storage || !resolved) return {};
+function readSlices({
+  read,
+  resolved,
+  deserialize,
+  versioned,
+}: {
+  /** Returns the raw payload stored under a key, or `null`. */
+  read: ((key: string) => string | null) | null;
+  resolved: ResolvedKey | null;
+  deserialize: (value: string) => unknown;
+  /** Whether the payload must carry the current version stamp. */
+  versioned: boolean;
+}): Partial<GridState> {
+  if (!read || !resolved) return {};
   try {
-    const raw = storage.getItem(resolved.key);
+    const raw = read(resolved.key);
     if (!raw) return {};
     const parsed = deserialize(raw);
     if (typeof parsed !== "object" || parsed === null) return {};
 
     const record = parsed as Record<string, unknown>;
-    if (record[VERSION_FIELD] !== PERSIST_PAYLOAD_VERSION) return {};
+    if (versioned && record[VERSION_FIELD] !== PERSIST_PAYLOAD_VERSION) {
+      return {};
+    }
     const restored: Record<string, unknown> = {};
     // Only copy the selected slices. A payload written before the selection was
     // narrowed cannot reintroduce slices the caller has since opted out of.
     for (const slice of resolved.slices) {
       if (!(slice in record)) continue;
-      if (!isValidSlice(slice, record[slice])) continue;
+      // A `null` slice stands for `undefined` - see the writers. An own key
+      // holding `undefined` still overrides `initialState` in the merge, which
+      // is the point: the user cleared the slice. The slice's guard then
+      // judges `undefined`, so only a slice that may be `undefined` (the
+      // untyped global filter) restores that way.
+      const value = record[slice] === null ? undefined : record[slice];
+      if (!isValidSlice(slice, value)) continue;
       restored[slice] =
-        slice === "columnPinning"
-          ? normalizeColumnPinning(record[slice])
-          : record[slice];
+        slice === "columnPinning" ? normalizeColumnPinning(value) : value;
     }
     return restored as Partial<GridState>;
   } catch {
@@ -252,7 +342,13 @@ function writeSlices(
 ): void {
   if (!storage || !resolved) return;
   const payload: Record<string, unknown> = { [VERSION_FIELD]: PERSIST_PAYLOAD_VERSION };
-  for (const slice of resolved.slices) payload[slice] = state[slice];
+  for (const slice of resolved.slices) {
+    // `null` for a slice the user cleared to `undefined` - the global filter
+    // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
+    // a missing slice means the initial state, so a reload would come back on
+    // the very value the user cleared. readSlices turns it back.
+    payload[slice] = state[slice] === undefined ? null : state[slice];
+  }
   try {
     storage.setItem(resolved.key, serialize(payload as Partial<GridState>));
   } catch {
@@ -260,9 +356,100 @@ function writeSlices(
   }
 }
 
+/**
+ * Writes the URL payload: the selected slices that differ from `baseline`,
+ * with no version stamp, or no param at all when none differs.
+ *
+ * Only the difference goes in, so a link names what the user changed and not
+ * what the page starts with anyway: the address bar stays short, and an old
+ * link does not pin a default the page has since changed. No stamp, because a
+ * bookmarked link has to survive a release; the shape guards and the
+ * realignment on read are what keep an old link safe.
+ */
+function writeUrlSlices({
+  urlStorage,
+  resolved,
+  state,
+  baseline,
+  excludedFilterColumnIds,
+  serialize,
+}: {
+  urlStorage: TMDataGridUrlStorage | null;
+  resolved: ResolvedKey | null;
+  state: GridState;
+  baseline: Partial<GridState>;
+  excludedFilterColumnIds: ReadonlySet<string>;
+  serialize: (value: Partial<GridState>) => string;
+}): void {
+  if (!urlStorage || !resolved) return;
+  const payload: Record<string, unknown> = {};
+  for (const slice of resolved.slices) {
+    // Both sides reduced the same way, so a change to an opted-out column or
+    // to a filter that narrows nothing does not put the param in the URL.
+    const value =
+      slice === "columnFilters"
+        ? linkableColumnFilters(state.columnFilters, excludedFilterColumnIds)
+        : state[slice];
+    const initial =
+      slice === "columnFilters"
+        ? linkableColumnFilters(baseline.columnFilters, excludedFilterColumnIds)
+        : baseline[slice];
+    if (sameStateValue(value, initial)) continue;
+    // `null` for a slice the user cleared to `undefined` - the global filter
+    // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
+    // a missing slice means the initial state, so the link would reopen on
+    // the very value the user cleared. readSlices turns it back.
+    payload[slice] = value === undefined ? null : value;
+  }
+  try {
+    const next =
+      Object.keys(payload).length === 0
+        ? null
+        : serialize(payload as Partial<GridState>);
+    // Unchanged: no write. A router-backed storage may navigate on every
+    // `set`, and the debounced write runs after a resize or a selection too.
+    if (urlStorage.get(resolved.key) === next) return;
+    urlStorage.set(resolved.key, next);
+  } catch {
+    // History access refused, or a router's own storage threw. Best effort,
+    // like storage.
+  }
+}
+
+function withoutColumnFilters(
+  filters: GridState["columnFilters"] | undefined,
+  excluded: ReadonlySet<string>,
+): GridState["columnFilters"] | undefined {
+  if (filters === undefined || excluded.size === 0) return filters;
+  return filters.filter((filter) => !excluded.has(filter.id));
+}
+
+/**
+ * The column filters a link carries: not on an opted-out column, and narrowing
+ * the rows. A filter that narrows nothing is a row the filter panel seeded or
+ * the user has not filled in yet; in a link it would only reopen an empty row.
+ */
+function linkableColumnFilters(
+  filters: GridState["columnFilters"] | undefined,
+  excluded: ReadonlySet<string>,
+): GridState["columnFilters"] | undefined {
+  return withoutColumnFilters(filters, excluded)?.filter(filterNarrowsRows);
+}
+
 function resolveKeys(persistence: TMDataGridPersistence | undefined) {
+  const url = resolveKey(persistence?.urlKey, DATA_STATE_SLICES);
+  const data = resolveKey(persistence?.dataKey, DATA_STATE_SLICES);
   return {
-    data: resolveKey(persistence?.dataKey, DATA_STATE_SLICES),
+    url,
+    // A slice lives in one group. The URL takes what both keys list, so a
+    // stored copy can never override the link that was opened.
+    data:
+      data !== null && url !== null
+        ? {
+            key: data.key,
+            slices: data.slices.filter((slice) => !url.slices.includes(slice)),
+          }
+        : data,
     settings: resolveKey(persistence?.settingsKey, SETTINGS_STATE_SLICES),
   };
 }
@@ -271,8 +458,27 @@ function resolveKeys(persistence: TMDataGridPersistence | undefined) {
 export function hasPersistenceKeys(
   persistence: TMDataGridPersistence | undefined,
 ): boolean {
-  const { data, settings } = resolveKeys(persistence);
-  return data !== null || settings !== null;
+  const { url, data, settings } = resolveKeys(persistence);
+  return url !== null || data !== null || settings !== null;
+}
+
+/**
+ * The data slices that a `dataKey` tuple names and `urlKey` also lists;
+ * `urlKey` takes them. A bare `dataKey` names no slice, so it reports nothing:
+ * "every data slice" plus a `urlKey` is the ordinary setup, and resolveKeys
+ * hands the URL its slices without a word. Only a slice named twice is a
+ * contradiction worth reporting.
+ */
+export function findOverlappingSlices(
+  persistence: TMDataGridPersistence | undefined,
+): TMDataGridDataSlice[] {
+  if (typeof persistence?.dataKey === "string") return [];
+  const url = resolveKey(persistence?.urlKey, DATA_STATE_SLICES);
+  const data = resolveKey(persistence?.dataKey, DATA_STATE_SLICES);
+  if (url === null || data === null) return [];
+  return DATA_STATE_SLICES.filter(
+    (slice) => url.slices.includes(slice) && data.slices.includes(slice),
+  );
 }
 
 const defaultDeserialize = (value: string): unknown => JSON.parse(value);
@@ -290,11 +496,34 @@ export function collectLeafColumnIds(
   defs: ReadonlyArray<unknown>,
   into: string[] = [],
 ): string[] {
+  forEachLeafColumnDef(defs, (id) => into.push(id));
+  return into;
+}
+
+/**
+ * The leaf column ids whose `meta.filter.url` is `false`, by the same id
+ * derivation as {@link collectLeafColumnIds}. Their filters stay out of the
+ * `urlKey` param, on read and on write.
+ */
+export function collectUrlExcludedColumnIds(
+  defs: ReadonlyArray<unknown>,
+  into: string[] = [],
+): string[] {
+  forEachLeafColumnDef(defs, (id, record) => {
+    if (prop(prop(record.meta, "filter"), "url") === false) into.push(id);
+  });
+  return into;
+}
+
+function forEachLeafColumnDef(
+  defs: ReadonlyArray<unknown>,
+  visit: (id: string, record: Record<string, unknown>) => void,
+): void {
   for (const def of defs) {
     if (typeof def !== "object" || def === null) continue;
     const record = def as Record<string, unknown>;
     if (Array.isArray(record.columns) && record.columns.length > 0) {
-      collectLeafColumnIds(record.columns, into);
+      forEachLeafColumnDef(record.columns, visit);
       continue;
     }
     const accessorKey =
@@ -303,9 +532,8 @@ export function collectLeafColumnIds(
       (typeof record.id === "string" ? record.id : undefined) ??
       accessorKey?.replaceAll(".", "_") ??
       (typeof record.header === "string" ? record.header : undefined);
-    if (id !== undefined) into.push(id);
+    if (id !== undefined) visit(id, record);
   }
-  return into;
 }
 
 /**
@@ -351,8 +579,25 @@ function realignToColumns(
   return realigned;
 }
 
+/** What the `urlKey` group needs beyond the persistence config itself. */
+export type TMDataGridUrlPersistInputs = {
+  /**
+   * The state the table starts with when nothing is restored: the grid's
+   * defaults merged with `initialState`. The URL carries only the slices that
+   * differ from it. Without it, every slice that has a value is written. On
+   * read, a column opted out of the URL keeps its filter from it.
+   */
+  baseline?: Partial<GridState>;
+  /** See {@link collectUrlExcludedColumnIds}. */
+  excludedFilterColumnIds?: ReadonlyArray<string>;
+  /** Whether a write touches the URL. Defaults to `true`; ignored on read. */
+  writeUrl?: boolean;
+};
+
 /**
- * State to merge into `initialState`, read once on mount.
+ * State to merge into `initialState`, read once on mount: settings, then data,
+ * then the URL. The groups are disjoint, since the URL takes the slices it
+ * shares with `dataKey`.
  *
  * With `knownColumnIds` - every id the grid is about to construct, generated
  * lanes included - the column-shaped slices are realigned first; see
@@ -361,28 +606,79 @@ function realignToColumns(
 export function readPersistedState(
   persistence?: TMDataGridPersistence,
   knownColumnIds?: ReadonlyArray<string>,
+  {
+    baseline = {},
+    excludedFilterColumnIds = [],
+  }: TMDataGridUrlPersistInputs = {},
 ): Partial<GridState> {
   const storage = resolveStorage(persistence);
-  const { data, settings } = resolveKeys(persistence);
+  const readStorage = storage ? (key: string) => storage.getItem(key) : null;
+  const urlStorage = resolveUrlStorage(persistence);
+  const readUrl = urlStorage ? (key: string) => urlStorage.get(key) : null;
+  const { url, data, settings } = resolveKeys(persistence);
   const deserialize = persistence?.deserialize ?? defaultDeserialize;
+  const fromUrl = readSlices({
+    read: readUrl,
+    resolved: url,
+    deserialize,
+    versioned: false,
+  });
+  if (fromUrl.columnFilters) {
+    // The link never speaks for an opted-out column - the write leaves those
+    // out of both sides - so such a column keeps its initial filter, which
+    // the restored slice would otherwise replace along with the rest.
+    const excluded = new Set(excludedFilterColumnIds);
+    fromUrl.columnFilters = [
+      ...(baseline.columnFilters ?? []).filter((filter) =>
+        excluded.has(filter.id),
+      ),
+      ...(withoutColumnFilters(fromUrl.columnFilters, excluded) ?? []),
+    ];
+  }
   const restored = {
-    ...readSlices(storage, settings, deserialize),
-    ...readSlices(storage, data, deserialize),
+    ...readSlices({
+      read: readStorage,
+      resolved: settings,
+      deserialize,
+      versioned: true,
+    }),
+    ...readSlices({
+      read: readStorage,
+      resolved: data,
+      deserialize,
+      versioned: true,
+    }),
+    ...fromUrl,
   };
   return knownColumnIds === undefined
     ? restored
     : realignToColumns(restored, new Set(knownColumnIds));
 }
 
-/** Writes both payloads. Called on every table state change. */
+/** Writes every configured payload. Called on every table state change. */
 export function writePersistedState(
   state: GridState,
   persistence?: TMDataGridPersistence,
+  {
+    baseline = {},
+    excludedFilterColumnIds = [],
+    writeUrl = true,
+  }: TMDataGridUrlPersistInputs = {},
 ): void {
+  const { url, data, settings } = resolveKeys(persistence);
+  const serialize = persistence?.serialize ?? defaultSerialize;
+  if (writeUrl) {
+    writeUrlSlices({
+      urlStorage: resolveUrlStorage(persistence),
+      resolved: url,
+      state,
+      baseline,
+      excludedFilterColumnIds: new Set(excludedFilterColumnIds),
+      serialize,
+    });
+  }
   const storage = resolveStorage(persistence);
   if (!storage) return;
-  const { data, settings } = resolveKeys(persistence);
-  const serialize = persistence?.serialize ?? defaultSerialize;
   writeSlices(storage, data, state, serialize);
   writeSlices(storage, settings, state, serialize);
 }

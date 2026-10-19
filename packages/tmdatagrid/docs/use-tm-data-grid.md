@@ -181,13 +181,16 @@ toolbar components can read the same strings as the built-in parts.
 ## persist
 
 Restores table state on mount and writes it back on every change. State is
-split across two keys: `settingsKey` for the column layout, `dataKey` for
-filters, sorting and pagination. Either can be cleared without the other.
+split across three keys: `settingsKey` for the column layout, `dataKey` for
+filters, sorting and pagination, and `urlKey` for data slices kept in the URL
+as a deep link. Each can be cleared without the others.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dataKey` | `string \| [string, DataSlice[]]` | – | Storage key for the data group. |
 | `settingsKey` | `string \| [string, SettingsSlice[]]` | – | Storage key for the settings group. |
+| `urlKey` | `string \| [string, DataSlice[]]` | – | Search param for data slices kept in the URL. See [Deep links](/docs/persistence#deep-links). |
+| `urlStorage` | `TMDataGridUrlStorage` | `location.search` and `history.replaceState` | Reads and writes the URL param. |
 | `storageMode` | `"localStorage" \| "sessionStorage"` | `"localStorage"` | Storage area. Use `"sessionStorage"` for per-tab state. |
 | `serialize` | `(value) => string` | `JSON.stringify` | Serializes a payload before storing. |
 | `deserialize` | `(value: string) => unknown` | `JSON.parse` | Parses a stored payload. |
@@ -222,6 +225,7 @@ const persist = {
 | Group | Available slices |
 | --- | --- |
 | `dataKey` | `columnFilters`, `globalFilter`, `sorting`, `pagination`, `expanded` |
+| `urlKey` | The data slices. A slice listed here is taken out of `dataKey`. |
 | `settingsKey` | `columnVisibility`, `columnSizing`, `columnOrder`, `columnPinning`, `grouping` |
 
 The exported `DATA_STATE_SLICES` and `SETTINGS_STATE_SLICES` arrays contain the

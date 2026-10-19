@@ -28,6 +28,7 @@ import {
   type DeepValue,
   type DisplayColumnDef,
   filterFns,
+  getInitialTableState,
   type GroupColumnDef,
   globalFilteringFeature,
   type IdentifiedColumnDef,
@@ -103,6 +104,8 @@ import {
 } from "./core/labels";
 import {
   collectLeafColumnIds,
+  collectUrlExcludedColumnIds,
+  findOverlappingSlices,
   hasPersistenceKeys,
   readPersistedState,
   type TMDataGridPersistence,
@@ -819,8 +822,9 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
       }
   ) & {
   /**
-   * Restore and persist table state across mounts. Two keys, because the two
-   * kinds of state have different lifetimes - see {@link TMDataGridPersistence}.
+   * Restore and persist table state across mounts. Two storage keys, because
+   * the two kinds of state have different lifetimes, and a URL search param
+   * for the data slices a link should carry - see {@link TMDataGridPersistence}.
    *
    * Keep the object referentially stable (module scope or `useMemo`); it is a
    * dependency of the subscription that writes back.
@@ -1133,6 +1137,17 @@ function withoutControlColumnVisibility(
 }
 
 /**
+ * The pagination the table starts with before anything is restored. Shared by
+ * the table's `initialState` and the persistence baseline, so the URL param
+ * compares against the page size the table really starts on.
+ */
+function startingPagination(
+  initial: Partial<TableState<TMDataGridFeatures>> | undefined,
+): TableState<TMDataGridFeatures>["pagination"] {
+  return { pageIndex: 0, pageSize: 25, ...initial?.pagination };
+}
+
+/**
  * Point every column at the operator-dispatching filter function, and take
  * the aggregation defaults back off, unless the column opted into its own.
  * Anything the consumer set wins - it is spread over these.
@@ -1377,13 +1392,34 @@ export function useTMDataGrid<TData extends RowData>({
     editColumnLabel,
   ]);
 
+  // Leaf columns whose filter stays out of the `urlKey` param. Follows the
+  // columns, since the write subscription below outlives a column change.
+  const urlExcludedColumnIds = useMemo(
+    () => collectUrlExcludedColumnIds(columns),
+    [columns],
+  );
+  // What the table would start with if nothing were restored: TanStack's
+  // feature defaults under the consumer's `initialState`, with the grid's own
+  // page size. The `urlKey` param carries only the slices that differ from
+  // it, and an opted-out column keeps its filter from it on read. Only the
+  // data slices are used, so the layout part of the `initialState` recipe
+  // below is not repeated here. Read once on mount, like `initialState`.
+  const [persistBaseline] = useState(() =>
+    getInitialTableState(tmDataGridFeatures, {
+      ...options.initialState,
+      pagination: startingPagination(options.initialState),
+    }),
+  );
   // Read once on mount: `initialState` is only consumed on the first render,
   // and re-reading later would fight the user's live edits.
   // Realigned against the ids this render is about to construct - lanes
   // included - so a column removed between deploys does not leave a ghost
   // sort, filter or width behind.
   const [persistedState] = useState(() =>
-    readPersistedState(persist, collectLeafColumnIds(columns)),
+    readPersistedState(persist, collectLeafColumnIds(columns), {
+      baseline: persistBaseline,
+      excludedFilterColumnIds: urlExcludedColumnIds,
+    }),
   );
 
   // Restored grouping decides whether the tree column starts out visible, so a
@@ -1731,9 +1767,7 @@ export function useTMDataGrid<TData extends RowData>({
           options.initialState?.columnPinning?.end,
       }),
       pagination: {
-        pageIndex: 0,
-        pageSize: 25,
-        ...options.initialState?.pagination,
+        ...startingPagination(options.initialState),
         ...persistedState.pagination,
       },
     },
@@ -1826,6 +1860,19 @@ export function useTMDataGrid<TData extends RowData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A slice listed under both `dataKey` and `urlKey` is handled by `urlKey`
+  // alone - see resolveKeys in persistence.ts. Reported once, because the
+  // consumer most likely expects the stored copy to still apply.
+  useEffect(() => {
+    for (const slice of findOverlappingSlices(persist)) {
+      console.error(
+        `TMDataGrid: persist.dataKey and persist.urlKey both list ${slice} - a slice lives in one group; urlKey takes it.`,
+      );
+    }
+    // A mount-time contract, like the checks above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // The tree column appears with the first grouped column and goes away with
   // the last, so an ungrouped grid looks exactly as it did before grouping
   // existed. Driven from a subscription rather than by rebuilding the column
@@ -1892,33 +1939,67 @@ export function useTMDataGrid<TData extends RowData>({
   // selection - and `setItem` serialises synchronously on the main thread. The
   // trailing edge is enough: storage only has to agree with the table once the
   // user stops.
+  //
+  // The `urlKey` inputs are read through a ref: the excluded columns follow
+  // the column defs, and re-subscribing on a column change would write once
+  // more for nothing.
+  const urlPersistInputsRef = useRef({
+    baseline: persistBaseline,
+    excludedFilterColumnIds: urlExcludedColumnIds,
+  });
+  urlPersistInputsRef.current = {
+    baseline: persistBaseline,
+    excludedFilterColumnIds: urlExcludedColumnIds,
+  };
+  // Keyed on the store, not the table: `useTable` returns a new copy of the
+  // table on every render (it memoizes on the options object, built inline
+  // above), while every copy shares the one store. Keyed on the table, each
+  // render re-ran this effect, whose cleanup flushed and whose setup wrote
+  // again at once - no debounce at all.
+  const tableStore = table.store;
   useEffect(() => {
     if (!hasPersistenceKeys(persist)) return;
-    writePersistedState(table.store.state, persist);
+    writePersistedState(tableStore.state, persist, urlPersistInputsRef.current);
 
     let timeout: ReturnType<typeof setTimeout> | undefined;
     let pending: TableState<TMDataGridFeatures> | null = null;
 
-    const flush = () => {
+    const flush = ({ writeUrl }: { writeUrl: boolean }) => {
       timeout = undefined;
       if (pending === null) return;
-      writePersistedState(pending, persist);
+      writePersistedState(pending, persist, {
+        ...urlPersistInputsRef.current,
+        writeUrl,
+      });
       pending = null;
     };
 
-    const subscription = table.store.subscribe((state) => {
+    // Where the grid was when it subscribed, to tell an unmount by navigation
+    // from an in-page one - see the cleanup.
+    const subscribedPathname =
+      typeof window === "undefined" ? null : window.location.pathname;
+
+    const subscription = tableStore.subscribe((state) => {
       pending = state;
       if (timeout !== undefined) clearTimeout(timeout);
-      timeout = setTimeout(flush, PERSIST_DEBOUNCE_MS);
+      timeout = setTimeout(() => flush({ writeUrl: true }), PERSIST_DEBOUNCE_MS);
     });
 
     return () => {
       subscription.unsubscribe();
       if (timeout !== undefined) clearTimeout(timeout);
-      // An unmount mid-debounce would otherwise drop the last change.
-      flush();
+      // An unmount mid-debounce would otherwise drop the last change. The URL
+      // only while still on the page: an SPA navigation changes the pathname
+      // before React unmounts the grid, so the param would land on the next
+      // page's URL. An in-page unmount - a modal closing, a tab panel
+      // switching - leaves the pathname alone and keeps its last filter.
+      flush({
+        writeUrl:
+          subscribedPathname !== null &&
+          subscribedPathname === window.location.pathname,
+      });
     };
-  }, [persist, table]);
+  }, [persist, tableStore]);
 
   const ui = useCreateStore<TMDataGridUiState, TMDataGridUiActions>(
     {

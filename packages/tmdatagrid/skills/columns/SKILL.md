@@ -4,7 +4,7 @@ description: >
   Define and arrange TMDataGrid columns. Covers createTMDataGridColumnHelper,
   every column meta field (label, type, options, flex, align, colSpan, autoSize,
   enableOrdering, and the meta.filter and meta.edit namespaces holding
-  operators, defaultOperator, control, enabled, field, editor, validate and
+  operators, defaultOperator, control, url, enabled, field, editor, validate and
   mapValue), the six column types, fluid minmax sizing versus fixed width with
   minSize / maxSize / size, autosizing and autosizeColumn, hiding through
   enableHiding and the columns panel, pinning and why a pinned column becomes
@@ -94,7 +94,7 @@ What the column **is** stays flat; what the filter panel and the edit engine do
 with it sits in their namespaces. `type` and `options` are read by both stages,
 which is why they are in neither.
 
-`meta.filter` holds `operators`, `defaultOperator` and `control`; `meta.edit`
+`meta.filter` holds `operators`, `defaultOperator`, `control` and `url`; `meta.edit`
 holds `enabled`, `field`, `editor`, `validate` and `mapValue`. Their fields are
 in [references/columns-api.md](references/columns-api.md).
 

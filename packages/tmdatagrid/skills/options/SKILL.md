@@ -9,7 +9,8 @@ description: >
   labels, editing, filters, exportOptions, enableColumnOrdering,
   enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
   showSelectedBackground, cellSelection, renderDetails, overscan,
-  quickSearchMode), persist with dataKey/settingsKey slices and storageMode, the
+  quickSearchMode), persist with dataKey/settingsKey slices, storageMode and
+  urlKey deep links, the
   returned api (table, ui, edit, features, labels, resetSettings, scrollToRow),
   ui actions, and reading grid state with useSelector over table.store, since
   table.getState() does not exist in v9. Load when configuring the hook, looking
@@ -160,14 +161,17 @@ const grid = useTMDataGrid({
 ## persist
 
 Restores table state on mount and writes it back on every change. State is split
-across two keys because the groups have different lifetimes: column configuration
-stays valid indefinitely, while filters and pagination go stale as the data
-changes. Separate keys let one group be cleared without touching the other.
+across three keys because the groups have different lifetimes: column configuration
+stays valid indefinitely, filters and pagination go stale as the data
+changes, and a deep link has to travel with the page URL. Separate keys let one
+group be cleared without touching the others.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dataKey` | `TMDataGridPersistKey<TMDataGridDataSlice>`: `string \| [string, DataSlice[]]` | – | Storage key for the data group. |
 | `settingsKey` | `TMDataGridPersistKey<TMDataGridSettingsSlice>`: `string \| [string, SettingsSlice[]]` | – | Storage key for the settings group. |
+| `urlKey` | `TMDataGridPersistKey<TMDataGridDataSlice>`: `string \| [string, DataSlice[]]` | – | Search param for data slices kept in the URL. See [Deep links](#deep-links). |
+| `urlStorage` | `TMDataGridUrlStorage`: `{ get(name): string \| null; set(name, value: string \| null): void }` | `location.search` and `history.replaceState` | Reads and writes the URL param. |
 | `storageMode` | `TMDataGridStorageMode`: `"localStorage" \| "sessionStorage"` | `"localStorage"` | Storage area. `"sessionStorage"` is per tab. |
 | `serialize` | `(value) => string` | `JSON.stringify` | Serializes before storing. |
 | `deserialize` | `(value: string) => unknown` | `JSON.parse` | Parses a stored payload. |
@@ -203,6 +207,7 @@ const persist = {
 | Group | Available slices |
 | --- | --- |
 | `dataKey` | `columnFilters`, `globalFilter`, `sorting`, `pagination`, `expanded` |
+| `urlKey` | The data slices. A slice listed here is taken out of `dataKey`. |
 | `settingsKey` | `columnVisibility`, `columnSizing`, `columnOrder`, `columnPinning`, `grouping` |
 
 `grouping` is a settings slice because it names columns rather than values, so it
@@ -226,6 +231,73 @@ columns that exist: entries naming a column removed between deploys are
 dropped.
 
 Source: `packages/tmdatagrid/docs/persistence.md` (Behaviour).
+
+### Deep links
+
+`urlKey` keeps data slices in one URL search param, so a link to the page opens
+the grid on the same filters. The string is the param name; a bare key takes
+every data slice, a tuple a subset, as with `dataKey`.
+
+```tsx
+const persist = {
+  settingsKey: "employees.settings",
+  // Sorting is remembered per browser; the filters travel in the link.
+  dataKey: ["employees.data", ["sorting"]],
+  urlKey: ["employees", ["columnFilters", "globalFilter"]],
+} satisfies TMDataGridPersistence;
+```
+
+- A slice lives in one group. A slice listed under `urlKey` is taken out of
+  `dataKey`: a bare `dataKey` hands it over silently, while a `dataKey` tuple
+  that names the slice explicitly is reported with `console.error` on mount.
+- The param carries only the slices whose value differs from the initial state
+  (`initialState` merged over the grid defaults), and only the column filters
+  that are active. When nothing differs, the param is removed. A link without the param, or without a slice, opens on the
+  initial state; a URL slice never falls back to storage.
+- Writes use `history.replaceState`, never `pushState`. Only the grid's own
+  param changes; the path, the hash, other params and `history.state` are kept.
+  Two grids on one page use two keys.
+- The URL payload has no version stamp, so a bookmarked link survives a
+  release. The shape guards and the realignment against existing columns apply
+  as for storage, and `serialize` / `deserialize` apply to the URL payload too.
+- `meta.filter.url: false` on a column keeps its filter out of the param, on
+  read and on write. The column's filter is then not persisted anywhere, and a
+  filter on it in `initialState` still applies when a link is opened. The
+  flag has no effect unless `urlKey` carries `columnFilters`.
+- `urlStorage` replaces the default read and write of the param, for a router
+  that owns the URL. `get` returns the param's string or `null`; `set` receives
+  the string, or `null` to remove the param. `set` is only called when the
+  value changed. Keep `persist` referentially stable here too: react-router
+  rebuilds `setSearchParams` on every URL change, so read it through a ref.
+
+```tsx
+// react-router: let the router do the replace.
+const [, setSearchParams] = useSearchParams();
+const setSearchParamsRef = useRef(setSearchParams);
+setSearchParamsRef.current = setSearchParams;
+
+const persist = useMemo(
+  () =>
+    ({
+      urlKey: ["employees", ["columnFilters"]],
+      urlStorage: {
+        get: (name) => new URLSearchParams(window.location.search).get(name),
+        set: (name, value) =>
+          setSearchParamsRef.current(
+            (prev) => {
+              if (value === null) prev.delete(name);
+              else prev.set(name, value);
+              return prev;
+            },
+            { replace: true },
+          ),
+      },
+    }) satisfies TMDataGridPersistence,
+  [],
+);
+```
+
+Source: `packages/tmdatagrid/docs/persistence.md` (Deep links).
 
 ## Return value
 

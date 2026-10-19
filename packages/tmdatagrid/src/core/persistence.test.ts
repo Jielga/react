@@ -1,13 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TableState } from "@tanstack/react-table";
 import {
   collectLeafColumnIds,
+  collectUrlExcludedColumnIds,
   DATA_STATE_SLICES,
+  findOverlappingSlices,
   hasPersistenceKeys,
   PERSIST_PAYLOAD_VERSION,
   readPersistedState,
   SETTINGS_STATE_SLICES,
   type TMDataGridPersistence,
+  type TMDataGridUrlStorage,
   writePersistedState,
 } from "./persistence";
 import type { TMDataGridFeatures } from "../useTMDataGrid";
@@ -45,6 +48,13 @@ describe("hasPersistenceKeys", () => {
   it("is true as soon as either key is set", () => {
     expect(hasPersistenceKeys({ dataKey: "d" })).toBe(true);
     expect(hasPersistenceKeys({ settingsKey: "s" })).toBe(true);
+  });
+
+  it("is true with only a urlKey", () => {
+    expect(hasPersistenceKeys({ urlKey: "g" })).toBe(true);
+    expect(hasPersistenceKeys({ urlKey: ["g", ["columnFilters"]] })).toBe(
+      true,
+    );
   });
 });
 
@@ -126,6 +136,18 @@ describe("readPersistedState", () => {
   it("returns nothing when no key is configured", () => {
     expect(readPersistedState(undefined)).toEqual({});
     expect(readPersistedState({})).toEqual({});
+  });
+
+  it("round-trips a global filter cleared to undefined, over the initial state", () => {
+    const persist: TMDataGridPersistence = { dataKey: ["d", ["globalFilter"]] };
+    // `initialState: { globalFilter: "Holm" }`, and the user cleared it.
+    writePersistedState(gridState({ globalFilter: undefined }), persist);
+
+    expect(stored("d").globalFilter).toBeNull();
+    const restored = readPersistedState(persist);
+    // An own key, so it overrides `initialState.globalFilter` in the merge.
+    expect(Object.hasOwn(restored, "globalFilter")).toBe(true);
+    expect({ globalFilter: "Holm", ...restored }.globalFilter).toBeUndefined();
   });
 
   it("ignores a payload written before the selection was narrowed", () => {
@@ -335,5 +357,603 @@ describe("collectLeafColumnIds", () => {
         { accessorKey: "age" },
       ]),
     ).toEqual(["firstName", "lastName", "age"]);
+  });
+});
+
+describe("collectUrlExcludedColumnIds", () => {
+  it("collects the leaf columns with meta.filter.url false", () => {
+    expect(
+      collectUrlExcludedColumnIds([
+        { accessorKey: "name", meta: { filter: { url: false } } },
+        { accessorKey: "age", meta: { filter: { url: true } } },
+        { accessorKey: "city", meta: { filter: {} } },
+        {
+          header: "Address",
+          columns: [
+            { accessorKey: "address.street", meta: { filter: { url: false } } },
+          ],
+        },
+      ]),
+    ).toEqual(["name", "address_street"]);
+  });
+});
+
+describe("urlKey", () => {
+  /** A URL param store held in memory, the shape a router adapter has. */
+  function fakeUrl(initial: Record<string, string> = {}) {
+    const params = new Map(Object.entries(initial));
+    const urlStorage: TMDataGridUrlStorage = {
+      get: (name) => params.get(name) ?? null,
+      set: (name, value) => {
+        if (value === null) params.delete(name);
+        else params.set(name, value);
+      },
+    };
+    return { params, urlStorage };
+  }
+
+  const param = (params: Map<string, string>, name: string) =>
+    JSON.parse(params.get(name) ?? "null") as Record<string, unknown> | null;
+
+  /** The state a grid without any `initialState` starts in. */
+  const defaults: Partial<GridState> = {
+    columnFilters: [],
+    globalFilter: undefined,
+    sorting: [],
+    pagination: { pageIndex: 0, pageSize: 25 },
+    expanded: {},
+  };
+
+  const filters = (
+    ...entries: Array<[id: string, value: string]>
+  ): GridState["columnFilters"] =>
+    entries.map(([id, value]) => ({
+      id,
+      value: { operator: "contains", value },
+    }));
+
+  describe("writing", () => {
+    it("writes the slices that differ from the baseline, without a version stamp", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState(),
+        { urlKey: ["g", ["columnFilters", "globalFilter"]], urlStorage },
+        { baseline: defaults },
+      );
+
+      expect(param(params, "g")).toEqual({
+        columnFilters: gridState().columnFilters,
+        globalFilter: "search",
+      });
+    });
+
+    it("leaves out a slice that equals its initial value", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState({ globalFilter: undefined }),
+        { urlKey: ["g", ["columnFilters", "globalFilter"]], urlStorage },
+        { baseline: defaults },
+      );
+
+      expect(Object.keys(param(params, "g") ?? {})).toEqual(["columnFilters"]);
+    });
+
+    it("removes the param when nothing differs from the baseline", () => {
+      const { params, urlStorage } = fakeUrl({ g: '{"sorting":[]}' });
+
+      writePersistedState(
+        gridState({ columnFilters: [], globalFilter: undefined }),
+        { urlKey: ["g", ["columnFilters", "globalFilter"]], urlStorage },
+        { baseline: defaults },
+      );
+
+      expect(params.has("g")).toBe(false);
+    });
+
+    it("writes an empty filter list when the user cleared an initial filter", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState({ columnFilters: [] }),
+        { urlKey: ["g", ["columnFilters"]], urlStorage },
+        { baseline: { ...defaults, columnFilters: filters(["name", "a"]) } },
+      );
+
+      expect(param(params, "g")).toEqual({ columnFilters: [] });
+    });
+
+    it("takes every data slice from a bare key", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(gridState(), { urlKey: "g", urlStorage }, {
+        baseline: defaults,
+      });
+
+      expect(Object.keys(param(params, "g") ?? {}).sort()).toEqual(
+        [...DATA_STATE_SLICES].sort(),
+      );
+    });
+
+    it("keeps the filter of a column opted out with meta.filter.url false", () => {
+      const { params, urlStorage } = fakeUrl();
+      const persist: TMDataGridPersistence = {
+        urlKey: ["g", ["columnFilters"]],
+        urlStorage,
+      };
+
+      writePersistedState(
+        gridState({ columnFilters: filters(["name", "a"], ["city", "M"]) }),
+        persist,
+        { baseline: defaults, excludedFilterColumnIds: ["city"] },
+      );
+      expect(param(params, "g")).toEqual({
+        columnFilters: filters(["name", "a"]),
+      });
+
+      // A filter on the opted-out column alone is no reason for a param.
+      writePersistedState(
+        gridState({ columnFilters: filters(["city", "M"]) }),
+        persist,
+        { baseline: defaults, excludedFilterColumnIds: ["city"] },
+      );
+      expect(params.has("g")).toBe(false);
+    });
+
+    it("writes only the column filters that narrow the rows", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState({
+          columnFilters: [
+            // A row the filter panel seeded, not filled in yet.
+            { id: "name", value: { operator: "contains", value: "" } },
+            // An operator that needs no value is active as it is.
+            { id: "city", value: { operator: "isEmpty" } },
+          ],
+        }),
+        { urlKey: ["g", ["columnFilters"]], urlStorage },
+        { baseline: defaults },
+      );
+      expect(param(params, "g")).toEqual({
+        columnFilters: [{ id: "city", value: { operator: "isEmpty" } }],
+      });
+
+      // Only an inactive filter: nothing differs from the baseline.
+      writePersistedState(
+        gridState({
+          columnFilters: [
+            { id: "name", value: { operator: "contains", value: "" } },
+          ],
+        }),
+        { urlKey: ["g", ["columnFilters"]], urlStorage },
+        { baseline: defaults },
+      );
+      expect(params.has("g")).toBe(false);
+    });
+
+    it("leaves the URL alone under writeUrl false, and still writes storage", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState(),
+        {
+          dataKey: ["d", ["sorting"]],
+          urlKey: ["g", ["columnFilters"]],
+          urlStorage,
+        },
+        { baseline: defaults, writeUrl: false },
+      );
+
+      expect(params.has("g")).toBe(false);
+      expect(stored("d").sorting).toEqual(gridState().sorting);
+    });
+
+    it("honours a custom serializer", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState(),
+        {
+          urlKey: ["g", ["sorting"]],
+          urlStorage,
+          serialize: (value) => `custom:${JSON.stringify(value)}`,
+        },
+        { baseline: defaults },
+      );
+
+      expect(params.get("g")).toBe(
+        `custom:${JSON.stringify({ sorting: [{ id: "name", desc: true }] })}`,
+      );
+    });
+
+    it("writes a slice cleared to undefined as null", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState({ globalFilter: undefined }),
+        { urlKey: ["g", ["globalFilter"]], urlStorage },
+        // `initialState: { globalFilter: "Holm" }`, and the user cleared it.
+        { baseline: { ...defaults, globalFilter: "Holm" } },
+      );
+
+      expect(params.get("g")).toBe('{"globalFilter":null}');
+    });
+
+    it("calls set only when the param changes", () => {
+      const { urlStorage: inner } = fakeUrl();
+      const urlStorage = { get: vi.fn(inner.get), set: vi.fn(inner.set) };
+      const persist: TMDataGridPersistence = {
+        urlKey: ["g", ["sorting"]],
+        urlStorage,
+      };
+      const write = (state: GridState) =>
+        writePersistedState(state, persist, { baseline: defaults });
+
+      // Nothing differs and there is no param: nothing to remove.
+      write(gridState({ sorting: [] }));
+      expect(urlStorage.set).not.toHaveBeenCalled();
+
+      write(gridState());
+      write(gridState());
+      expect(urlStorage.set).toHaveBeenCalledTimes(1);
+
+      write(gridState({ sorting: [] }));
+      write(gridState({ sorting: [] }));
+      expect(urlStorage.set).toHaveBeenCalledTimes(2);
+      expect(urlStorage.set).toHaveBeenLastCalledWith("g", null);
+    });
+
+    it("swallows a url storage failure", () => {
+      const urlStorage: TMDataGridUrlStorage = {
+        get: () => null,
+        set: () => {
+          throw new Error("SecurityError");
+        },
+      };
+
+      expect(() =>
+        writePersistedState(gridState(), { urlKey: "g", urlStorage }),
+      ).not.toThrow();
+    });
+  });
+
+  describe("reading", () => {
+    it("round-trips what was written", () => {
+      const { urlStorage } = fakeUrl();
+      const persist: TMDataGridPersistence = {
+        urlKey: ["g", ["columnFilters", "sorting"]],
+        urlStorage,
+      };
+      writePersistedState(gridState(), persist, { baseline: defaults });
+
+      const restored = readPersistedState(persist);
+
+      expect(restored).toEqual({
+        columnFilters: gridState().columnFilters,
+        sorting: gridState().sorting,
+      });
+    });
+
+    it("needs no version stamp, and tolerates one", () => {
+      const persistWith = (
+        urlStorage: TMDataGridUrlStorage,
+      ): TMDataGridPersistence => ({ urlKey: ["g", ["sorting"]], urlStorage });
+
+      const plain = fakeUrl({ g: '{"sorting":[{"id":"name","desc":true}]}' });
+      expect(readPersistedState(persistWith(plain.urlStorage))).toEqual({
+        sorting: [{ id: "name", desc: true }],
+      });
+
+      // A stamp from any version is ignored, not checked.
+      const stamped = fakeUrl({
+        g: JSON.stringify({
+          __v: PERSIST_PAYLOAD_VERSION + 1,
+          sorting: [{ id: "name", desc: true }],
+        }),
+      });
+      expect(readPersistedState(persistWith(stamped.urlStorage))).toEqual({
+        sorting: [{ id: "name", desc: true }],
+      });
+    });
+
+    it("reads nothing for a missing param or a missing slice", () => {
+      const { urlStorage } = fakeUrl({ g: '{"sorting":[]}' });
+
+      expect(
+        readPersistedState({ urlKey: ["other", ["sorting"]], urlStorage }),
+      ).toEqual({});
+      expect(
+        readPersistedState({ urlKey: ["g", ["columnFilters"]], urlStorage }),
+      ).toEqual({});
+    });
+
+    it("has no storage fallback for a url slice", () => {
+      // A stored copy from before the slice moved to the URL stays unread.
+      window.localStorage.setItem(
+        "d",
+        JSON.stringify({ __v: PERSIST_PAYLOAD_VERSION, ...gridState() }),
+      );
+      const { urlStorage } = fakeUrl();
+
+      const restored = readPersistedState({
+        dataKey: "d",
+        urlKey: ["g", ["columnFilters"]],
+        urlStorage,
+      });
+
+      expect(restored.columnFilters).toBeUndefined();
+      expect(restored.sorting).toEqual(gridState().sorting);
+    });
+
+    it("ignores a bad or non-JSON param", () => {
+      for (const raw of ["{not json", '"a string"', "null", "%7B"]) {
+        const { urlStorage } = fakeUrl({ g: raw });
+        expect(readPersistedState({ urlKey: "g", urlStorage })).toEqual({});
+      }
+    });
+
+    it("drops a slice of the wrong shape and keeps the rest", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({
+          columnFilters: [{ value: "x" }],
+          sorting: [{ id: "name", desc: false }],
+        }),
+      });
+
+      expect(readPersistedState({ urlKey: "g", urlStorage })).toEqual({
+        sorting: [{ id: "name", desc: false }],
+      });
+    });
+
+    it("drops the filter of a column opted out with meta.filter.url false", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({
+          columnFilters: filters(["name", "a"], ["city", "M"]),
+        }),
+      });
+
+      const restored = readPersistedState(
+        { urlKey: ["g", ["columnFilters"]], urlStorage },
+        undefined,
+        { excludedFilterColumnIds: ["city"] },
+      );
+
+      expect(restored.columnFilters).toEqual(filters(["name", "a"]));
+    });
+
+    it("keeps the initial filter of an opted-out column next to the link's", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({ columnFilters: filters(["name", "a"]) }),
+      });
+
+      const restored = readPersistedState(
+        { urlKey: ["g", ["columnFilters"]], urlStorage },
+        undefined,
+        {
+          // `initialState.columnFilters` filters the opted-out city column.
+          baseline: { ...defaults, columnFilters: filters(["city", "M"]) },
+          excludedFilterColumnIds: ["city"],
+        },
+      );
+
+      expect(restored.columnFilters).toEqual(
+        filters(["city", "M"], ["name", "a"]),
+      );
+    });
+
+    it("reads a null slice as undefined, over the initial state", () => {
+      const { urlStorage } = fakeUrl({ g: '{"globalFilter":null}' });
+
+      const restored = readPersistedState({
+        urlKey: ["g", ["globalFilter"]],
+        urlStorage,
+      });
+
+      // An own key, so it overrides `initialState.globalFilter` in the merge.
+      expect(Object.hasOwn(restored, "globalFilter")).toBe(true);
+      expect({ globalFilter: "Holm", ...restored }.globalFilter).toBeUndefined();
+    });
+
+    it("drops a null slice that may not be undefined", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({
+          columnFilters: null,
+          sorting: null,
+          pagination: null,
+          expanded: null,
+        }),
+      });
+
+      expect(readPersistedState({ urlKey: "g", urlStorage })).toEqual({});
+    });
+
+    it("drops a filter on a column that no longer exists", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({
+          columnFilters: filters(["name", "a"], ["removed", "x"]),
+          sorting: [{ id: "removed", desc: true }],
+        }),
+      });
+
+      const restored = readPersistedState({ urlKey: "g", urlStorage }, [
+        "name",
+        "age",
+      ]);
+
+      expect(restored.columnFilters).toEqual(filters(["name", "a"]));
+      expect(restored.sorting).toEqual([]);
+    });
+
+    it("honours a custom deserializer", () => {
+      const { urlStorage } = fakeUrl({
+        g: `custom:${JSON.stringify({ sorting: [{ id: "name", desc: true }] })}`,
+      });
+
+      const restored = readPersistedState({
+        urlKey: "g",
+        urlStorage,
+        deserialize: (value) => JSON.parse(value.replace(/^custom:/, "")),
+      });
+
+      expect(restored.sorting).toEqual([{ id: "name", desc: true }]);
+    });
+  });
+
+  describe("a slice listed by dataKey and urlKey", () => {
+    function setup() {
+      const url = fakeUrl();
+      const persist: TMDataGridPersistence = {
+        dataKey: ["d", ["columnFilters", "sorting"]],
+        urlKey: ["g", ["columnFilters"]],
+        urlStorage: url.urlStorage,
+      };
+      return { ...url, persist };
+    }
+
+    it("is reported when a dataKey tuple names it", () => {
+      expect(findOverlappingSlices(setup().persist)).toEqual(["columnFilters"]);
+      expect(
+        findOverlappingSlices({
+          dataKey: ["d", ["sorting", "pagination"]],
+          urlKey: "g",
+        }),
+      ).toEqual(["sorting", "pagination"]);
+      expect(
+        findOverlappingSlices({
+          dataKey: ["d", ["sorting"]],
+          urlKey: ["g", ["columnFilters"]],
+        }),
+      ).toEqual([]);
+    });
+
+    it("is not reported under a bare dataKey, which names no slice", () => {
+      expect(
+        findOverlappingSlices({ dataKey: "d", urlKey: ["g", ["sorting"]] }),
+      ).toEqual([]);
+      expect(findOverlappingSlices({ dataKey: "d", urlKey: "g" })).toEqual([]);
+    });
+
+    it("is written to the URL only", () => {
+      const { params, persist } = setup();
+
+      writePersistedState(gridState(), persist, { baseline: defaults });
+
+      expect(stored("d")).toEqual({
+        __v: PERSIST_PAYLOAD_VERSION,
+        sorting: gridState().sorting,
+      });
+      expect(param(params, "g")).toEqual({
+        columnFilters: gridState().columnFilters,
+      });
+    });
+
+    it("is read from the URL only", () => {
+      const { params, persist } = setup();
+      window.localStorage.setItem(
+        "d",
+        JSON.stringify({ __v: PERSIST_PAYLOAD_VERSION, ...gridState() }),
+      );
+      params.set("g", JSON.stringify({ columnFilters: filters(["age", "3"]) }));
+
+      const restored = readPersistedState(persist);
+
+      expect(restored.columnFilters).toEqual(filters(["age", "3"]));
+      expect(restored.sorting).toEqual(gridState().sorting);
+    });
+  });
+
+  describe("the default url storage", () => {
+    afterEach(() => {
+      window.history.replaceState(null, "", "/");
+    });
+
+    const persist: TMDataGridPersistence = { urlKey: ["g", ["sorting"]] };
+    const sorted = gridState({ sorting: [{ id: "name", desc: true }] });
+
+    it("writes the param with replaceState and keeps the rest of the URL", () => {
+      const routerState = { key: "router-entry" };
+      window.history.replaceState(routerState, "", "/page?tab=2#section");
+      const replaceState = vi.spyOn(window.history, "replaceState");
+      const pushState = vi.spyOn(window.history, "pushState");
+
+      writePersistedState(sorted, persist, { baseline: defaults });
+
+      expect(replaceState).toHaveBeenCalledTimes(1);
+      expect(pushState).not.toHaveBeenCalled();
+      expect(window.location.pathname).toBe("/page");
+      expect(window.location.hash).toBe("#section");
+      const search = new URLSearchParams(window.location.search);
+      expect(search.get("tab")).toBe("2");
+      expect(JSON.parse(search.get("g") ?? "null")).toEqual({
+        sorting: [{ id: "name", desc: true }],
+      });
+      expect(window.history.state).toEqual(routerState);
+    });
+
+    it("reads the param from location.search", () => {
+      writePersistedState(sorted, persist, { baseline: defaults });
+
+      expect(readPersistedState(persist).sorting).toEqual([
+        { id: "name", desc: true },
+      ]);
+    });
+
+    it("does not touch history when the URL would not change", () => {
+      writePersistedState(sorted, persist, { baseline: defaults });
+      const replaceState = vi.spyOn(window.history, "replaceState");
+
+      writePersistedState(sorted, persist, { baseline: defaults });
+
+      expect(replaceState).not.toHaveBeenCalled();
+    });
+
+    it("removes the param and keeps the other params", () => {
+      window.history.replaceState(null, "", "/page?tab=2");
+      writePersistedState(sorted, persist, { baseline: defaults });
+
+      writePersistedState(gridState({ sorting: [] }), persist, {
+        baseline: defaults,
+      });
+
+      expect(window.location.search).toBe("?tab=2");
+    });
+
+    it("keeps every other param byte for byte, on set and on remove", () => {
+      window.history.replaceState(null, "", "/page?redirect=/a%20b&tab=x#top");
+      const encoded = encodeURIComponent(
+        JSON.stringify({ sorting: [{ id: "name", desc: true }] }),
+      );
+
+      writePersistedState(sorted, persist, { baseline: defaults });
+      expect(window.location.search).toBe(
+        `?redirect=/a%20b&tab=x&g=${encoded}`,
+      );
+      expect(window.location.hash).toBe("#top");
+
+      writePersistedState(gridState({ sorting: [] }), persist, {
+        baseline: defaults,
+      });
+      expect(window.location.search).toBe("?redirect=/a%20b&tab=x");
+      expect(window.location.hash).toBe("#top");
+    });
+
+    it("replaces its own param wherever it sits, by its decoded key", () => {
+      // `+` decodes to a space, so `my+grid` is the grid's `my grid` param.
+      window.history.replaceState(null, "", "/page?a=1&my+grid=old&b=%2F");
+
+      writePersistedState(
+        sorted,
+        { urlKey: ["my grid", ["sorting"]] },
+        { baseline: defaults },
+      );
+
+      expect(window.location.search).toBe(
+        `?a=1&b=%2F&my%20grid=${encodeURIComponent(
+          JSON.stringify({ sorting: [{ id: "name", desc: true }] }),
+        )}`,
+      );
+    });
   });
 });

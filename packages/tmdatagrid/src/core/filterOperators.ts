@@ -251,6 +251,19 @@ export function isFilterActive(value: unknown): boolean {
     : typeof value.value === "string" && value.value.trim() !== "";
 }
 
+/**
+ * Whether one `columnFilters` entry narrows the rows, by the one rule the grid
+ * uses for "active": an envelope counts once {@link isFilterActive} says so,
+ * and a value that is not an envelope always counts, since a raw value written
+ * by consumer code narrows the rows as far as the grid can tell.
+ *
+ * @internal Shared by the empty state and the `urlKey` param; not exported
+ * from the package.
+ */
+export function filterNarrowsRows(entry: { value: unknown }): boolean {
+  return !isTMDataGridFilterValue(entry.value) || isFilterActive(entry.value);
+}
+
 /** One column's filter, typed - what `columnFilters` holds per entry. */
 export type TMDataGridColumnFilter = {
   id: string;

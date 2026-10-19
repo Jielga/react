@@ -4,7 +4,8 @@ description: >
   Narrow the rows a TMDataGrid shows. Covers the shared tmDataGrid filter
   function and its {operator, value} model, the eighteen operators and which
   meta.type offers each, meta.filter.operators to offer a column only a subset
-  of them, meta.filter.defaultOperator, isFilterActive and the half-typed
+  of them, meta.filter.defaultOperator, meta.filter.url for deep links,
+  isFilterActive and the half-typed
   filter, the filters option and its surfaces (popup, sidebar, none, plus
   inHeader for header filters), TMDataGrid.FilterPanel and its layout prop,
   TMDataGrid.FilterButton, TMDataGrid.FilterPills with its api prop,
@@ -104,6 +105,18 @@ columnHelper.accessor("customer", {
 `getColumnOperators(column)` returns the resolved list and
 `getColumnDefaultOperator(column)` the operator a fresh filter opens on. The
 `server-side` skill shows the list typed together with the API mapping table.
+
+`meta.filter.url` determines whether the column's filter goes into the URL
+search param when `persist.urlKey` carries `columnFilters`. By default it does.
+Set it to `false` for a filter that should not travel in a shared link; the
+filter is then not persisted anywhere. The `options` skill covers `urlKey`.
+
+```tsx
+columnHelper.accessor("owner", {
+  header: "Owner",
+  meta: { filter: { url: false } },
+});
+```
 
 ## The filters option
 
