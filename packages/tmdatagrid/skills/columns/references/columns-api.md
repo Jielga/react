@@ -22,6 +22,20 @@ Reference for the `columns` skill.
 | `validate` | `TMDataGridFieldValidate` | – | Field-level validation. A bare schema means `onChange`. |
 | `mapValue` | `TMDataGridEditValueMap` | – | Maps each value an editor writes, on every keystroke. |
 
+## Column-level feature options
+
+Standard TanStack column options. Each also removes the corresponding interface.
+
+| Option | Effect when `false` |
+| --- | --- |
+| `enableSorting` | No sort indicator, no sort menu items, no click-to-sort. |
+| `enableMultiSort` | Shift+click on this header replaces the sort instead of adding to it. |
+| `enableColumnFilter` | No filter menu item. Excluded from the filter panel's column list, and its header filter cell is empty. |
+| `enableHiding` | No hide menu item. Checkbox disabled in the column manager. |
+| `enablePinning` | No pin menu items. |
+| `enableResizing` | The divider is displayed but cannot be dragged. |
+| `enableGrouping` | No "Group by" menu item. |
+
 ## Exports and options
 
 | Name | Kind | Type | Default | What it does |
@@ -34,7 +48,7 @@ Reference for the `columns` skill.
 | `TMDataGridOptionsArgs` | Type | `{ table, column, row? }` | – | What a `meta.options` function receives. `row` is absent when the filter panel asks. |
 | `resolveColumnOptions` | Export | `({ table, column, row?, fallback? }) => Array<TMDataGridOption>` | – | Normalises all three `meta.options` forms. Empty when the column declares none. |
 | `optionsToComboboxData` | Export | `(options) => ComboboxData` | – | Options as Mantine `Select` / `MultiSelect` data, groups folded in. |
-| `minSize` / `maxSize` / `size` | Column options | `number` | `80` / – / – | Width bounds, and the fixed width once one applies. |
+| `minSize` / `maxSize` / `size` | Column options | `number` | `80` / – / `150` | Floor of the fluid track, a resize and a pinned width; ceiling of a resize and a pinned width; width of a column pinned at mount. |
 | `enableSorting` · `enableColumnFilter` · `enableHiding` · `enablePinning` · `enableResizing` · `enableGrouping` | Column options | `boolean` | `true` | Per-column switches, each removing its interface. |
 | `enableColumnOrdering` | Option | `boolean` | `true` | Header dragging and the move menu items. Grid-defined. |
 | `enableMultiSort` · `maxMultiSortColCount` · `isMultiSortEvent` | Table options | – | Shift held | Multi-column sorting. |

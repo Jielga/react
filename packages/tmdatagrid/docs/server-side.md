@@ -64,7 +64,7 @@ column manager behave identically in both modes.
 
 ## The page index
 
-A column filter, the quick search or a sort changes what page 3 means.
+A column filter, the quick search, a sort or a grouping changes what page 3 means.
 The result set is a different one, and it may not have a page 3 at all - so the grid resets `pageIndex` to 0 whenever the query changes, on every grid.
 The reset is applied in the same event as the change, so one request goes out, for the first page of the new query.
 
@@ -139,6 +139,8 @@ even though they are no longer mounted. Read the state rather than the row
 models:
 
 ```ts
+// In an event handler. In render, subscribe instead:
+// useSelector(grid.table.store, (state) => Object.keys(state.rowSelection))
 const selectedIds = Object.keys(grid.table.store.state.rowSelection);
 ```
 

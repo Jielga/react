@@ -8,6 +8,7 @@ import {
   type TestRow,
 } from "../../test/gridHarness";
 import { TMDataGrid } from "./TMDataGrid";
+import { createTMDataGridColumnHelper } from "../useTMDataGrid";
 
 /**
  * jsdom lays nothing out, so every header measures 0 there. The tests hand the
@@ -166,5 +167,29 @@ describe("column resizing", () => {
     mouse(popupDocument, "mouseup", 280);
     expect(table.store.state.columnSizing.name).toBe(280);
     expect(table.store.state.columnResizing.isResizingColumn).toBe(false);
+  });
+});
+
+describe("column minSize", () => {
+  const helper = createTMDataGridColumnHelper<TestRow>();
+  /** Built once: `useTMDataGrid` memoizes on the columns reference. */
+  const columns = helper.columns([helper.accessor("name", { header: "Name" })]);
+
+  it("floors a column with no minSize at 80", () => {
+    const { result } = renderGrid({ columns });
+    const { table } = result.current;
+
+    act(() => table.setColumnSizing({ name: 10 }));
+
+    expect(table.getColumn("name")?.getSize()).toBe(80);
+  });
+
+  it("lets the consumer's defaultColumn.minSize win", () => {
+    const { result } = renderGrid({ columns, defaultColumn: { minSize: 40 } });
+    const { table } = result.current;
+
+    act(() => table.setColumnSizing({ name: 10 }));
+
+    expect(table.getColumn("name")?.getSize()).toBe(40);
   });
 });

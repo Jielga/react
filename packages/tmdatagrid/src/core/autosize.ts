@@ -1,6 +1,7 @@
 import type { RowData } from "@tanstack/react-table";
 import type { TMDataGridRowData } from "../TMDataGridContext";
 import type { TMDataGridTable } from "../useTMDataGrid";
+import { DEFAULT_COLUMN_MIN_SIZE } from "./columnUtils";
 import { isHTMLElement } from "./dom";
 
 /**
@@ -154,7 +155,7 @@ export function autosizeColumn<TData extends RowData>({
   const measured = measureColumnContentWidth({ container, columnId });
   if (measured <= 0) return false;
 
-  const minSize = column.columnDef.minSize ?? 80;
+  const minSize = column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE;
   const maxSize = column.columnDef.maxSize ?? Number.POSITIVE_INFINITY;
   const width = Math.round(Math.min(Math.max(measured, minSize), maxSize));
 

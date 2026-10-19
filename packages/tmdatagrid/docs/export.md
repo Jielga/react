@@ -80,7 +80,7 @@ const grid = useTMDataGrid({
 | `includeHeaders` | `boolean` | `true` | Determines whether the column labels are written as the first row. |
 | `columns` | `"visible" \| "all" \| Array<string>` | `"visible"` | Which columns are written. See [What is written](#what-is-written). |
 
-The option is read field by field, so a literal is fine.
+The option is read field by field, so an inline object literal needs no `useMemo`.
 Every export of the grid reads it: the menu items, the hook, and the export item of the cell-range menu.
 
 ## Formats
@@ -290,7 +290,7 @@ See [Testing](/docs/testing).
 
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
-| `exportOptions` | Option | `TMDataGridExportOptions` | `DEFAULT_EXPORT_OPTIONS` | Format, file name and header row for every export of the grid. |
+| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row for every export of the grid. |
 | `meta.enableExport` | Column meta | `boolean` | `true` | `false` leaves the column out of every export and of Ctrl+C. |
 | `meta.exportValue` | Column meta | `({ value, row, column }) => unknown` | – | The value written in place of `row.getValue`. |
 | `TMDataGridExportValueGetter` | Type | – | – | The type of `meta.exportValue`. |

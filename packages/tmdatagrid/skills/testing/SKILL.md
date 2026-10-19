@@ -104,6 +104,17 @@ match the same rows, and the negative is `:not([data-new])` in CSS and
 
 **Keyed by both**: `editor`.
 
+**The generated lanes** are columns with exported ids: `ROW_NUMBER_COLUMN_ID`
+(`__rowNumber__`), `SELECT_COLUMN_ID` (`__select__`), `GROUP_COLUMN_ID`
+(`__group__`), `DETAILS_COLUMN_ID` (`__details__`) and `EDIT_COLUMN_ID`
+(`__edit__`). A lane's header is
+`[data-dg-part="header"][data-column-id="__select__"]`, a lane cell
+`[data-row-id="42"][data-column-id="__select__"]:not([data-dg-part])`, and the
+control inside it has a row-keyed part: `select-row`, `details-toggle`,
+`group-toggle`, the edit lane's buttons. `select-all` and `details-toggle-all`
+sit in the lane headers. The checkbox parts are on the `<input>` itself, so
+`check()` works on them directly. There is no `data-testid`.
+
 Inside a `filter-row` the controls are `filter-column`, `filter-operator` and
 `filter-value` - or `filter-value-from` / `filter-value-to` for `between` - and
 `filter-remove` is its ✕. None of them carries `data-column-id`; scope through

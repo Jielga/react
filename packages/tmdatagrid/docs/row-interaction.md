@@ -100,7 +100,7 @@ copy and export items too. By default they appear above a divider and yours
 below, which is what happens when the render prop does not use `internalItems`.
 See [Cell selection](/docs/cell-selection#copy-and-export).
 
-`internalItems` is those built-in items. **Using it takes over the
+`internalItems` holds those built-in items. **Using it takes over the
 composition**: the menu becomes exactly what you return, in the order you
 return it.
 

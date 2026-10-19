@@ -50,11 +50,12 @@ cell is tested against) and `between` (a `[min, max]` pair, an empty string
 leaving that end open).
 
 A filter with an empty value **stays in state** so the panel keeps its row while
-the user types. It matches every row, does not set the header indicator and
-produces no pill. `isFilterActive(value)` tests for that state, and
-`activeColumnFilters(columnFilters | table)` applies it across the slice and
-types what it hands back (entries in any other value shape are dropped); presence in
-`columnFilters` does not.
+the user types. The built-in matcher lets every row through, and the filter
+does not set the header indicator and produces no pill.
+`isFilterActive(value)` tells whether a value narrows anything.
+`activeColumnFilters(columnFilters | table)` returns the active entries, typed,
+and drops entries in any other value shape. An entry in `columnFilters` is not
+necessarily active.
 
 ## Operators
 
@@ -106,8 +107,8 @@ columnHelper.accessor("customer", {
 
 ## The filters option
 
-`filters` on `useTMDataGrid` picks the surface. It is read field by field, so a
-literal is fine.
+`filters` on `useTMDataGrid` picks the surface. It is read field by field, so an
+inline object literal needs no `useMemo`.
 
 | Option | Type | Default | What it does |
 | --- | --- | --- | --- |
@@ -132,13 +133,14 @@ close it; `FilterButton` is exempt from the click-away so it stays a toggle.
 the toolbar. The rows give up the width rather than being covered, a click in
 the table does not dismiss it, and clearing the filters leaves it standing.
 Escape closes it. It starts open, being a layout choice; its rows are
-`layout="stacked"`, since 280px has no room for the triple.
+`layout="stacked"`, since the default 280px cannot fit the column, operator and
+value fields side by side.
 
 **Header filters** - `inHeader: true` adds a header row of value controls, one
 per filterable column, on the same column tracks as everything else. The
 column and operator dropdowns are not there: the column is the one the cell
-sits over, and the operator is a funnel button beside the input, tinted off its
-default. The column menu's Filter item and the funnel indicator both come off,
+sits over, and the operator is a funnel button beside the input, tinted when
+the operator is not the type's default. The column menu's Filter item and the funnel indicator both come off,
 having nothing left to reveal; the filtered column's tinted title stays. A
 narrow column clips its control - give it a `minSize`.
 
@@ -158,7 +160,7 @@ hand-placed `TMDataGrid.FilterPanel` is the only one. Read
 
 The panel of filter rows - one column / operator / value triple per filter, over "Add filter" and "Clear all".
 A plain block with no title, no close button and no open state: it renders wherever it is mounted, and the popup and sidebar surfaces are wrappers around it.
-It must be inside `<TMDataGrid>` (it reads the grid from context) and it only reads and writes `columnFilters`, so a `manualFiltering` grid gets it for free.
+It must be inside `<TMDataGrid>` (it reads the grid from context) and it only reads and writes `columnFilters`, so it works unchanged under `manualFiltering`.
 Closing a surface only hides it; the filters stay.
 **Clear all** drops every filter, half-typed ones included.
 
@@ -201,7 +203,8 @@ import { TMDataGridFilterPills } from "@jielga/tmdatagrid";
 
 ## openColumnFilter
 
-`openColumnFilter(api, columnId)` seeds an empty filter if the column has none, then opens the surface on that column's panel row - or, under `inHeader`, scrolls the column's header control into view and focuses it, leaving the surface closed.
+`openColumnFilter(api, columnId)` seeds an empty filter if the column has none, then opens the surface on that column's panel row.
+Under `inHeader` it instead scrolls the column's header control into view and focuses it, leaving the surface closed.
 It is what a pill's label and the column menu's Filter item both call.
 
 ## Replacing the value control
@@ -232,41 +235,47 @@ the same way.
 inside. It handles the value only: it reads `operator` to shape itself and
 writes the bare value through `onChange`, and the grid stores the
 `{ operator, value }` pair around it. The column and operator dropdowns remain
-the panel's.
-
-```tsx
-import type { TMDataGridFilterControlComponent } from "@jielga/tmdatagrid";
-
-// Module scope: a new identity per render remounts the control mid-typing.
-const StatusFilter: TMDataGridFilterControlComponent = ({
-  operator,
-  value,
-  options,
-  onChange,
-}) => (
-  <Chip.Group
-    multiple
-    value={Array.isArray(value) ? [...value] : []}
-    onChange={onChange}
-  >
-    {options.map((option) => (
-      <Chip key={option.value} value={option.value}>
-        {option.label}
-      </Chip>
-    ))}
-  </Chip.Group>
-);
-
-meta: { type: "select", filter: { control: StatusFilter } }
-```
+the panel's. Worked example: `references/custom-filters.md` (A value control of
+your own).
 
 `args.options` arrives pre-resolved for a column that declares `meta.options` or
 is select-shaped. `args.table` is available to a control that needs more than
 that.
 
+## Writing filters from your own interface
+
+The grid's controls write plain TanStack state, so a control of your own does
+the same: `column.setFilterValue({ operator, value })` or
+`table.setColumnFilters([...])` with an envelope, and the matcher, the pills,
+the header indicator and `activeColumnFilters` all read it.
+`setFilterValue(undefined)` removes the entry; an empty envelope stays in state
+and matches every row. `getColumnOperators(column)`,
+`getColumnDefaultOperator(column)` and `emptyValueForOperator(operator)` build
+a valid envelope. To keep the grid's panel and place it yourself, set
+`filters: { surface: "none" }` and render `TMDataGrid.FilterPanel`. To drop
+only the column menu's Filter item, pass `renderColumnMenuItems` to
+`TMDataGrid.Table` and leave out the item keyed `"filter"`. To replace every
+filter control, set `enableColumnFilters: false` and write the envelope
+yourself; filters in state still apply. Worked examples:
+`references/custom-filters.md`.
+
+## Custom matching
+
 To give a column its own *matching* instead of its own control, set `filterFn`
-on the column definition. The grid provides only `"tmDataGrid"`, which is the
-default.
+on the column definition. A column `filterFn` **replaces the shared matcher**
+for that column, so its third argument is the stored `{ operator, value }`
+envelope, not the unwrapped value. Type it as `TMDataGridFilterFn<TData>` and
+delegate to `tmDataGridFilterFn(row, columnId, filter)` for the operators it
+does not handle; `matchesFilter(cellValue, filter)` applies the built-in
+matching to a derived value, and `filterValueShape(operator)` tells whether
+`value` is a string, a `ReadonlyArray<string>` (`isAnyOf` / `isNoneOf`) or a
+`[min, max]` pair (`between`). A column `filterFn` is also called with
+half-typed envelopes, which the built-in matcher treats as matching every row,
+so return `true` for `!isFilterActive(filter)` first. The column's controls do
+not change and keep reading the envelope. A filter function named by string
+also receives the envelope and does not unwrap it, so TanStack's built-ins such
+as `"includesString"` do not work as a column `filterFn`. Write custom matching
+as a function. Worked example: `references/custom-filters.md`.
 
 ## Quick search
 
@@ -298,10 +307,20 @@ excluded.
 
 ## Turning it off
 
-`enableColumnFilters: false` removes the panel, the button and the menu item;
-`enableColumnFilter: false` on a column takes that column out.
-`enableGlobalFilter: false` removes the search input, or on a column removes its
-participation in the search. The generated lanes are already excluded.
+`enableColumnFilters: false` removes the Filter item from the column menu, the
+`FilterButton`, the header filter row and the panel's column list, and disables
+the panel's "Add filter" button. It does **not** clear `columnFilters`: an entry already in
+state, or one written with `setFilterValue`, still narrows the rows, still shows
+as a pill and still sets the header indicator. Call `table.resetColumnFilters()`
+when switching the interface off. Under `filters.surface: "sidebar"`, set
+`surface: "none"` as well, as the sidebar does not follow the switch.
+`TMDataGrid.Menu` has no filter items, so the switch changes nothing there.
+
+`enableColumnFilter: false` on a column removes that column's menu item, its
+entry in the panel's column list and its header control - the header cell
+stays, empty. `enableGlobalFilter: false` removes the search input, or on a
+column removes its participation in the search. The generated lanes are already
+excluded.
 
 ## Common mistakes
 
@@ -417,17 +436,20 @@ Source: `packages/tmdatagrid/docs/quick-search.md` (Fuzzy by default).
 
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
-| `enableColumnFilters` | Table option | `boolean` | `true` | `false` removes the panel, the button and the menu item. |
+| `enableColumnFilters` | Table option | `boolean` | `true` | `false` removes the menu item, the button, the header row and the panel's column list, and disables the panel's "Add filter" button. Filters already in state still apply. |
 | `enableColumnFilter` | Column option | `boolean` | `true` | `false` takes one column out of filtering. |
 | `meta.type` | Column meta | `TMDataGridColumnType` | `"string"` | Selects the operators and the value control. |
 | `meta.filter.operators` | Column meta | `readonly TMDataGridFilterOperator[]` | The type's list | The operators this column offers, a subset of its type's. |
 | `meta.filter.defaultOperator` | Column meta | `TMDataGridFilterOperator` | The type's default, else the first offered | The operator a fresh filter opens on. |
 | `meta.filter.control` | Column meta | `TMDataGridFilterControlComponent` | By type and operator | Replaces the value control. Module scope. |
-| `filterFn` | Column option | name or fn | `"tmDataGrid"` | Custom matching for one column. |
+| `filterFn` | Column option | `TMDataGridFilterFn<TData>` or name | `"tmDataGrid"` | Custom matching for one column. Receives the `{ operator, value }` envelope. |
+| `TMDataGridFilterFn<TData>` | Type | `(row, columnId, filter: TMDataGridFilterValue, addMeta?) => boolean` | – | The signature of a column's own `filterFn`. |
+| `tmDataGridFilterFn` | Export | `(row, columnId, filterValue: unknown) => boolean`, assignable to `TMDataGridFilterFn<TData>` | – | The shared matcher, for a custom `filterFn` to delegate to. |
+| `matchesFilter` | Export | `(cellValue, filter: TMDataGridFilterValue) => boolean` | – | The built-in matching applied to one value. |
 | `quickSearchMode` | Option | `TMDataGridQuickSearchMode`: `"fuzzy" \| "contains"` | `"fuzzy"` | How the quick search matches. |
 | `enableMatchHighlighting` | Option | `boolean` | `false` | Mark matched text in default-rendered cells. |
 | `enableGlobalFilter` | Table option | `boolean` | `true` | Also a column option. Removes the input, or one column's participation. |
-| `globalFilterFn` | Table option | filter fn | fuzzy | Overrides the matching, and the ranking with it. |
+| `globalFilterFn` | Table option | filter fn or name | `"tmDataGridFuzzy"`; `"includesString"` under `quickSearchMode: "contains"` | Overrides the matching, and the ranking with it. |
 | `TMDataGrid.FilterPanel` | Component | `layout: "row" \| "stacked"`, Mantine `BoxProps` | `"row"` | The panel of filter rows, as a plain block. Style props set on it. |
 | `TMDataGridFilterPanelProps` · `TMDataGridFilterPanelLayout` | Types | – · `"row" \| "stacked"` | – | The props of `TMDataGrid.FilterPanel`, and the type of its `layout`. For wrapping the panel in a component of your own. |
 | `filters` | Table option | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Which surface holds the filter controls. |

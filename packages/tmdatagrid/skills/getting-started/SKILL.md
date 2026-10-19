@@ -157,7 +157,7 @@ flex column.
 | --- | --- | --- |
 | `TMDataGrid` | `table`, `ui`, `features`, `size`, `className`, `style` | Root. Provides context. `style` also takes CSS variables: `--dg-row-selected-bg`, `--dg-row-height`, `--dg-header-height`, `--dg-font-size`, `--dg-padding`. |
 | `TMDataGrid.Table` | `onRowClick(row)`, `renderRowContextMenu`, `renderColumnMenuItems`, `rowContextMenuProps` | Header, virtualized body, and whichever filter surface the `filters` option asks for. `onRowClick` runs in addition to selection under `selectionMode: "row"`. |
-| `TMDataGrid.Footer` | `pageSizeOptions` (default `[10, 25, 50, 100]`), `pagination` render prop | Pagination controls. Renders nothing unless pagination is enabled. |
+| `TMDataGrid.Footer` | `pageSizeOptions` (default `[10, 25, 50, 100]`, keep the array stable), `renderPagination` slot | Rows-per-page select, range and previous/next buttons. Renders nothing unless pagination is enabled. |
 | `TMDataGrid.Toolbar` | `children` | Flex row above the grid. |
 | `TMDataGrid.Spacer` | - | Pushes later toolbar items right. |
 | `TMDataGrid.SummaryCount` | `children` | Visible rows out of total. |
@@ -359,6 +359,41 @@ Source: `packages/tmdatagrid/docs/card-view.md`,
 | `moveColumn({ table, columnId, targetId, side })` | Moves a column next to another. See the `columns` skill. |
 | `moveColumnByStep({ table, columnId, direction })` | Moves a column one position within its region. |
 | `SELECT_COLUMN_ID` | Id of the generated checkbox column. |
+
+## Coming from TanStack Table
+
+`useTMDataGrid` takes TanStack's `TableOptions`, so a page built on
+`useReactTable` keeps its `data`, `columns`, `state` and `onXChange` callbacks.
+Go through these differences:
+
+- **`getRowId`** - return the entity id. The index default points at another
+  record after a sort or a refetch, which breaks selection, expansion and
+  editing. Required once `editing` is set.
+- **Stable `data` and `columns`** - define `columns` outside the component and
+  keep `data` referentially stable; a fresh `[]` for the empty case belongs in
+  a module-scope constant. Under `editing`, a transient `[]` drops every open
+  draft.
+- **Sizing** - columns are fluid, `minmax(minSize, flex fr)`. `size` applies
+  only to a column pinned at mount, `maxSize` only to resizing and autosizing,
+  and `minSize` defaults to `80`. See the `columns` skill.
+- **Defaults the grid changes** - `aggregationFn` is cleared, so grouping does
+  not sum anything on its own; `groupedColumnMode` is `"remove"`;
+  `autoResetExpanded` and `autoResetPageIndex` are off; `globalFilterFn` is the
+  fuzzy matcher. The full list is in the
+  `options` skill.
+- **Filters are envelopes** - `columnFilters` holds `{ operator, value }`, and
+  a column's own `filterFn` receives that envelope. See the `filtering` skill.
+- **Interface the page already owns** - `enableGlobalFilter: false`, or no
+  `TMDataGrid.Search`, for the search; `enableColumnFilters: false`, or
+  `filters: { surface: "none" }` to keep filtering without the grid's panel.
+- **Page reset** - `resetPageOnQueryChange` (default `true`) returns to the
+  first page when a filter, the search, the sorting or the grouping changes
+  through the table. A data source re-filtered outside table state does not
+  trigger it; call `table.setPageIndex(0)` yourself, or use `manualFiltering`.
+- **State reads** - there is no `table.getState()`; read slices with
+  `useSelector(table.store, ...)`. See the `options` skill.
+- **Tests** - the grid publishes `data-dg-part`, `data-row-id` and
+  `data-column-id`, and no `data-testid`. See the `testing` skill.
 
 ## Common mistakes
 

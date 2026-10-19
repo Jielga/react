@@ -1,10 +1,11 @@
 import type {
   ColumnFiltersState,
+  FilterMeta,
   Row,
   RowData,
   TableFeatures,
 } from "@tanstack/react-table";
-import type { TMDataGridTable } from "../useTMDataGrid";
+import type { TMDataGridFeatures, TMDataGridTable } from "../useTMDataGrid";
 
 /**
  * The value shape stored in `columnFilters` for every TMDataGrid column.
@@ -473,6 +474,20 @@ export function matchesFilter(
       return true;
   }
 }
+
+/**
+ * The signature of a column's own `filterFn`. The third argument is the
+ * `{ operator, value }` envelope the grid writes into `columnFilters`; a
+ * column `filterFn` replaces `tmDataGridFilterFn` outright, so it is handed
+ * the envelope, not the unwrapped value. Delegate to `tmDataGridFilterFn`
+ * for the operators the function does not handle itself.
+ */
+export type TMDataGridFilterFn<TData extends RowData> = (
+  row: Row<TMDataGridFeatures, TData>,
+  columnId: string,
+  filterValue: TMDataGridFilterValue,
+  addMeta?: (meta: FilterMeta) => void,
+) => boolean;
 
 /**
  * The single filter function every TMDataGrid column uses. It dispatches on the

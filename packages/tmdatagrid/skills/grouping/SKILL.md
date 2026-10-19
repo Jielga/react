@@ -96,8 +96,8 @@ would pass a row that looks real but is the wrong one. Group rows therefore:
 A group row's checkbox selects every record under it at any depth, including
 records inside collapsed sub-groups, showing a tick once all are selected and a
 dash while only some are. Only the records reach `rowSelection`; a group row is
-never in it, so `getSelectedRowModel()` and the toolbar count do not depend on
-how the tree is arranged. Under `enableMultiRowSelection: false` group rows carry
+never in it, so `getSelectedRowModel()` and `onRowSelectionChange` do not depend
+on how the tree is arranged. Under `enableMultiRowSelection: false` group rows carry
 no checkbox.
 
 `getGroupDataRows(row)` returns every record under a group row, at any depth.
@@ -116,8 +116,11 @@ page. Rendering the whole tree is the grid's default mode in any case, so only
 the pager is lost.
 
 `isPagingActive(table, features)` is exported so a custom pager can grey itself
-out the same way. To have both, page on the server: group there and feed the
-grid one page of a tree at a time with `manualPagination` and `manualGrouping`.
+out the same way. There is no option to keep the built-in pager active while
+grouped, and `manualGrouping` does not change that: the pager greys out whenever
+`grouping` is non-empty. To have both, page on the server with
+`manualPagination` and `manualGrouping`, and render the pager through the
+Footer's `renderPagination` slot, ignoring `isPagingActive`.
 
 ## The summary row
 
@@ -197,7 +200,7 @@ out instead of paging the tree, so a footer count wired to `getPageCount()`
 reports a number nobody can navigate to. Read
 `isPagingActive(table, features)` before trusting the pager state.
 
-Source: `packages/tmdatagrid/docs/grouping.md` (Grouping suspends pagination).
+Source: `packages/tmdatagrid/docs/grouping.md` (Grouping and pagination).
 
 ### HIGH Handing a group row to a row callback
 
@@ -224,7 +227,7 @@ const records = getGroupDataRows(groupRow).map((row) => row.original);
 />;
 ```
 
-Source: `packages/tmdatagrid/docs/grouping.md` (Group rows are not data rows).
+Source: `packages/tmdatagrid/docs/grouping.md` (Group rows).
 
 ### MEDIUM Totalling the page instead of the data
 
@@ -252,18 +255,22 @@ useTMDataGrid({
 });
 ```
 
+The built-in pager still greys out while `grouping` is set, so such a grid
+renders its pager through `TMDataGrid.Footer`'s `renderPagination` slot and
+ignores `state.isPagingActive`.
+
 Source: `packages/tmdatagrid/docs/grouping.md` (Server-side grids).
 
 ## Reference
 
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
-| `enableGrouping` | Table option | `boolean` | `true` | Group by and Ungroup menu items. Also a column option. |
+| `enableGrouping` | Table option | `boolean` | `true`; `false` under `manualPagination` | Group by and Ungroup menu items, and the tree lane. Also a column option. |
 | `groupedColumnMode` | Table option | `"reorder" \| "remove" \| false` | `"remove"` | Whether a grouped column leaves the grid or moves to the front. |
 | `manualGrouping` | Table option | `boolean` | `false` | The rows arrive grouped. Required to group a server-paged grid. |
 | `initialState.grouping` | Table option | `string[]` | `[]` | Column ids grouped at mount. A settings slice, so it persists. |
 | `aggregationFn` | Column option | `TMDataGridAggregationName \| fn` | – | How a column fills in its group cells. Unset leaves them blank. |
-| `aggregatedCell` | Column option | `(ctx) => ReactNode` | The `cell` renderer | Renders a group row's value differently. |
+| `aggregatedCell` | Column option | `(ctx) => ReactNode` | `cell` over the aggregate when `aggregationFn` is set, else blank | Renders a group row's value differently from a data row's. |
 | `footer` | Column option | `(ctx) => ReactNode` | – | Renders this column's summary cell. Defining one adds the row. |
 | `aggregateColumn` | Export | `({ table, columnId, fn }) => unknown` | `fn: "sum"` | Aggregates over every filtered row, all pages. |
 | `TMDataGridAggregationName` | Export | type | – | The registered function names. |

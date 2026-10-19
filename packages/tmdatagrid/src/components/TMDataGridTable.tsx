@@ -41,6 +41,7 @@ import {
 } from "./TMDataGridCellEditor";
 import { TMDataGridEntryRows } from "./TMDataGridEntryRows";
 import {
+  DEFAULT_COLUMN_MIN_SIZE,
   getColumnAlign,
   isControlColumn,
   isGeneratedColumn,
@@ -89,6 +90,7 @@ import {
   resolveRowSelectionClick,
 } from "../core/rowSelection";
 import { readPinnedRows } from "../core/rowPinning";
+import { isFilterActive, isTMDataGridFilterValue } from "../core/filterOperators";
 import { buildMatchNeedles, findMatchRanges } from "../core/matchHighlight";
 import { ROW_NUMBER_COLUMN_ID } from "./TMDataGridRowNumberColumn";
 import { SearchIcon } from "./icons";
@@ -1327,7 +1329,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       const isFixed = column.columnDef.minSize === column.columnDef.maxSize;
       const isResized = column.id in columnSizing;
       const isPinned = column.getIsPinned() !== false;
-      const minWidth = column.columnDef.minSize ?? 80;
+      const minWidth = column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE;
       if (isFixed || isResized || isPinned) {
         return {
           id: column.id,
@@ -1476,11 +1478,20 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
   // Pinned rows count as content: with every visible row pinned to an edge,
   // an empty-state message beside them would contradict what is on screen.
   const isEmpty = rows.length === 0 && pinnedRowCount === 0;
-  // Which emptiness this is. The body already subscribes to the whole table
-  // store, so these reads are reactive.
+  // Which emptiness this is. A column filter counts by the rule the pills, the
+  // header indicator and the page reset use, so the grid has one definition
+  // of "active": an envelope counts once `isFilterActive` says so - the
+  // half-typed `{ operator, value: "" }` the filter panel seeds filters
+  // nothing - and a value that is not an envelope always counts, since a raw
+  // value written by consumer code narrows the rows as far as the grid can
+  // tell. The body already subscribes to the whole table store, so these
+  // reads are reactive.
   const emptyGlobalFilter = table.store.state.globalFilter;
   const hasActiveFilters =
-    table.store.state.columnFilters.length > 0 ||
+    table.store.state.columnFilters.some(
+      (entry) =>
+        !isTMDataGridFilterValue(entry.value) || isFilterActive(entry.value),
+    ) ||
     (typeof emptyGlobalFilter === "string"
       ? emptyGlobalFilter.trim() !== ""
       : emptyGlobalFilter != null);

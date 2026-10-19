@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createTMDataGridColumnHelper } from "../useTMDataGrid";
 import { TMDATAGRID_LABELS_SV } from "./labelsSv";
 import {
   activeColumnFilters,
@@ -12,7 +13,9 @@ import {
   operatorNeedsValue,
   operatorTakesArrayValue,
   operatorTakesRangeValue,
+  type TMDataGridFilterFn,
   type TMDataGridFilterOperator,
+  tmDataGridFilterFn,
 } from "./filterOperators";
 
 const match = (
@@ -411,5 +414,23 @@ describe("activeColumnFilters", () => {
       "name",
       "status",
     ]);
+  });
+});
+
+describe("TMDataGridFilterFn", () => {
+  type FilterRow = { x: string };
+
+  it("types a column filterFn that delegates to tmDataGridFilterFn", () => {
+    // The assertion is the typecheck: the envelope is the third argument, the
+    // built-in matcher accepts it as is, and the column def accepts the function.
+    const filterFn: TMDataGridFilterFn<FilterRow> = (row, columnId, filter) =>
+      filter.operator === "isEmpty"
+        ? row.getValue(columnId) === "-"
+        : tmDataGridFilterFn(row, columnId, filter);
+    const column = createTMDataGridColumnHelper<FilterRow>().accessor("x", {
+      filterFn,
+    });
+
+    expect(column.filterFn).toBe(filterFn);
   });
 });

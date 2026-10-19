@@ -66,6 +66,24 @@ const cell = orders.locator(
 Body cells carry no `data-dg-part`; the coordinate pair identifies them.
 The `editor` part of an open cell carries the same pair, so `:not([data-dg-part])` keeps the locator on the cell while the cell is being edited.
 
+The generated lanes are columns like any other, with exported ids:
+
+| Constant | `data-column-id` | Lane |
+| --- | --- | --- |
+| `ROW_NUMBER_COLUMN_ID` | `__rowNumber__` | Row numbers |
+| `SELECT_COLUMN_ID` | `__select__` | Selection checkboxes |
+| `GROUP_COLUMN_ID` | `__group__` | The grouping tree |
+| `DETAILS_COLUMN_ID` | `__details__` | Details toggles |
+| `EDIT_COLUMN_ID` | `__edit__` | Row editing |
+
+A lane's header is `[data-dg-part="header"][data-column-id="__select__"]` and
+a lane cell `[data-row-id="42"][data-column-id="__select__"]:not([data-dg-part])`.
+The control inside a lane cell has a part of its own, keyed by the row:
+`select-row`, `details-toggle`, `group-toggle` and the edit lane's buttons (see
+[Keyed by `data-row-id`](#keyed-by-data-row-id)); `select-all` and
+`details-toggle-all` sit in the lane headers. The checkbox parts are on the
+`<input>` itself, so `check()` works on them directly.
+
 **The body scrolls inside the scroll container.** The element carrying
 `data-dg-scroll-container` is the one to scroll in a test, whether to load the
 next page of an infinite-scroll grid or to move the virtualizer without the api:

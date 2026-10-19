@@ -19,10 +19,13 @@ hint: Expand a few rows - the panels differ in height, and each one is measured.
 height: 460
 ```
 
-The panel is as tall as whatever it renders. The grid measures each one, so
-they need not be uniform. `renderDetailsEstHeight` (default `160`) is what the
-virtualizer assumes for a panel it has not measured yet, which keeps the
-scrollbar accurate for rows that open off screen.
+The panel opens below the row's cells, which stay where they are; there is no
+mode in which a panel replaces the row. The panel is as tall as whatever it
+renders. The grid measures each one, so they need not be uniform.
+`renderDetailsEstHeight` (default `160`) is what the virtualizer assumes for a
+panel it has not measured yet, which keeps the scrollbar accurate for rows that
+open off screen. Set it to the typical panel height; the estimate only decides
+how far the scrollbar is off until the panel has mounted.
 
 ## The details lane
 
@@ -126,6 +129,29 @@ not select or highlight the row underneath. It carries
 [Testing](/docs/testing).
 
 Group rows have no panel. Expanding one opens its children.
+
+Rows are virtualized. A row that leaves the viewport and the `overscan`
+unmounts, and its panel unmounts with it, so state held inside the panel is
+lost. Keep such state outside the grid, keyed by `row.id`. Rows pinned to an
+edge never unmount.
+
+`renderDetails` runs on every render of the body. Give a heavy panel a memoized
+component and pass it the record, not the row:
+
+```tsx
+const EmployeeDetails = memo(function EmployeeDetails({ employee }: { employee: Employee }) {
+  return <EmployeeCard employee={employee} />;
+});
+
+const grid = useTMDataGrid({
+  data,
+  columns,
+  renderDetails: ({ row }) => <EmployeeDetails employee={row.original} />,
+});
+```
+
+Key a stateful child by `row.id`; that is stable only when `getRowId` returns
+the entity id.
 
 ## Reference
 

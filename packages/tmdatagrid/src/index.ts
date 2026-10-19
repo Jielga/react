@@ -51,6 +51,7 @@ export type {
 export {
   type TMDataGridColumnFilter,
   type TMDataGridColumnType,
+  type TMDataGridFilterFn,
   type TMDataGridFilterOperator,
   type TMDataGridFilterValue,
   type TMDataGridFilterValueShape,
@@ -61,9 +62,11 @@ export {
   formatFilterLabel,
   getOperatorsForType,
   isFilterActive,
+  matchesFilter,
   operatorNeedsValue,
   operatorTakesArrayValue,
   operatorTakesRangeValue,
+  tmDataGridFilterFn,
 } from "./core/filterOperators";
 export {
   fuzzyGlobalFilterFn,

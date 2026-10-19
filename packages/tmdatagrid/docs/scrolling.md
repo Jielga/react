@@ -103,7 +103,7 @@ boundary and the pinned band is always on.
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
 | `overscan` | Option | `number` | `6` | Rows kept mounted beyond each edge of the viewport. |
-| `meta.rowHeight` | Option | `number` | From `size` | Row height, in pixels. The virtualizer needs a number. |
+| `meta.rowHeight` | Option | `number` | `52` at the default `md` size; see [the size scale](/docs/styling#the-size-scale) | Row height, in pixels. The virtualizer needs a number. |
 | `scrollToRow` | Hook return | `({ rowId, align? }) => boolean` | `align: "auto"` | Scrolls a row into view, mounted or not. Answers whether it could be reached. |
 | `TMDataGridScrollToRowArgs` | Type | `{ rowId, align? }` | – | What `scrollToRow` takes. |
 | `onScrollToTop` · `onScrollToBottom` · `onScrollToLeft` · `onScrollToRight` | Table props | `() => void` | – | Fire once on arriving at that edge. |

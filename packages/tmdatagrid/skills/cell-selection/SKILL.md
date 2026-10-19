@@ -215,7 +215,7 @@ Source: `packages/tmdatagrid/docs/cell-selection.md` (Copy and export).
 | --- | --- | --- | --- | --- |
 | `cellSelection` | Option | `TMDataGridCellSelectionMode`: `"none" \| "single" \| "range"` | `"none"`, or `"single"` under `editing` | Turns the cursor, and the rectangle, on. |
 | `onFocusedCellChange` | Callback | `(cell \| null) => void` | – | Follows the cursor. |
-| `exportOptions` | Option | `TMDataGridExportOptions` | `DEFAULT_EXPORT_OPTIONS` | Format, file name and header row of the Export cells item. |
+| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row of the Export cells item. |
 | `ui.state.focusedCell` | UI state | `{ rowId, columnId } \| null` | `null` | The cursor. |
 | `ui.state.cellRange` | UI state | `{ anchor, focus } \| null` | `null` | The rectangle's two corners. |
 | `ui.actions.setFocusedCell` · `setCellRange` | UI actions | – | – | Move either from your own code. |

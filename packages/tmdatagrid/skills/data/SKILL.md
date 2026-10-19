@@ -8,7 +8,7 @@ description: >
   canPaginate, always-on virtualization with overscan and meta.rowHeight,
   scrollToRow, the edge callbacks onScrollToBottom / onScrollToRight and why
   onReachEnd is better for loading more, the header and pinned-lane depth
-  shadows, and the four empty states in precedence order with meta.loading,
+  shadows, and the five empty states in precedence order with meta.loading,
   renderEmptyState, hasActiveFilters, TMDataGrid.LoadingIndicator and
   TMDataGrid.SummaryCount, and export: TMDataGrid.Menu.Export and
   Menu.ExportSelected, useTMDataGridExport, exportGrid, exportOptions, the
@@ -56,8 +56,14 @@ const grid = useTMDataGrid({
 ```
 
 Initial page size is 25, through `initialState.pagination`. `enablePagination`
-is defined by the grid rather than by TanStack, and is the only grid option that
-defaults to off.
+is defined by the grid rather than by TanStack.
+
+The Footer renders a rows-per-page select, the range (`1–25 of 300`, from
+`table.getRowCount()`) and previous and next buttons; there are no numbered page
+buttons. The select offers `pageSizeOptions`, by default `[10, 25, 50, 100]`,
+with the current size folded in when it is not in the list. Pass a module-scope
+array: the select is memoized on it, and an inline literal remounts it on every
+render.
 
 `TMDataGrid.Footer` takes a `renderPagination` slot handed three things: the
 `state` the pager shows, the `actions` it can take, and `Controls`, the built-in
@@ -82,22 +88,26 @@ pieces, already wired.
 
 `Controls.PageSize`, `Controls.Range` and `Controls.Pager` are what the default
 footer renders, in that order, so a custom layout can keep the parts it wants
-instead of rebuilding them. They behave exactly as before, including greying out
-under a suspended pager. `Controls.PageNumber` - the "Page 3 of 200" label a
-server-paged grid usually shows in place of a row range - is a fourth control,
-not in the default footer; put it in through the slot rather than writing it by
-hand.
+instead of rebuilding them. They behave as in the default footer, including
+greying out while paging is suspended. `Controls.PageNumber` renders
+"Page 3 of 200", the label a server-paged grid usually shows in place of the
+row range. It is not in the default footer; add it through the slot.
 
 `state` carries `pageIndex`, `pageSize`, `pageCount`, `rowCount`,
 `canPreviousPage`, `canNextPage`, `from`, `to` and `isPagingActive`. `actions`
 carries `setPageIndex`, `setPageSize`, `previousPage`, `nextPage`, `firstPage`
-and `lastPage`. `getTMDataGridPaginationApi(table)` returns the same
-`{ state, actions }` outside the Footer. `Controls` is bound to the grid
-context, so those components work only inside the slot.
+and `lastPage`. Outside the Footer,
+`getTMDataGridPaginationApi(table, isPagingActive(table, grid.features))`
+returns the same `{ state, actions }`. Without the second argument
+`state.isPagingActive` is `true`, also while the rows are grouped. `Controls`
+is bound to the grid context, so those components work only inside the slot.
 
-Grouping suspends the pager: it greys out and the range becomes
-`Grouped · all N rows`. `isPagingActive(table, features)` is the live state,
-whether the pager is slicing anything right now, while
+Grouping suspends the pager: the built-in controls grey out and the range
+becomes `Grouped · all N rows`. The default footer also carries
+`data-paging-suspended` on its bar and shows `labels.pagingSuspendedHint` as a
+tooltip; a footer with `renderPagination` has neither. There is no option to
+keep the built-in pager active while grouped. `isPagingActive(table, features)`
+is the live state, whether the pager is slicing anything right now, while
 `getGridCapabilities(...).canPaginate` is the configuration. The two differ
 while a grouping is active.
 
@@ -141,14 +151,13 @@ arrival rather than on every scroll event. For loading more rows use
 `onReachEnd` (the `server-side` skill) instead: it fires a number of rows before
 the bottom, and latches per row count so a pending fetch is not requested twice.
 
-Two depth cues are scroll-driven animations run on the compositor, with no
-scroll listener and no React render: a shadow under the sticky header once rows
-scroll beneath it, and a band beside a pinned lane while it is covering
-content.
+Two depth cues run as scroll-driven CSS animations, with no scroll listener and
+no React render. A shadow appears under the sticky header once rows scroll
+beneath it. A band appears beside a pinned lane while it covers content.
 
 ## Empty states
 
-There are four ways to have nothing to show, and an empty body shows exactly one
+There are five ways to have nothing to show, and an empty body shows exactly one
 of them, in this order:
 
 1. **Loading** - `meta.loading` is true: a centred loader. A grid that is
@@ -156,9 +165,23 @@ of them, in this order:
 2. **Entry rows** - an open entry row from `edit.addRow()`: the entry block
    only, with no message beside the form.
 3. **`renderEmptyState`** - your node, centred where the message would be.
-4. **Filtered-empty** - a filter or search is active: `labels.noResults`, since
-   clearing the filter will bring rows back.
-5. **Truly-empty** - no data at all: `labels.noRows`.
+4. **Filtered-empty** - a column filter is active (`isFilterActive`) or the
+   quick search is not blank: `labels.noResults`, since clearing the filter
+   will bring rows back.
+5. **Truly-empty** - no column filter is active and the quick search is blank:
+   `labels.noRows`.
+
+"Empty" means no displayed row and no pinned row. States 4 and 5 are decided by
+the filter state alone, so an empty `data` array shows `noResults` while a
+filter is active. A half-typed filter, such as
+`{ operator: "contains", value: "" }`, is not active, so it does not count.
+
+The loader is the only "no data yet" signal, so set `meta.loading` during the
+first fetch too; without it the empty message shows until the rows arrive.
+`renderEmptyState` is called only once `meta.loading` is not `true`: during a
+refetch that returns no rows the loader mounts when `loading` turns `true`,
+`renderEmptyState` mounts when it turns `false`, and unmounts again on the next
+refetch.
 
 `renderEmptyState` replaces the last two with one render prop, and
 `hasActiveFilters` says which it is standing in for:
@@ -177,15 +200,14 @@ of them, in this order:
 />
 ```
 
-An empty grid is a good place to offer the action that fills it, such as
-clearing the filters or creating the first record.
-
 The body's loading state only appears while the grid is **empty**. A
 server-driven grid refetching with rows still on screen keeps showing them.
 `TMDataGrid.LoadingIndicator` covers that case: a small spinner while
 `meta.loading` is true. `TMDataGrid.SummaryCount` shows visible rows out of
-total, where the total is `meta.totalRowCount` when provided and the pre-filtered
-count otherwise.
+total. The total is `meta.totalRowCount` when provided, otherwise the
+pre-filtered count on a client-side grid; a server-driven grid
+(`manualFiltering` or `manualPagination`) without `meta.totalRowCount` shows the
+visible count alone, with no total.
 
 ## Export
 
@@ -214,15 +236,19 @@ function ExportButton() {
 }
 ```
 
-What is written: the data columns in render order (never the generated lanes,
-never a column with `meta.enableExport: false`), every row after filtering and
-sorting (a grouped grid writes the records under every group, never the group
-rows), and each cell's **value** rather than what it renders -
-`meta.exportValue: ({ value, row, column }) => unknown` substitutes one.
+What is written:
+
+- **Columns** - the data columns in render order. Never the generated lanes,
+  never a column with `meta.enableExport: false`.
+- **Rows** - every row after filtering and sorting. A grouped grid writes the
+  records under every group, never the group rows.
+- **Values** - each cell's **value** rather than what it renders.
+  `meta.exportValue: ({ value, row, column }) => unknown` substitutes one.
+
 `columns` on `exportOptions`, the items and the functions is `"visible"` (the
-default), `"all"` (hidden columns too) or a list of ids; `columns="custom"` on
-a menu item opens a picker instead - every exportable column, the visible ones
-ticked, Export and Cancel - driven by `ui.state.exportPicker` and
+default), `"all"` (hidden columns too) or a list of ids. `columns="custom"` on a
+menu item opens a picker instead: every exportable column, the visible ones
+ticked, Export and Cancel. The picker is driven by `ui.state.exportPicker` and
 `ui.actions.openExportPicker`. `TMDataGrid.Menu.ExportSelected` counts and
 writes the ticked rows of the current view, in grid order; it renders nothing
 when row selection is off.
@@ -303,10 +329,11 @@ a pending fetch is not requested twice.
 
 Source: `packages/tmdatagrid/docs/scrolling.md` (Edge callbacks).
 
-### HIGH `SummaryCount` reporting the page under manual pagination
+### HIGH `SummaryCount` without a total under manual pagination
 
-The client only holds one page, so without `meta.totalRowCount` the total is
-whatever arrived. It shows "25 of 25" over a table of thousands.
+The client holds one page, so a server-driven grid has no total of its own.
+Without `meta.totalRowCount`, `SummaryCount` shows the visible count alone, with
+no total, over a table of thousands.
 
 Correct:
 
@@ -334,7 +361,7 @@ Correct:
 useTMDataGrid({ data, columns, meta: { loading: isFetching } });
 ```
 
-Source: `packages/tmdatagrid/docs/loading-and-empty.md` (What wins).
+Source: `packages/tmdatagrid/docs/loading-and-empty.md` (Precedence).
 
 ### MEDIUM Trusting the pager while grouped
 
@@ -342,7 +369,7 @@ Source: `packages/tmdatagrid/docs/loading-and-empty.md` (What wins).
 grid is rendering the whole tree. A custom pager must read
 `isPagingActive(table, features)` rather than the page count.
 
-Source: `packages/tmdatagrid/docs/pagination.md` (Grouping suspends it).
+Source: `packages/tmdatagrid/docs/pagination.md` (Grouping).
 
 ## Reference
 
@@ -351,31 +378,31 @@ Source: `packages/tmdatagrid/docs/pagination.md` (Grouping suspends it).
 | `enablePagination` | Option | `boolean` | `false` | Client-side paging and the Footer's pager. Grid-defined. |
 | `manualPagination` | Table option | `boolean` | `false` | The server pages. Implies `enablePagination`. |
 | `rowCount` | Table option | `number` | – | The true total, required under `manualPagination`. |
-| `initialState.pagination` | Table option | `{ pageIndex, pageSize }` | `{ 0, 25 }` | Where paging starts. A `data` slice, so it persists. |
+| `initialState.pagination` | Table option | `{ pageIndex, pageSize }` | `{ pageIndex: 0, pageSize: 25 }` | Where paging starts. A `data` slice, so it persists. |
 | `onPaginationChange` | Table option | `OnChangeFn` | – | Controls the pagination state. |
-| `TMDataGrid.Footer` | Component | `pageSizeOptions`, `renderPagination`, Mantine `BoxProps` | `[10, 25, 50, 100]` | The footer bar. Renders nothing when paging is off. Style props set on the bar. |
+| `TMDataGrid.Footer` | Component | `pageSizeOptions`, `renderPagination`, Mantine `BoxProps` | `pageSizeOptions`: `[10, 25, 50, 100]` | The footer bar. Renders nothing when paging is off. Style props set on the bar. |
 | `TMDataGridFooterProps` | Type | – | – | The props of `TMDataGrid.Footer`. |
 | `Footer` `renderPagination` | Slot | `(args: TMDataGridPaginationSlotArgs) => ReactNode` | Built-in pager | Replaces the pager, and hands over its pieces. |
 | `TMDataGridPaginationSlotArgs` | Type | `TMDataGridPaginationApi & { Controls }` | – | What `renderPagination` receives: `{ state, actions, Controls }`. |
-| `getTMDataGridPaginationApi` | Export | `(table, isPaging?) => TMDataGridPaginationApi` | `isPaging`: `true` | The pager API, outside the Footer. |
+| `getTMDataGridPaginationApi` | Export | `(table, isPaging?) => TMDataGridPaginationApi` | `isPaging`: `true` | The pager API, outside the Footer. Pass `isPagingActive(table, features)` as `isPaging`. |
 | `TMDataGridPaginationApi` | Type | `{ state, actions }` | – | What `getTMDataGridPaginationApi` returns. |
 | `TMDataGridPaginationState` · `TMDataGridPaginationActions` · `TMDataGridPaginationControls` | Exports | types | – | The three parts of the slot argument. |
 | `isPagingActive` | Export | `(table, features) => boolean` | – | Whether the pager is slicing anything right now. |
 | `overscan` | Option | `number` | `6` | Rows kept mounted beyond each edge of the viewport. |
-| `meta.rowHeight` | Option | `number` | From `size` | Row height in pixels. The virtualizer needs a number. |
+| `meta.rowHeight` | Option | `number` | `52` at the default `md` size; see the `size` scale in the `appearance` skill | Row height in pixels. The virtualizer needs a number. |
 | `scrollToRow` | Hook return | `({ rowId, align? }) => boolean` | `align: "auto"` | Scrolls a row into view, mounted or not. |
 | `TMDataGridScrollToRowArgs` | Export | `{ rowId, align? }` | – | What `scrollToRow` takes. |
 | `onScrollToTop` · `onScrollToBottom` · `onScrollToLeft` · `onScrollToRight` | Table props | `() => void` | – | Fire once on arriving at that edge. |
 | `TMDataGridScrollAlign` | Export | `"start" \| "center" \| "end" \| "auto"` | – | The `align` argument. |
-| `meta.loading` | Option | `boolean` | `false` | A fetch is in flight. Takes precedence over every empty message. |
+| `meta.loading` | Option | `boolean` | `false` | A fetch is in flight. While `true` and the view is empty, the loader replaces every empty message and `renderEmptyState` is not called. |
 | `meta.noResultsLabel` | Option | `string` | `labels.noResults` | The filtered-empty message, without a render prop. |
-| `meta.totalRowCount` | Option | `number` | Pre-filtered count | The total `SummaryCount` reports. |
-| `renderEmptyState` | Table prop | `({ hasActiveFilters, table }) => ReactNode` | – | Replaces both built-in empty messages. |
+| `meta.totalRowCount` | Option | `number` | Pre-filtered count; none on a server-driven grid | The total `SummaryCount` reports. |
+| `renderEmptyState` | Table prop | `({ hasActiveFilters, table }) => ReactNode` | – | Replaces both built-in empty messages. `hasActiveFilters` is `true` when a column filter is active (`isFilterActive`) or the quick search is not blank. |
 | `TMDataGrid.LoadingIndicator` | Component | – | – | Spinner while `meta.loading`, for when the body has rows. |
 | `TMDataGrid.SummaryCount` | Component | `children` replaces the text | – | Visible rows out of total. |
 | `--dg-header-shadow-color` | CSS variable | colour | Themed | The shadow under the sticky header. |
 | `--dg-sticky-edge-range` | CSS variable | length | `20px` | How far the pinned-lane band takes to fade in. |
-| `exportOptions` | Option | `TMDataGridExportOptions` | `DEFAULT_EXPORT_OPTIONS` | Format, file name and header row for every export of the grid. |
+| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row for every export of the grid. |
 | `meta.enableExport` | Column meta | `boolean` | `true` | `false` leaves the column out of every export and of Ctrl+C. |
 | `meta.exportValue` | Column meta | `TMDataGridExportValueGetter`: `({ value, row, column }) => unknown` | – | The value written in place of `row.getValue`. |
 | `TMDataGrid.Menu.Export` · `TMDataGrid.Menu.ExportSelected` | Components | `TMDataGridMenuExportProps` | – | Menu items: every filtered row, and the selected rows. `columns="custom"` opens the picker. |
