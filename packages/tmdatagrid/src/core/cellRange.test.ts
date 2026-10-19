@@ -114,4 +114,21 @@ describe("boundsEdges", () => {
     expect(boundsEdges(block, 0, 0)).toBeNull();
     expect(boundsEdges(null, 0, 0)).toBeNull();
   });
+
+  it("addresses a spanning cell by its first column", () => {
+    const bounds = { top: 1, bottom: 1, left: 2, right: 3 };
+    // The cell covers columns 2-5: inside by its first column, and the
+    // rectangle's right edge falls inside it.
+    expect(boundsEdges(bounds, 1, 2, 5)).toEqual({
+      top: true,
+      bottom: true,
+      left: true,
+      right: true,
+    });
+    // A cell at 1 covering 1-5 is outside: the rectangle does not hold its
+    // first column.
+    expect(isWithinBounds(bounds, 1, 1)).toBe(false);
+    expect(boundsEdges(bounds, 1, 1, 5)).toBeNull();
+  });
+
 });

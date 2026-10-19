@@ -87,6 +87,12 @@ Because it is the standard state, `table.toggleAllRowsExpanded()`,
 > `autoResetExpanded: false`; pass `autoResetExpanded: true` to have a new
 > `data` array close the panels.
 
+## A wider cell on an open row
+
+To have an open row show something wider in the row itself - a title across
+the columns, say - give that column a `meta.colSpan` that depends on
+`row.getIsExpanded()`. See [Spanning columns](/docs/columns#spanning-columns).
+
 ## The two kinds of expanding
 
 TanStack keeps one `expanded` state, and the grid uses it for two unrelated

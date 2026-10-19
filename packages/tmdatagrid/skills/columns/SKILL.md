@@ -2,8 +2,8 @@
 name: columns
 description: >
   Define and arrange TMDataGrid columns. Covers createTMDataGridColumnHelper,
-  every column meta field (label, type, options, flex, align, autoSize,
-  enableOrdering, and the meta.filter and meta.edit namespaces holding
+  every column meta field (label, type, options, flex, align, colSpan,
+  autoSize, enableOrdering, and the meta.filter and meta.edit namespaces holding
   operators, defaultOperator, control, enabled, field, editor, validate and
   mapValue), the six column types, fluid minmax sizing versus fixed width with
   minSize / maxSize / size, autosizing and autosizeColumn, hiding through
@@ -84,6 +84,7 @@ columnHelper.group({
 | `options` | `TMDataGridOptionsSource` | – | Choices for a `select` / `multiSelect` column: an array, `"faceted"`, or a function. One declaration feeds the filter panel and the editor. |
 | `flex` | `number` | `1` | Share of the remaining width. |
 | `align` | `"left" \| "right" \| "center"` | `"left"` | Applied to both header and cells. |
+| `colSpan` | `number \| ({ row, table }) => number` | `1` | Columns the cell covers on a row, counting itself; the covered cells do not render there. See below. |
 | `autoSize` | `boolean` | `false` | Size to the widest mounted content once, after the first rows render. |
 | `enableOrdering` | `boolean` | `true` | `false` keeps the column where it is. |
 | `filter` | `TMDataGridColumnFilterOptions` | – | How this column filters. See below. |
@@ -116,6 +117,10 @@ annotation. A column written without the helper keeps the untyped row,
 `enableOrdering` lives in `meta` because column ordering is the one feature
 TanStack defines no column option for. `meta.edit` only acts once `editing` is
 set: see the `editing` skill. `meta.filter` belongs to the `filtering` skill.
+
+`colSpan` (args `TMDataGridColSpanArgs`, `{ row, table }`) is display only, never
+covers a generated lane or leaves its pinned block, and is ignored on group rows
+and rows in row edit mode. See `docs/columns.md#spanning-columns`.
 
 ### Column types
 

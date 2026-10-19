@@ -170,6 +170,33 @@ describe("meta.autoSize", () => {
     );
   });
 
+  it("fits the header when every mounted cell spans", async () => {
+    // A spanning cell says nothing about its column's width, so it is left
+    // out of the measurement - but it still counts as a mounted row, or the
+    // column would wait for ever for a cell it never gets.
+    stubScrollWidth(16);
+    const spanningColumns = [
+      {
+        accessorKey: "name",
+        header: "Name",
+        minSize: 80,
+        meta: { autoSize: true, colSpan: 2 },
+      },
+      { accessorKey: "age", header: "Age" },
+    ];
+    const { result } = renderGrid({ columns: spanningColumns } as never);
+    renderTable(result);
+
+    await waitFor(() =>
+      expect(result.current.table.store.state.columnSizing["name"]).toBeDefined(),
+    );
+    // "Name" at 16px/char plus the header's allowance, well under the
+    // "Stockholm"-sized widths the value cells would have given.
+    expect(result.current.table.store.state.columnSizing["name"]).toBeLessThan(
+      "Stockholm".length * 16,
+    );
+  });
+
   it("waits for data that arrives after the mount", async () => {
     // The case the demos never hit: a grid whose rows are fetched. It mounts
     // empty, so the only thing in the DOM to measure is the header - a width

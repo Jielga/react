@@ -40,30 +40,41 @@ function contentSpanWidth(content: HTMLElement): number {
   return width > 0 ? width : content.scrollWidth;
 }
 
-/** One column's body cells that are currently in the DOM. */
+/**
+ * One column's body cells that are currently in the DOM.
+ *
+ * `measurable` leaves out the cells spanning several columns (`meta.colSpan`):
+ * such a cell says nothing about this one column's width.
+ */
 function mountedCells(
   container: HTMLElement,
   columnId: string,
+  { measurable }: { measurable: boolean },
 ): NodeListOf<HTMLElement> {
   const id = CSS.escape(columnId);
+  const unspanned = measurable ? ":not([data-col-span])" : "";
   return container.querySelectorAll<HTMLElement>(
-    `[role="cell"][data-column-id="${id}"],` +
-      `[role="gridcell"][data-column-id="${id}"]`,
+    `[role="cell"][data-column-id="${id}"]${unspanned},` +
+      `[role="gridcell"][data-column-id="${id}"]${unspanned}`,
   );
 }
 
 /**
- * Whether this column has any body cell in the DOM to measure.
+ * Whether this column has any body cell in the DOM.
  *
  * A caller sizing a column on its own schedule rather than from a gesture has
  * to ask: the virtualizer mounts its first rows a render *after* the grid
  * itself mounts, and a measurement taken before that fits the header alone.
+ *
+ * A spanning cell counts. A column whose every mounted cell spans has its
+ * rows, and measuring it fits the header, which is the width it gets; left
+ * out, the column would wait for cells that never come.
  */
 export function hasMountedCells(
   container: HTMLElement,
   columnId: string,
 ): boolean {
-  return mountedCells(container, columnId).length > 0;
+  return mountedCells(container, columnId, { measurable: false }).length > 0;
 }
 
 /**
@@ -85,7 +96,7 @@ export function measureColumnContentWidth({
 }): number {
   let widest = 0;
 
-  for (const cell of mountedCells(container, columnId)) {
+  for (const cell of mountedCells(container, columnId, { measurable: true })) {
     const content = cell.firstElementChild;
     if (!isHTMLElement(content)) continue;
     const styles = getComputedStyle(cell);

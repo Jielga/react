@@ -16,6 +16,7 @@ export {
   openColumnFilter,
   type TMDataGridApi,
   type TMDataGridColumnMeta,
+  type TMDataGridColSpanArgs,
   type TMDataGridDetailsArgs,
   type TMDataGridDetailsRenderer,
   type TMDataGridFeatures,
