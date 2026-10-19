@@ -247,7 +247,9 @@ Which rows are open is TanStack's own `expanded` state, so anything can open
 one - `row.toggleExpanded()` from a menu item, `initialState.expanded`,
 `table.toggleAllRowsExpanded()` - and it persists as a `data` slice. The panel
 is a cell spanning the row, not a row: `aria-rowcount` still counts records, and
-a click inside it does not select the row underneath. Group rows have no panel;
+a click inside it does not select the row underneath. It has no padding: content
+fills the row edge to edge, and content that should line up with the cell text
+pads itself with `padding: var(--dg-padding)`. Group rows have no panel;
 expanding one opens its children.
 
 Rows are virtualized. A row that leaves the viewport and the `overscan`

@@ -46,7 +46,9 @@ export function SpanningCells() {
     columns,
     getRowId: (row) => String(row.id),
     renderDetails: ({ row }) => (
-      <Text size="sm">{row.original.email}</Text>
+      <Text size="sm" p="var(--dg-padding)">
+        {row.original.email}
+      </Text>
     ),
     renderDetailsEstHeight: 60,
     initialState: { expanded: { "2": true } },

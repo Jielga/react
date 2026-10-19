@@ -128,6 +128,11 @@ not select or highlight the row underneath. It carries
 `data-dg-part="details"` with the row's `data-row-id`. See
 [Testing](/docs/testing).
 
+The panel has no padding. Its content starts at the row's left edge and ends at
+its right edge, so a nested grid, a tab strip or an image fills the row. Give
+content that should line up with the cell text `padding: var(--dg-padding)`,
+the [cell padding](/docs/styling#css-variables) of the grid's `size`.
+
 Group rows have no panel. Expanding one opens its children.
 
 Rows are virtualized. A row that leaves the viewport and the `overscan`
