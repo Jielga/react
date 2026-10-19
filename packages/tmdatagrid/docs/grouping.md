@@ -100,8 +100,8 @@ records inside collapsed sub-groups. It shows a tick once all of them are
 selected and a dash while only some are.
 
 Only the records are written to `rowSelection`. A group row is never in it, so
-`getSelectedRowModel()` and the toolbar count do not depend on how the tree is
-arranged.
+`getSelectedRowModel()` and `onRowSelectionChange` do not depend on how the tree
+is arranged.
 
 Under `enableMultiRowSelection: false` group rows carry no checkbox.
 
@@ -125,8 +125,11 @@ While a column is grouped the grid renders the whole tree and relies on
 virtualization. `TMDataGrid.Footer` greys its pager out and replaces the range
 with `Grouped · all N rows`. Ungroup and paging resumes where it left off.
 
-To page a grouped grid, group and page on the server: feed the grid one page of
-a tree at a time with `manualPagination` and `manualGrouping`.
+There is no option to keep the built-in pager active while grouped, and
+`manualGrouping` does not change that: the pager greys out whenever `grouping`
+is non-empty. To page a grouped grid, group and page on the server with
+`manualPagination` and `manualGrouping`, and render the pager through
+`renderPagination`, ignoring `isPagingActive`.
 
 `isPagingActive(table, features)` is exported, so a custom pager can grey itself
 out the same way:
@@ -150,12 +153,12 @@ server-side can set `enableGrouping: true` alongside `manualGrouping: true`. See
 
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
-| `enableGrouping` | Table option | `boolean` | `true` | Group by and Ungroup menu items. Also a column option. |
+| `enableGrouping` | Table option | `boolean` | `true`; `false` under `manualPagination` | Group by and Ungroup menu items, and the tree lane. Also a column option. |
 | `groupedColumnMode` | Table option | `"reorder" \| "remove" \| false` | `"remove"` | Whether a grouped column leaves the grid or moves to the front. |
 | `manualGrouping` | Table option | `boolean` | `false` | The rows arrive grouped. Required to group a server-paged grid. |
 | `initialState.grouping` | Table option | `string[]` | `[]` | Column ids to group on at mount. A settings slice, so it persists. |
 | `aggregationFn` | Column option | `TMDataGridAggregationName \| fn` | – | How a column fills in its group cells. Unset leaves them blank. |
-| `aggregatedCell` | Column option | `(ctx) => ReactNode` | The `cell` renderer | Renders a group row's value differently from a data row's. |
+| `aggregatedCell` | Column option | `(ctx) => ReactNode` | `cell` over the aggregate when `aggregationFn` is set, else blank | Renders a group row's value differently from a data row's. |
 | `GROUP_COLUMN_ID` | Export | `"__group__"` | – | Id of the generated tree column. |
 | `formatGroupValue` | Export | `(value) => string` | – | How the tree lane renders a group's value. |
 | `getGroupDataRows` | Export | `(row) => Row[]` | – | Every record under a group row, at any depth. |

@@ -250,7 +250,9 @@ const labels = {
 `TMDataGridLabels` is the full dictionary type, so a missing key in a new
 translation is a compile error. The resolved dictionary comes back as
 `grid.labels` and from `useTMDataGridContext().labels`, so a component of your
-own uses the same strings as the built-in parts.
+own uses the same strings as the built-in parts. Every key, with its English
+default and where the grid shows it, is in
+[references/labels.md](references/labels.md).
 
 ## Common mistakes
 
@@ -319,7 +321,7 @@ const { canSort } = getColumnCapabilities(column, features);
 if (!canSort) return null;
 ```
 
-Source: `packages/tmdatagrid/docs/toolbar.md` (Why `features` is a second argument).
+Source: `packages/tmdatagrid/docs/toolbar.md` (Reading options reactively).
 
 ### MEDIUM An inline `labels` object
 
@@ -370,7 +372,7 @@ Source: `packages/tmdatagrid/docs/toolbar.md` (The built-in parts).
 | `grid.labels` | Hook return | `TMDataGridLabels` | – | The resolved dictionary. |
 | `TMDATAGRID_LABELS_EN` · `TMDATAGRID_LABELS_SV` | Exports | `TMDataGridLabels` | – | The English base, and a complete Swedish dictionary. |
 | `TMDataGridLabels` · `TMDataGridLabelsOverride` | Exports | types | – | The full dictionary, and a partial one. |
-| `mergeLabels` | Export | `(base, override) => TMDataGridLabels` | – | The merge, for composing dictionaries. |
+| `mergeLabels` | Export | `(override?: TMDataGridLabelsOverride) => TMDataGridLabels` | – | Folds a partial override over the English defaults. Returns `TMDATAGRID_LABELS_EN` itself without an argument. |
 | `meta.noResultsLabel` | Option | `string` | `labels.noResults` | Per-instance override of the filtered-empty message. |
 
 The CSS layer name `tmdatagrid` in `styles.layer.css` is public API and never

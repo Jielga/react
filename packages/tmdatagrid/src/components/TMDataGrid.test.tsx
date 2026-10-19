@@ -107,6 +107,50 @@ describe("rendering", () => {
     expect(screen.queryByText("No rows to show")).not.toBeInTheDocument();
   });
 
+  it("says truly-empty while the filter panel holds only a half-typed filter", async () => {
+    const user = userEvent.setup();
+    renderGridUi({ data: [] });
+
+    // Opening the panel seeds `{ operator, value: "" }`, which filters nothing.
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+
+    expect(screen.getByText("No rows to show")).toBeInTheDocument();
+    expect(
+      screen.queryByText("No rows match your filters"),
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Value"), "999999");
+
+    expect(
+      screen.getByText("No rows match your filters"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No rows to show")).not.toBeInTheDocument();
+  });
+
+  it("renderEmptyState counts only a filter that says something", async () => {
+    const user = userEvent.setup();
+    renderGridUi({
+      data: [],
+      tableProps: {
+        renderEmptyState: ({ hasActiveFilters }) => (
+          <div>blank slate, filtered: {String(hasActiveFilters)}</div>
+        ),
+      },
+    });
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+
+    expect(
+      screen.getByText("blank slate, filtered: false"),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Value"), "999999");
+
+    expect(
+      screen.getByText("blank slate, filtered: true"),
+    ).toBeInTheDocument();
+  });
+
   it("shows no message while an entry row is open on an empty grid", async () => {
     const user = userEvent.setup();
     // Referentially stable - an inline `[]` would be a new array every render,

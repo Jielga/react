@@ -180,7 +180,7 @@ Unlike the Export cells item, `resolveRangeBounds` does not fall back to the foc
 | `cellSelection` | Option | `"none" \| "single" \| "range"` | `"none"` | Turns the cell cursor, and the rectangle, on. |
 | `TMDataGridCellSelectionMode` | Type | – | – | The type of `cellSelection`. |
 | `onFocusedCellChange` | Callback | `(cell \| null) => void` | – | Follows the cursor. |
-| `exportOptions` | Option | `TMDataGridExportOptions` | `DEFAULT_EXPORT_OPTIONS` | Format, file name and header row of the Export cells item. See [Export](/docs/export). |
+| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row of the Export cells item. See [Export](/docs/export). |
 | `ui.state.focusedCell` | UI state | `{ rowId, columnId } \| null` | `null` | The cursor. |
 | `ui.state.cellRange` | UI state | `{ anchor, focus } \| null` | `null` | The rectangle's two corners. |
 | `ui.actions.setFocusedCell` · `setCellRange` | UI actions | – | – | Move either from your own code. |

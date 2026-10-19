@@ -37,8 +37,8 @@ cell cursors and ranges are `cell-selection`.
 ## Selection
 
 `selectionMode` sets what selecting looks like **and** what a bare row click
-does. It is one option rather than two because a click can toggle a
-multi-selection or move a highlight, but not both.
+does. A bare click either toggles the selection or moves the highlight, never
+both.
 
 | Mode | Checkbox column | Row click |
 | --- | --- | --- |
@@ -51,8 +51,8 @@ multi-selection or move a highlight, but not both.
 const grid = useTMDataGrid({ data, columns, selectionMode: "row" });
 ```
 
-The first two write to TanStack's `rowSelection`, so the toolbar count,
-`getSelectedRowModel()` and persistence all behave the same either way. Under
+The first two write to TanStack's `rowSelection`, so `getSelectedRowModel()`
+and `onRowSelectionChange` behave the same either way. Under
 `"row"` the click follows desktop-list conventions: a plain click
 makes the selection this row, Ctrl/Cmd toggles it and leaves the rest, Shift
 selects the range from the anchor, Ctrl+Shift adds that range. Rows are
@@ -61,7 +61,7 @@ focusable in this mode, and Space or Enter toggles the focused row.
 `enableRowSelection: false` removes the checkbox column and row-click selection
 in any mode.
 
-### The highlight is not a selection
+### The highlighted row
 
 The highlight is state of its own, not a slice of `rowSelection`. That is what
 lets `"checkboxAndHighlight"` run both at once: tick rows for a bulk action,
@@ -81,8 +81,9 @@ const grid = useTMDataGrid({
 ### Reading a selection
 
 Read it through the table store rather than by calling the method directly.
-`table` keeps one identity across renders, so the React Compiler caches a bare
-`getSelectedRowModel()` and the component stops updating.
+A bare read is stale in any component that does not call `useTMDataGrid`
+itself, and under the React Compiler also in the one that does; `useSelector`
+subscribes either way.
 
 ```tsx
 import { useSelector } from "@tanstack/react-store";
@@ -160,9 +161,10 @@ the row with `data-context-menu` while its menu is open, so an action meant for
 a multi-selection reads `table` and falls back to the clicked row.
 
 Under `cellSelection: "range"` the grid has its own items for this menu: copy,
-export and include headers. `internalItems` is those items, and **using it takes
-over the composition**: place it and the menu is exactly what you returned; omit
-it and the grid keeps its own items above a divider and yours below.
+export and include headers. `internalItems` holds those items, and **using it
+takes over the composition**. Place it, and the menu is exactly what you
+returned. Omit it, and the grid renders its items above a divider and yours
+below.
 
 ```tsx
 renderRowContextMenu={({ row, internalItems }) => (
@@ -232,12 +234,14 @@ const grid = useTMDataGrid({
 });
 ```
 
-Each panel is measured, so heights need not be uniform.
-`renderDetailsEstHeight` (default `160`) is what the virtualizer assumes for one
-it has not measured yet. A generated chevron column, `DETAILS_COLUMN_ID`, is
-pinned left after the checkbox and tree lanes, or right, inside the edit lane,
-under `detailsColumnPosition: "right"`; it cannot be hidden, moved, resized or
-unpinned, and its header opens and closes every panel.
+The panel opens below the row's cells, which stay where they are; there is no
+mode in which a panel replaces the row. Each panel is measured, so heights need
+not be uniform. `renderDetailsEstHeight` (default `160`) is what the virtualizer
+assumes for one it has not measured yet; set it to the typical panel height.
+`DETAILS_COLUMN_ID` is a generated chevron lane. It is pinned left, after the
+checkbox and tree lanes; under `detailsColumnPosition: "right"` it is pinned
+right, inside the edit lane. It cannot be hidden, moved, resized or unpinned.
+Its header opens and closes every panel.
 
 Which rows are open is TanStack's own `expanded` state, so anything can open
 one - `row.toggleExpanded()` from a menu item, `initialState.expanded`,
@@ -245,6 +249,13 @@ one - `row.toggleExpanded()` from a menu item, `initialState.expanded`,
 is a cell spanning the row, not a row: `aria-rowcount` still counts records, and
 a click inside it does not select the row underneath. Group rows have no panel;
 expanding one opens its children.
+
+Rows are virtualized. A row that leaves the viewport and the `overscan`
+unmounts, and its panel unmounts with it, so state held inside the panel is
+lost; keep such state outside the grid, keyed by `row.id`. `renderDetails` runs
+on every render of the body, so give a heavy panel a `memo` component and pass
+it `row.original`, not the row. Key a stateful child by `row.id`; that is stable
+only when `getRowId` returns the entity id.
 
 ## Pinning and numbering
 
@@ -264,7 +275,7 @@ There is no built-in pin gesture and no pin icon. Build one from TanStack's own
 either as a display column whose cell is a pin button or in the row context
 menu. Read the pinned state through a subscription
 (`useSelector(row.table.store, () => row.getIsPinned())`) rather than calling it
-in a component body: the `row` identity survives a pin, so the React Compiler
+in a component body. The `row` identity survives a pin, so the React Compiler
 would cache the call and the icon would never change. Whichever control you
 build, include unpin in it. Pinned rows leave the scrolling order and render in
 sticky blocks: top under the header, bottom above the summary row.
@@ -300,13 +311,13 @@ Correct:
 rowStyle={() => ({ "--row-bg": "pink" })}
 ```
 
-Source: `packages/tmdatagrid/docs/row-styling.md` (Set `--row-bg`, not `background`).
+Source: `packages/tmdatagrid/docs/row-styling.md` (Set the row background).
 
 ### CRITICAL Reading the selection without subscribing
 
-`table` keeps one identity for the life of the grid, so the React Compiler
-memoizes a bare `getSelectedRowModel()` against it. The count renders once and
-then never changes.
+A bare read is stale in any component that does not call `useTMDataGrid`
+itself, and under the React Compiler also in the one that does; `useSelector`
+subscribes either way. A stale count renders once and then never changes.
 
 Wrong:
 
@@ -327,8 +338,8 @@ Source: `packages/tmdatagrid/docs/row-selection.md` (Acting on a selection).
 ### HIGH Looking for the highlight in `rowSelection`
 
 The highlight is separate state, which is what lets `"checkboxAndHighlight"`
-run both at once. It never appears in `rowSelection`, `getSelectedRowModel()` or
-the persisted selection slice.
+run both at once. It never appears in `rowSelection` or
+`getSelectedRowModel()`.
 
 Wrong:
 
@@ -343,7 +354,7 @@ Correct:
 const current = useSelector(grid.ui, (state) => state.highlightedRowId);
 ```
 
-Source: `packages/tmdatagrid/docs/row-selection.md` (The highlight is not a selection).
+Source: `packages/tmdatagrid/docs/row-selection.md` (The highlighted row).
 
 ### HIGH Expecting a click handler to replace the built-in behaviour
 
@@ -382,18 +393,29 @@ written as though every row reaches it silently skips them.
 
 Source: `packages/tmdatagrid/docs/row-interaction.md`, `packages/tmdatagrid/docs/row-pinning.md`.
 
-### MEDIUM Open panels closing when `data` is replaced
+### MEDIUM Keeping state inside a details panel
 
-TanStack resets `expanded` when the row structure changes, so a refetch collapses
-every open panel.
+A panel unmounts with its row when the row leaves the virtual window, so a form
+or an accordion inside `renderDetails` loses its state on a long scroll and
+comes back reset.
 
-Correct:
+Correct: hold the state outside the grid, keyed by `row.id`, and pass it in.
 
 ```tsx
-useTMDataGrid({ data, columns, renderDetails, autoResetExpanded: false });
+const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+useTMDataGrid({
+  data,
+  columns,
+  renderDetails: ({ row }) => (
+    <DetailsForm draft={drafts[row.id]} onChange={(d) => setDrafts((all) => ({ ...all, [row.id]: d }))} />
+  ),
+});
 ```
 
-Source: `packages/tmdatagrid/docs/row-details.md`.
+`autoResetExpanded` is already `false` by default, so a refetch does not close
+the panels; pass `autoResetExpanded: true` to get TanStack's collapse back.
+
+Source: `packages/tmdatagrid/docs/row-details.md` (Panel behaviour).
 
 ### MEDIUM Expecting pinned rows to persist
 

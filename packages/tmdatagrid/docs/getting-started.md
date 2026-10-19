@@ -112,6 +112,46 @@ file: getting-started/ToolbarAndFooter.tsx
 [Grid anatomy](/docs/anatomy) for what each part is, and
 [Toolbar](/docs/toolbar) for adding your own buttons among them.
 
+## Coming from TanStack Table
+
+`useTMDataGrid` takes TanStack's `TableOptions`, so a page built on
+`useReactTable` keeps its `data`, `columns`, `state` and `onXChange` callbacks.
+Go through these differences:
+
+- **`getRowId`** - return the entity id. The index default points at another
+  record after a sort or a refetch, which breaks selection, expansion and
+  editing. Required once `editing` is set.
+- **Stable `data` and `columns`** - define `columns` outside the component and
+  keep `data` referentially stable; a fresh `[]` for the empty case belongs in
+  a module-scope constant. Under `editing`, a transient `[]` drops every open
+  draft.
+- **Sizing** - columns are fluid, `minmax(minSize, flex fr)`. `size` applies
+  only to a column pinned at mount, `maxSize` only to resizing and autosizing,
+  and `minSize` defaults to `80`. See
+  [Visibility, pinning, ordering and size](/docs/column-layout#sizing).
+- **Defaults the grid changes** - `aggregationFn` is cleared, so grouping does
+  not sum anything on its own; `groupedColumnMode` is `"remove"`;
+  `autoResetExpanded` and `autoResetPageIndex` are off; `globalFilterFn` is the
+  fuzzy matcher. The full list is on
+  [useTMDataGrid](/docs/use-tm-data-grid#options).
+- **Filters are envelopes** - `columnFilters` holds `{ operator, value }`, and
+  a column's own `filterFn` receives that envelope. See
+  [Filtering](/docs/filtering#custom-matching).
+- **Interface the page already owns** - `enableGlobalFilter: false`, or no
+  `TMDataGrid.Search`, for the search; `enableColumnFilters: false`, or
+  `filters: { surface: "none" }` to keep filtering without the grid's panel.
+  See [Filtering](/docs/filtering#turning-it-off).
+- **Page reset** - `resetPageOnQueryChange` (default `true`) returns to the
+  first page when a filter, the search, the sorting or the grouping changes
+  through the table. A data source re-filtered outside table state does not
+  trigger it; call `table.setPageIndex(0)` yourself, or use `manualFiltering`.
+  See [Server-side data](/docs/server-side).
+- **State reads** - there is no `table.getState()`; read slices with
+  `useSelector(table.store, ...)`. See
+  [useTMDataGrid](/docs/use-tm-data-grid#reading-state).
+- **Tests** - the grid publishes `data-dg-part`, `data-row-id` and
+  `data-column-id`, and no `data-testid`. See [Testing](/docs/testing).
+
 ## Where to go next
 
 - **[Defining columns](/docs/columns)** - accessors, `meta.type`, and what each

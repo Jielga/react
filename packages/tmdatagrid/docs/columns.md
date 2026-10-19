@@ -283,8 +283,9 @@ Sizing, pinning, ordering and visibility are covered on
 ## The generated columns
 
 Five lanes the grid adds when a feature needs them. All are **system lanes**:
-fixed width, no column menu, no resize handle, never exported, never hidden and
-never listed in the columns panel.
+pinned, with no column menu, never exported and never listed in the columns
+panel. Four of them are fixed width with no resize handle; the tree lane can be
+resized, and it is shown only while a grouping is active.
 
 | Id | Appears when | Where |
 | --- | --- | --- |

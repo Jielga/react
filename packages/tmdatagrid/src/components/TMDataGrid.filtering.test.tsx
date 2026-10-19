@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   erased,
   gridRowCount,
@@ -16,6 +16,10 @@ import {
   type TestRow,
 } from "../../test/gridHarness";
 import type { TMDataGridFilterControlComponent } from "../core/filterControls";
+import {
+  type TMDataGridFilterFn,
+  tmDataGridFilterFn,
+} from "../core/filterOperators";
 import { TMDataGrid } from "./TMDataGrid";
 import { DgAutocompleteFilter } from "./filters/DgAutocompleteFilter";
 import { DgDateRangeFilter } from "./filters/DgDateRangeFilter";
@@ -119,6 +123,33 @@ describe("filtering", () => {
 
     expect(screen.queryByLabelText("Value")).not.toBeInTheDocument();
     expect(renderedRowIds().length).toBe(testRows.length);
+  });
+
+  it("hands a column's own filterFn the { operator, value } envelope", async () => {
+    const user = userEvent.setup();
+    const filterFn = vi.fn<TMDataGridFilterFn<TestRow>>(
+      (row, columnId, filter) => tmDataGridFilterFn(row, columnId, filter),
+    );
+    const helper = createTMDataGridColumnHelper<TestRow>();
+    // "id" is not filterable, so the Filters button seeds the filter on
+    // "name", whose default operator is "contains".
+    const columns = helper.columns([
+      helper.accessor("id", { header: "ID", enableColumnFilter: false }),
+      helper.accessor("name", { header: "Name", filterFn }),
+    ]);
+    renderGridUi({ columns });
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.type(screen.getByLabelText("Value"), "a");
+
+    expect(filterFn.mock.calls.at(-1)?.[1]).toBe("name");
+    expect(filterFn.mock.calls.at(-1)?.[2]).toEqual({
+      operator: "contains",
+      value: "a",
+    });
+    // The delegation matched: every name but "Erik" holds an "a", and the
+    // fixture rows hold three Eriks.
+    expect(gridRowCount()).toBe(testRows.length - 3);
   });
 });
 

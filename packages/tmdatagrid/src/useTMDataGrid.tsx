@@ -79,6 +79,7 @@ import {
   tmDataGridFilterFn,
 } from "./core/filterOperators";
 import {
+  DEFAULT_COLUMN_MIN_SIZE,
   getColumnDefaultOperator,
   isControlColumn,
   isGeneratedColumn,
@@ -1584,6 +1585,14 @@ export function useTMDataGrid<TData extends RowData>({
     () => tableRef.current as unknown as TMDataGridQueryTable,
     [],
   );
+  // The grid's `minSize` floor under the consumer's `defaultColumn`, which
+  // still wins per key. Keyed on the consumer's object, because TanStack
+  // memoizes the default column def on `options.defaultColumn` identity.
+  const consumerDefaultColumn = options.defaultColumn;
+  const defaultColumn = useMemo(
+    () => ({ minSize: DEFAULT_COLUMN_MIN_SIZE, ...consumerDefaultColumn }),
+    [consumerDefaultColumn],
+  );
 
   // The sync of `state` into the table's atoms happens inside this call, in
   // the render body, and publishing from there makes React warn about the
@@ -1652,6 +1661,7 @@ export function useTMDataGrid<TData extends RowData>({
           ) as TableOptions<TMDataGridFeatures, TData>["onGroupingChange"],
         }
       : {}),
+    defaultColumn,
     // The rows as shown - see `shown` above. The consumer's own array passes
     // through untouched while nothing is committed.
     data: shown.rows,

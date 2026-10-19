@@ -119,8 +119,9 @@ TanStack defines no column option for. `meta.edit` only acts once `editing` is
 set: see the `editing` skill. `meta.filter` belongs to the `filtering` skill.
 
 `colSpan` (args `TMDataGridColSpanArgs`, `{ row, table }`) is display only, never
-covers a generated lane or leaves its pinned block, and is ignored on group rows
-and rows in row edit mode. See `docs/columns.md#spanning-columns`.
+covers a generated lane or leaves its pinned block, and is ignored on group rows,
+on rows in row edit mode, and on a row whose open cell editor a span would cover.
+Source: `packages/tmdatagrid/docs/columns.md` (Spanning columns).
 
 ### Column types
 
@@ -168,10 +169,11 @@ Columns are fluid. Each track is `minmax(minSize, flex fr)`.
 
 | Option | Effect |
 | --- | --- |
-| `minSize` | Minimum width, and the column's contribution to the grid minimum width. Defaults to `80`. |
+| `minSize` | Minimum width, and the column's contribution to the grid minimum width. Also the floor of a resize and of a pinned width. Defaults to `80`, through `defaultColumn.minSize`. |
+| `maxSize` | Ceiling of a resize, an autosize and a pinned width. Does not cap a fluid track. No default. |
 | `meta.flex` | Share of the remaining width. Defaults to `1`. |
 | `minSize === maxSize` | Fixed width. The column is never fluid. |
-| `size` | Applied once the column becomes fixed by resizing or pinning. |
+| `size` | Width of a column pinned at mount, clamped by `minSize` and `maxSize`. Ignored on a fluid column; a resize or an interactive pin stores the rendered width instead. Defaults to `150`. |
 
 ```tsx
 // Fixed 64px action column that never flexes.
@@ -196,21 +198,23 @@ consumer code.
 
 All three write state that persists together, so a grid comes back arranged the
 way it was left. `resetSettings()` from the hook clears visibility, order,
-pinning and widths in one go, and the column chooser offers it as **Reset
-layout**.
+pinning, widths and grouping in one go, and the column chooser offers it as
+**Reset layout**.
 
 **Hiding** is `columnVisibility`, driven by "Hide column" in a column menu and by
-the column chooser: `TMDataGrid.Menu.Columns` in the grid menu, **Manage
-columns** as a submenu of every column menu, and `TMDataGrid.ColumnsPanel` as
-plain controls for a host that is not a menu. See the `appearance` skill.
+the column chooser, which comes in three forms (see the `appearance` skill):
+
+- `TMDataGrid.Menu.Columns` in the grid menu.
+- **Manage columns**, a submenu of every column menu.
+- `TMDataGrid.ColumnsPanel`, plain controls for a host that is not a menu.
 
 **Pinning** is "Pin to left" / "Pin to right" in the column menu. A pinned
 column also becomes fixed-width: sticky offsets are computed from `getSize()`,
 which cannot resolve an `fr` value, so the grid stores the rendered width in
 `columnSizing` at the moment it is pinned and nothing jumps. A column pinned
 from `initialState.columnPinning` has no rendered width to store, so it takes
-its `size` - TanStack's default of `150` where none is set - and `minSize`
-does not apply.
+its `size` - TanStack's default of `150` where none is set - clamped by
+`minSize` and `maxSize`.
 
 **Ordering** is header dragging plus "Move left" / "Move right". A column can
 only move **within its own pinned region** - pinning splits the grid into left,
@@ -258,24 +262,18 @@ const grid = useTMDataGrid({
 ```
 
 `sortFn` on a column takes any registered name or a
-`(rowA, rowB, columnId) => number` function - v9's name for what v8 called
-`sortingFn`, and a rename an agent will reproduce wrongly from memory. Sorting writes
+`(rowA, rowB, columnId) => number` function. `sortFn` is v9's name for v8's
+`sortingFn`. Sorting writes
 TanStack's `sorting` state, an array of `{ id, desc }` in priority order. It is
 a **data** slice, persisted under `dataKey`, while the column layout below is a
 settings slice under `settingsKey`.
 
 ## Column-level feature options
 
-Standard TanStack column options. Each also removes the corresponding interface.
-
-| Option | Effect when `false` |
-| --- | --- |
-| `enableSorting` | No sort indicator, no sort menu items, no click-to-sort. |
-| `enableColumnFilter` | No filter menu item. Excluded from the filter panel's column list, and its header filter cell is empty. |
-| `enableHiding` | No hide menu item. Checkbox disabled in the column manager. |
-| `enablePinning` | No pin menu items. |
-| `enableResizing` | The divider is displayed but cannot be dragged. |
-| `enableGrouping` | No "Group by" menu item. |
+Standard TanStack column options, each removing its interface when `false`:
+`enableSorting`, `enableMultiSort`, `enableColumnFilter`, `enableHiding`,
+`enablePinning`, `enableResizing` and `enableGrouping`. What each one removes is
+in [references/columns-api.md](references/columns-api.md#column-level-feature-options).
 
 `meta.enableOrdering: false` belongs to the same set. A column whose menu has no
 remaining items renders no menu button and takes no right-click, so the
@@ -299,16 +297,17 @@ columns and edit.
 They are structural: fixed width, no column menu, and they cannot be sorted,
 filtered, resized, re-pinned or moved. The checkbox lane anchors the left pinned
 region, so no column can be placed in front of it. `isControlColumn(columnId)`
-identifies them.
+identifies them. To locate a lane in a test, use the constant with
+`data-column-id`; see the `testing` skill.
 
 ## Common mistakes
 
 ### CRITICAL Setting `size` to control width
 
-`size` is only applied once the column becomes fixed by resizing or pinning. On
-a fluid column it is ignored - the track is `minmax(minSize, flex fr)` - so a
-column given `size: 200` renders at whatever the flex share works out to, and
-the number looks like it did nothing.
+`size` applies only to a column pinned at mount. On a fluid column it is
+ignored - the track is `minmax(minSize, flex fr)` - so a column given
+`size: 200` renders at whatever the flex share works out to. A resize or an
+interactive pin stores the rendered width, not `size`.
 
 Wrong:
 
@@ -327,29 +326,28 @@ columnHelper.accessor("email", {
 });
 ```
 
-The corollary is that a pinned column is fixed-width and does use `size`, so a
-column that is pinned needs one.
+A column pinned at mount is fixed-width and does use `size`, so give it one.
 
 Source: `packages/tmdatagrid/docs/column-layout.md` (Sizing).
 
-### HIGH Pinning a column at mount without size
+### HIGH Pinning a column at mount without a width
 
 A column pinned interactively keeps the width it was rendering, which the grid
 writes into `columnSizing`. A column pinned from `initialState.columnPinning`
-has no rendered width, so it takes `size` - TanStack's default of `150` where
-none is set - and `minSize` does not apply.
+has no rendered width, so it takes `size` clamped by `minSize` / `maxSize`:
+TanStack's `150` when none is set, whatever the content needs.
 
 Wrong:
 
 ```tsx
-columnHelper.accessor("name", { header: "Name", minSize: 220 });
+columnHelper.accessor("name", { header: "Name" });
 initialState: { columnPinning: { start: ["name"], end: [] } },
 ```
 
 Correct:
 
 ```tsx
-columnHelper.accessor("name", { header: "Name", minSize: 220, size: 220 });
+columnHelper.accessor("name", { header: "Name", size: 220 });
 initialState: { columnPinning: { start: ["name"], end: [] } },
 ```
 
@@ -404,8 +402,7 @@ Source: `packages/tmdatagrid/src/core/columnUtils.ts`.
 
 `getColumnType(column)` defaults to `"string"`, so a numeric column that omits
 `meta: { type: "number" }` offers only the string operators, and comparisons run
-as text - `"9"` above `"10"`. The column still sorts and filters, which is why
-it is easy to miss.
+as text - `"9"` above `"10"`. The column still sorts and filters.
 
 Source: `packages/tmdatagrid/src/core/filterOperators.ts`.
 
@@ -426,10 +423,9 @@ Source: `packages/tmdatagrid/docs/column-layout.md` (Regions).
 
 ### HIGH Reaching for the v8 name of a v9 option
 
-TanStack v9 renamed the column comparator to `sortFn`. `sortingFn` is not an
-error the compiler catches in every position - it is simply an unknown key on
-the column definition, so the column keeps its automatic comparator and the
-custom ordering never appears.
+TanStack v9 renamed the column comparator to `sortFn`. `sortingFn` is an
+unknown key in v9; TypeScript does not always report it, and the column keeps
+its automatic comparator, so the custom ordering never appears.
 
 Wrong:
 

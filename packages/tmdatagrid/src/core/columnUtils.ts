@@ -160,6 +160,13 @@ export function isColumnReorderable(column: ColumnLike): boolean {
   return column.parent === undefined;
 }
 
+/**
+ * The `minSize` of a column that sets none: the floor of its fluid track, of a
+ * resize drag and of its pinned width. Passed to TanStack as
+ * `defaultColumn.minSize`, which otherwise fills in 20.
+ */
+export const DEFAULT_COLUMN_MIN_SIZE = 80;
+
 /** The list length from which a column chooser shows its search box. */
 export const COLUMN_SEARCH_MIN = 6;
 

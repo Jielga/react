@@ -2,15 +2,19 @@
 name: options
 description: >
   useTMDataGrid options, return value and state persistence. Covers passthrough
-  of TanStack TableOptions, the default initialState (pagination, columnPinning,
-  globalFilterFn), the meta object (loading, noResultsLabel, rowHeight,
-  totalRowCount), the grid's own persist, enableColumnOrdering,
-  enablePagination, selectionMode and showSelectedBackground options, the
-  persist option with dataKey/settingsKey slice selection and storageMode, the
-  returned api (table, ui, edit, features, labels, resetSettings, scrollToRow),
-  ui panel and column drag actions, and reading grid state with useSelector.
-  Load when configuring the hook, persisting column layout or filters, or
-  reacting to grid state from a parent.
+  of TanStack TableOptions, every default the grid changes (globalFilterFn,
+  groupedColumnMode, autoResetExpanded, autoResetPageIndex,
+  defaultColumn.minSize), the default initialState, the meta object (loading,
+  noResultsLabel, rowHeight, totalRowCount), the grid's own options (persist,
+  labels, editing, filters, exportOptions, enableColumnOrdering,
+  enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
+  showSelectedBackground, cellSelection, renderDetails, overscan,
+  quickSearchMode), persist with dataKey/settingsKey slices and storageMode,
+  the returned api (table, ui, edit, features, labels, resetSettings,
+  scrollToRow), ui actions, and reading grid state with useSelector over
+  table.store, since table.getState() does not exist in v9. Load when
+  configuring the hook, looking up an option's default, persisting layout or
+  filters, or reacting to grid state from a parent.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -28,7 +32,8 @@ Creates the table instance and the state used by the grid interface.
 
 ```tsx
 const grid = useTMDataGrid<TData>(options);
-// { table, ui, edit, features, labels, resetSettings, scrollToRow }
+// { table, ui, edit, features, labels, filters, exportOptions, renderDetails,
+//   renderDetailsEstHeight, overscan, resetSettings, scrollToRow }
 ```
 
 The signature is
@@ -42,43 +47,77 @@ All TanStack `TableOptions` are supported and passed through unchanged, includin
 flags and `rowCount`. The `features` option is supplied internally and cannot be
 overridden.
 
-`persist`, `enableColumnOrdering`, `enablePagination`, `selectionMode` and
-`showSelectedBackground` are the grid's own options and are consumed by the hook
-rather than forwarded to TanStack.
+The grid defines these options itself: `persist`, `labels`, `editing`,
+`filters`, `exportOptions`, `enableColumnOrdering`, `enablePagination`,
+`resetPageOnQueryChange`, `enableRowNumbers`, `selectionMode`,
+`showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
+`cellSelection`, `onFocusedCellChange`, `renderDetails`,
+`renderDetailsEstHeight`, `detailsColumnPosition`, `overscan`,
+`quickSearchMode` and `enableMatchHighlighting`. The table below marks them
+"Defined by the grid"; every other row is a TanStack option, listed where the
+grid changes its default or where it decides something visible. A TanStack
+default the grid changes reads, for example, `"remove"` (grid default;
+TanStack: `"reorder"`). A TanStack option that is not listed passes through
+with TanStack's own default.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `data` | `TData[]` | – | Row data. Keep the reference stable with `useMemo`. |
-| `columns` | `ColumnDef[]` | – | Created with `createTMDataGridColumnHelper`. |
-| `getRowId` | `(row, index) => string` | Row index | Used by row selection and virtualization. Required once `editing` is set. |
+| `data` | `TData[]` | – | Row data. When the reference changes the table reprocesses the row models, so keep it stable with `useMemo`; a fresh `[]` for the empty case belongs in a module-scope constant. |
+| `columns` | `ColumnDef[]` | – | Created with `createTMDataGridColumnHelper`. Define them outside the component. |
+| `getRowId` | `(row, index, parent?) => string` | Row index | The id that row selection, expansion, row pinning and editing are keyed by. The index points at another record after a sort or a refetch, so return the entity id. Required once `editing` is set. |
+| `defaultColumn` | `Partial<ColumnDef>` | `{ minSize: 80 }` (grid default; TanStack: `{}`) | Defaults merged under every column. The grid sets `filterFn: "tmDataGrid"` and clears `aggregationFn` and `aggregatedCell` on every column, so those three keys have no effect here; a value on the column wins. |
 | `enableRowSelection` | `boolean \| (row) => boolean` | `true` | `false` removes row selection and its checkbox column. |
-| `selectionMode` | `"checkbox" \| "row" \| "checkboxAndHighlight" \| "highlight"` | `"checkbox"` | What selecting looks like and what a row click does. Defined by the grid - see the `rows` skill. |
-| `showSelectedBackground` | `boolean` | Follows the mode | Background tint on selected rows: off for `"checkbox"`, on for `"row"`. Colour is `--dg-row-selected-bg`. Defined by the grid. |
-| `enableSorting` | `boolean` | `true` | Enables sorting for the table. |
-| `enableColumnFilters` | `boolean` | `true` | Enables filtering for the table. |
-| `enableHiding` | `boolean` | `true` | Enables column visibility for the table. |
+| `enableMultiRowSelection` | `boolean \| (row) => boolean` | `true` | `false` removes the select-all checkbox and limits the selection to one row. |
+| `selectionMode` | `"checkbox" \| "row" \| "checkboxAndHighlight" \| "highlight"` | `"checkbox"` | What selecting looks like and what a bare row click does. Defined by the grid, see the `rows` skill. |
+| `showSelectedBackground` | `boolean` | On for `"row"`, off for `"checkbox"` | Determines whether selected rows take a background tint, coloured by `--dg-row-selected-bg`. Defined by the grid, see the `rows` skill. |
+| `defaultHighlightedRowId` | `string \| null` | – | Row highlighted on mount, under a mode with a highlight. Read once, like `initialState`. Defined by the grid. |
+| `onHighlightedRowChange` | `(rowId: string \| null) => void` | – | Follows the highlighted row, from clicks and from `ui.actions.setHighlightedRow`. Defined by the grid. |
+| `enableSorting` | `boolean` | `true` | `false` removes the sort indicator, the sort menu items and click-to-sort. Also a column option. See the `columns` skill. |
+| `enableMultiSort` | `boolean` | `true` for accessor columns | Shift+click on a header adds a sort instead of replacing it. Also a column option. See the `columns` skill. |
+| `maxMultiSortColCount` | `number` | `Number.MAX_SAFE_INTEGER` | How many sorts are kept; past it the oldest is dropped. |
+| `enableColumnFilters` | `boolean` | `true` | `false` removes the filter menu item, the `FilterButton`, the header filter row and the panel's column list, and disables the panel's "Add filter" button. Filters already in state still apply. See the `filtering` skill. |
+| `enableGlobalFilter` | `boolean` | `true` | `false` removes `Search`. Also a column option, removing one column from the search. See the `filtering` skill. |
+| `globalFilterFn` | filter fn \| name | `"tmDataGridFuzzy"`; `"includesString"` under `quickSearchMode: "contains"` (grid default; TanStack: `"auto"`) | How the quick search matches. An explicit value also switches the fuzzy rank ordering off. |
+| `enableHiding` | `boolean` | `true` | `false` removes the Hide column item, the Manage columns submenu and the column chooser. Also a column option. |
 | `enableColumnPinning` | `boolean` | `true` | Enables pinning for the table. `false` removes the pin menu items; the generated lanes stay pinned. |
-| `enableColumnResizing` | `boolean` | `true` | Enables resizing for the table. |
-| `enableColumnOrdering` | `boolean` | `true` | Enables header dragging and the move menu items. Defined by the grid. |
-| `enablePagination` | `boolean` | `false` | Enables client-side paging and the `Footer` pager. Implied by `manualPagination`. Defined by the grid. |
-| `cellSelection` | `"none" \| "single" \| "range"` | `"none"` | Cell cursor; `"range"` adds a drag-selectable rectangle, Ctrl+C and CSV export. Defined by the grid. |
-| `onFocusedCellChange` | `(cell \| null) => void` | – | Fires whenever the focused cell moves. |
-| `overscan` | `number` | `6` | Rows the virtualizer keeps mounted above and below the viewport. Defined by the grid. |
-| `columnResizeMode` | `"onChange" \| "onEnd"` | `"onChange"` | Resize update strategy. |
-| `initialState` | `Partial<TableState>` | See below | The state the grid starts from, read once on mount. Merged over the grid defaults. |
-| `state` | `Partial<TableState>` | – | Controlled state. Each slice requires its `onXChange` - see below. |
-| `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration, see below. |
-| `persist` | `TMDataGridPersistence` | – | State persistence, see below. |
-| `editing` | `TMDataGridEditingOptions` | off | Turns editing on. Two axes: `mode` (`"cell" \| "cellConfirm" \| "row"`) picks what counts as a commit, `draft` picks whether it parks in the draft store; the object also holds `onCommit`, `onSaveDrafts`, `rowValidators`, `isRowEditable`, `newRowDefaults`, `newRowsSticky` (keeps committed new rows in the sticky entry block instead of sorting them in with the body), `onRowAdd` and `onRowDelete` - see the `editing` skill. |
-| `labels` | `TMDataGridLabelsOverride` | English | Overrides for the grid's strings and `aria-label`s. |
+| `enableColumnResizing` | `boolean` | `true` | With `false` the divider is displayed but cannot be dragged, and double-click autosize and the Autosize menu item are removed. Also a column option, as `enableResizing`. |
+| `enableColumnOrdering` | `boolean` | `true` | Enables header dragging and the move menu items. Defined by the grid, see the `columns` skill. |
+| `enableGrouping` | `boolean` | `true`; `false` under `manualPagination` (grid default; TanStack: `true`) | `false` removes the Group by and Ungroup menu items and the tree lane. Also a column option. See the `grouping` skill. |
+| `groupedColumnMode` | `"remove" \| "reorder" \| false` | `"remove"` (grid default; TanStack: `"reorder"`) | What happens to a column the rows are grouped by: `"remove"` takes it out of the grid, `"reorder"` moves it to the front, `false` leaves it in place. See the `grouping` skill. |
+| `enablePagination` | `boolean` | `false` | Enables client-side paging and the `Footer` pager. Implied by `manualPagination`. Defined by the grid, see the `data` skill. |
+| `resetPageOnQueryChange` | `boolean` | `true` | Returns to the first page when a column filter, the quick search, the sorting or the grouping changes through the table. A `data` change does not count. Defined by the grid, see the `data` skill. |
+| `autoResetPageIndex` | `boolean` | `false` (grid default; TanStack: `!manualPagination`) | TanStack's return to the first page on every `data` change. Off, since `resetPageOnQueryChange` covers the query. |
+| `autoResetExpanded` | `boolean` | `false` (grid default; TanStack: `!manualExpanding`) | TanStack's collapse of every expanded row on a `data` change. Off, so open details panels survive a refetch. |
+| `manualFiltering`, `manualSorting`, `manualGrouping`, `manualPagination` | `boolean` | `false` | The server does that step and the grid shows `data` as given. `manualPagination` also implies `enablePagination`. See the `server-side` skill. |
+| `rowCount` | `number` | – | The total row count under `manualPagination`, read by the pager. |
+| `enableRowNumbers` | `boolean` | `false` | The row-number gutter, outermost left. Defined by the grid, see the `rows` skill. |
+| `enableRowPinning` | `boolean \| (row) => boolean` | `false` (grid default; TanStack: `true`) | Rows can be pinned to sticky edge blocks with `row.pin()`. See the `rows` skill. |
+| `quickSearchMode` | `"fuzzy" \| "contains"` | `"fuzzy"` | How `Search` matches. Fuzzy forgives typos and orders unsorted results by match quality; `"contains"` is plain substring matching. Defined by the grid, see the `filtering` skill. |
+| `enableMatchHighlighting` | `boolean` | `false` | Cells mark the matched text while a contains-family filter or the quick search is active. Defined by the grid, see the `filtering` skill. |
+| `renderDetails` | `({ row, table }) => ReactNode` | – | Panel rendered under an expanded row, spanning every column. Setting it turns row details on and adds the pinned chevron lane. Defined by the grid, see the `rows` skill. |
+| `renderDetailsEstHeight` | `number` | `160` | What the virtualizer assumes for a panel it has not measured yet. Panels are measured once mounted, so an approximation is enough. Defined by the grid. |
+| `detailsColumnPosition` | `"left" \| "right"` | `"left"` | Which edge the details lane is pinned to. `"right"` places it after every column, inside the edit lane. Defined by the grid, see the `rows` skill. |
+| `cellSelection` | `"none" \| "single" \| "range"` | `"none"` | Cell cursor and, under `"range"`, a selectable rectangle with Ctrl+C and CSV export. Defined by the grid, see the `cell-selection` skill. |
+| `onFocusedCellChange` | `(cell: TMDataGridCellPosition \| null) => void` | – | Called whenever the focused cell moves, by key, click or `setFocusedCell`. Defined by the grid. |
+| `overscan` | `number` | `6` | Rows the virtualizer keeps mounted above and below the viewport. Raise it if fast scrolling flashes blank rows, lower it when rows are expensive to render. Defined by the grid. |
+| `columnResizeMode` | `"onChange" \| "onEnd"` | `"onEnd"` | When a resize drag writes `columnSizing`. The grid paints a running drag itself either way; `"onChange"` also publishes a width on every pointer move, which re-renders the grid with each of them. |
+| `initialState` | `Partial<TableState>` | – | Starting state, read once on mount. Merged over the grid defaults below. |
+| `state` | `Partial<TableState>` | – | Controlled state. Each slice requires its `onXChange`. See below. |
+| `atoms` | `Partial<Record<slice, Atom>>` | – | External atoms owning state slices. No callback required. Takes precedence over `state`. |
+| `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration. See below. |
+| `filters` | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Where the filter controls go - a popup, a sidebar, the column headers, or nowhere. Defined by the grid, see the `filtering` skill. |
+| `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see the `data` skill. |
+| `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see the `editing` skill. |
+| `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see below. |
+| `labels` | `TMDataGridLabelsOverride` | English | Overrides for the grid's strings and `aria-label`s. Defined by the grid, see the `appearance` skill. |
 
 ### Default initial state
 
 | Slice | Default |
 | --- | --- |
-| `pagination` | `{ pageIndex: 0, pageSize: 25 }` - inert until pagination is enabled |
-| `columnPinning.start` | The checkbox column, followed by any columns you provide |
-| `globalFilterFn` | `"includesString"` |
+| `pagination` | `{ pageIndex: 0, pageSize: 25 }`. Inert until pagination is enabled |
+| `columnPinning.start` | The row number, checkbox, tree and details columns, followed by any columns you provide. The details column moves to `end` under `detailsColumnPosition: "right"` |
+| `columnPinning.end` | Any columns you provide, then the details column under `detailsColumnPosition: "right"`, then the edit column |
 
 ### Controlled state
 
@@ -113,10 +152,10 @@ const grid = useTMDataGrid({
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `loading` | `boolean` | – | Displays a loader instead of the empty state. |
-| `noResultsLabel` | `string` | `"No rows match your filters"` | Empty state text. |
+| `loading` | `boolean` | `false` | While `true` and the view is empty, a loader replaces the empty state; `renderEmptyState` is not called. Rows on screen stay. See the `data` skill. |
+| `noResultsLabel` | `string` | `labels.noResults` | The text shown when a filter or the search leaves no rows. |
 | `rowHeight` | `number` | From `size` | Row height in px. Overrides the size scale. |
-| `totalRowCount` | `number` | – | Unfiltered total used by `SummaryCount`. Required for server-side data. |
+| `totalRowCount` | `number` | – | Unfiltered total used by `SummaryCount`. Without it a `manualFiltering` or `manualPagination` grid shows the shown count alone. |
 
 ## persist
 
@@ -194,25 +233,49 @@ Source: `packages/tmdatagrid/docs/persistence.md` (Behaviour).
 | --- | --- | --- |
 | `table` | `Table<TMDataGridFeatures, TData>` | The TanStack table instance. |
 | `ui` | `TMDataGridUiStore`: `Store<TMDataGridUiState, TMDataGridUiActions>` | State of the filter and column panels. |
+| `filters` | `TMDataGridFiltersSettings` | The `filters` option with its defaults filled in. |
+| `exportOptions` | `TMDataGridExportSettings` | The `exportOptions` option with its defaults filled in. |
 | `edit` | `TMDataGridEditApi` | The edit engine, inert until `editing` is set. See the `editing` skill. |
 | `features` | `TMDataGridFeatureFlags` | Table-level feature switches, re-read on each render. |
 | `labels` | `TMDataGridLabels` | The resolved label set, overrides merged over English. |
+| `renderDetails` | `TMDataGridDetailsRenderer<TData> \| undefined` | The detail renderer, passed through for `TMDataGrid.Table` to call. |
+| `renderDetailsEstHeight` | `number` | The estimate, resolved to its default when the option was not set. |
+| `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view through the virtualizer. `false` when the row is not in the current view. |
 
-Both stores are subscribable, which is how a parent reacts to grid state without
-owning it:
+`table` is `TMDataGridTable<TData>`, TanStack's core `Table` type. It has no
+`getState()` (that method does not exist in TanStack Table v9) and `table.state`
+is not part of the type; state lives in `table.store`.
+
+### Reading state
+
+`table.store` and `ui` are TanStack stores. Read a slice with `useSelector`
+from `@tanstack/react-store`, which subscribes the component to what the
+selector returns:
 
 ```tsx
 import { useSelector } from "@tanstack/react-store";
 
 const selectedCount = useSelector(
   grid.table.store,
-  (state) => Object.keys(state.rowSelection).length,
+  () => grid.table.getSelectedRowModel().rows.length,
 );
-
+const isGrouped = useSelector(grid.table.store, (state) =>
+  state.grouping.includes("department"),
+);
+const pageIndex = useSelector(grid.table.store, (state) => state.pagination.pageIndex);
 const filterPanelOpen = useSelector(grid.ui, (state) => state.filterPanelOpen);
 ```
+
+`grid.table.store.state` is a plain read and does not subscribe the component.
+A bare read is stale in any component that does not call `useTMDataGrid`
+itself, and under the React Compiler also in the one that does; `useSelector`
+subscribes either way. A table or column getter such as
+`table.getSelectedRowModel()` or `column.getIsGrouped()` is a plain read as
+well; call it inside a selector, as above. `getTMDataGridPaginationApi(table)`
+is a snapshot too; wrap it in `useSelector` or use the `state` the Footer's
+`renderPagination` slot receives.
 
 ### ui actions
 
@@ -220,6 +283,8 @@ const filterPanelOpen = useSelector(grid.ui, (state) => state.filterPanelOpen);
 | --- | --- |
 | `openFilterPanel` | `(columnId?: string \| null) => void` |
 | `closeFilterPanel` | `() => void` |
+| `openExportPicker` | `(request: TMDataGridExportPickerRequest) => void` |
+| `closeExportPicker` | `() => void` |
 | `focusPanelFilter` | `(columnId: string \| null) => void` |
 | `focusHeaderFilter` | `(columnId: string \| null) => void` |
 | `startColumnDrag` | `(columnId: string) => void` |
@@ -232,29 +297,41 @@ const filterPanelOpen = useSelector(grid.ui, (state) => state.filterPanelOpen);
 The last two move the cell cursor and the selected rectangle under
 `cellSelection`; DOM focus follows `focusedCell` and scrolls its row into view.
 
-`startColumnDrag` / `endColumnDrag` are called by the header cells while a column is being dragged, and
-`ui.draggedColumnId` holds the column being moved - browsers keep `dataTransfer`
-unreadable until the drop.
+`startColumnDrag` / `endColumnDrag` are called by the header cells while a
+column is being dragged, and `ui.state.draggedColumnId` holds the column being
+moved - browsers keep `dataTransfer` unreadable until the drop.
 
 `openColumnFilter(grid, columnId)` combines the two steps the column menu uses:
-add an empty filter row for the column if none exists, then open the panel.
+add an empty filter row for the column if none exists, then open the panel on
+it, or focus the column's header control under `filters.inHeader`.
 
 ## Common mistakes
 
 ### Reading store state during render
 
-`grid.table.store.state` is a plain read - it does not subscribe the component,
-so the value is correct on first render and then never updates.
+`grid.table.store.state` is a plain read - it does not subscribe the component.
+A bare read is stale in any component that does not call `useTMDataGrid`
+itself, and under the React Compiler also in the one that does; `useSelector`
+subscribes either way. The same holds for every table and column getter called
+outside a selector.
 
 ```tsx
 // Wrong - never re-renders when the selection changes.
 const count = Object.keys(grid.table.store.state.rowSelection).length;
+// Wrong - a getter outside a selector is a snapshot.
+const grouped = grid.table.getColumn("department")!.getIsGrouped();
+// Wrong - `getState()` does not exist in TanStack Table v9.
+const sorting = grid.table.getState().sorting;
 
 // Right.
 const count = useSelector(
   grid.table.store,
   (state) => Object.keys(state.rowSelection).length,
 );
+const grouped = useSelector(grid.table.store, (state) =>
+  state.grouping.includes("department"),
+);
+const sorting = useSelector(grid.table.store, (state) => state.sorting);
 ```
 
 ### persist object built during render
@@ -273,4 +350,7 @@ Include a tenant or user identifier in the key.
 
 A new array identity on each render re-runs the row model. `data={rows ?? []}`
 allocates a fresh `[]` every render when `rows` is undefined - hoist the empty
-array to a module-scope constant or `useMemo` the expression.
+array to a module-scope constant or `useMemo` the expression. Under `editing`
+the cost is higher: every new `data` identity drops the open drafts of the rows
+it no longer contains, so a transient `[]` while refetching discards every
+draft.

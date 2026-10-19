@@ -14,7 +14,11 @@ hint: Drag a header to reorder · pin or hide from a column menu · drag a divid
 ## Hiding
 
 **Hide column** in any column menu, and the column chooser for the whole list at once: a search field, one checkbox per column, show/hide all, and **Reset layout**.
-The chooser is `TMDataGrid.Menu.Columns` in the [grid menu](/docs/menu), **Manage columns** in every column menu (a submenu of the same items), and `TMDataGrid.ColumnsPanel` as plain controls for a host that is not a menu.
+The chooser comes in three forms:
+
+- `TMDataGrid.Menu.Columns` in the [grid menu](/docs/menu).
+- **Manage columns**, a submenu of every column menu with the same items.
+- `TMDataGrid.ColumnsPanel`, plain controls for a host that is not a menu.
 
 `enableHiding: false` removes all of it; on a column it removes that column's
 menu item and leaves it out of the panel, which lists what can be hidden and
@@ -42,8 +46,8 @@ computed from an `fr` value. The grid writes the column's rendered width into
 To start pinned, set `initialState.columnPinning`. The slice is TanStack's
 full `ColumnPinningState`, so a partial does not compile - name both sides.
 A column pinned at mount has no rendered width to store, so it takes its
-`size` - TanStack's default of `150` where none is set - and `minSize` does
-not apply. Give such a column an explicit `size`:
+`size`, clamped between `minSize` and `maxSize`; with none of them set that is
+TanStack's default of `150`. Give such a column an explicit `size`:
 
 ```tsx
 columnHelper.accessor("registration", { header: "Registration", size: 220 });
@@ -114,10 +118,11 @@ Columns are fluid by default. Each track is `minmax(minSize, flex fr)`.
 
 | Column option | Effect |
 | --- | --- |
-| `minSize` | Minimum width, and the column's contribution to the grid minimum width. Defaults to `80`. |
+| `minSize` | Minimum width, and the column's contribution to the grid minimum width. Also the floor of a resize and of a pinned width. Defaults to `80`, through `defaultColumn.minSize`. |
+| `maxSize` | Ceiling of a resize, an autosize and a pinned width. Does not cap a fluid track. No default. |
 | `meta.flex` | Share of the remaining width. Defaults to `1`. |
 | `minSize === maxSize` | Fixed width. The column is never fluid. |
-| `size` | Applied once the column becomes fixed by resizing or pinning. |
+| `size` | Width of a column pinned at mount, clamped by `minSize` and `maxSize`. Ignored on a fluid column; a resize or an interactive pin stores the rendered width instead. Defaults to `150`. |
 
 Drag a divider to resize. A column switches to a fixed pixel width the moment
 it is resized or pinned, and the width is stored in `columnSizing`. The drag
@@ -148,8 +153,8 @@ the column's cells.
 
 ## Reset the layout
 
-`resetSettings()` from the hook clears visibility, order, pinning and widths in
-one call. The columns panel offers it as **Reset layout**.
+`resetSettings()` from the hook clears visibility, order, pinning, widths and
+grouping in one call. The columns panel offers it as **Reset layout**.
 
 ```tsx
 const { resetSettings } = useTMDataGrid({ data, columns });
@@ -169,7 +174,7 @@ const { resetSettings } = useTMDataGrid({ data, columns });
 | `meta.flex` | Column meta | `number` | `1` | Share of the remaining width. |
 | `meta.autoSize` | Column meta | `boolean` | `false` | Autosize once, on the render the column's first cells appear in. |
 | `minSize` / `maxSize` / `size` | Column options | `number` | `80` / – / – | Width bounds, and the fixed width once one applies. |
-| `resetSettings` | Hook return | `() => void` | – | Clears visibility, order, pinning and widths. |
+| `resetSettings` | Hook return | `() => void` | – | Clears visibility, order, pinning, widths and grouping. |
 | `moveColumn` | Export | `({ table, columnId, targetId, side }) => void` | – | Moves a column beside another. |
 | `moveColumnByStep` | Export | `({ table, columnId, direction }) => void` | – | Moves it one place. |
 | `MoveColumnArgs` · `ColumnStepArgs` | Types | – | – | What `moveColumn` takes, and what `moveColumnByStep` and `getStepTargetColumn` take. |

@@ -18,8 +18,7 @@ file: rows/SelectionModes.tsx
 ## The four modes
 
 `selectionMode` sets what selecting looks like and what a bare row click does.
-A click can toggle a multi-selection or move a highlight, not both, so the two
-are one option rather than two.
+A bare click either toggles the selection or moves the highlight, never both.
 
 | Mode | Checkbox column | Row click |
 | ---- | --------------- | --------- |
@@ -28,8 +27,8 @@ are one option rather than two.
 | `"checkboxAndHighlight"` | yes, multi-select | highlights one row |
 | `"highlight"` | no | highlights one row - no selection at all |
 
-The first two write to TanStack's `rowSelection`, so the toolbar count,
-`getSelectedRowModel()` and persistence all behave the same either way.
+The first two write to TanStack's `rowSelection`, so `getSelectedRowModel()`
+and `onRowSelectionChange` behave the same either way.
 
 Under `"row"` the click follows the usual desktop-list conventions: a plain
 click replaces the selection with this row, Ctrl/Cmd toggles it and leaves the
@@ -71,9 +70,9 @@ For a panel that opens under the row instead of beside the grid, see
 
 Read the selection through the table store with TanStack Store's
 [`useSelector`](https://tanstack.com/store/latest/docs/framework/react/reference), rather
-than by calling a method directly. The table identity is stable across renders,
-so the React Compiler caches a bare `getSelectedRowModel()` call and the
-toolbar stops updating.
+than by calling a method directly. A bare read is stale in any component that
+does not call `useTMDataGrid` itself, and under the React Compiler also in the
+one that does; `useSelector` subscribes either way.
 
 ```tsx
 const selected = useSelector(
