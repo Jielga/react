@@ -217,9 +217,15 @@ hint: Open a row with its chevron - its name takes the rest of the row, and the 
 - Group rows ignore `colSpan`, and so does a row open in
   [row edit mode](/docs/editing), where every column holds an editor.
 - Sorting, filtering, copy and export still see every column. Autosize leaves
-  a spanning cell out of its column's measurement.
+  a spanning cell out of its column's measurement, and a column whose every
+  mounted cell spans fits its header.
 - Under [cell selection](/docs/cell-selection) the spanning cell is one cell:
   the arrow keys step over it, and a move onto a column it covers lands on it.
+  It is addressed by its first column: a range holds it when it holds that
+  column, and a range over only the columns it covers leaves it out. Copy and
+  export take every column of the range either way.
+- Under [cell editing](/docs/editing) a covered column has no cell to open,
+  and Tab from the spanning cell's editor moves past the columns it covers.
 
 A cell renderer that reads `row.getIsExpanded()`, as the demo's does, has to
 subscribe to the store - see

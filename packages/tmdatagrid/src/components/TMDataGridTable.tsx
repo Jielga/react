@@ -1256,12 +1256,23 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     colSpanCache.set(row.id, resolved);
     return resolved;
   };
-  /** A position moved onto the cell that renders it, under spans. */
+  /** Whether the column at `columnIndex` is covered by a span on `row`. */
+  const isCoveredCell = (
+    row: Row<TMDataGridFeatures, TMDataGridRowData>,
+    columnIndex: number,
+  ): boolean => {
+    const spans = colSpansOf(row);
+    return spans !== null && spans[columnIndex] === 0;
+  };
+  /**
+   * A position moved onto the cell that renders it, under spans. `row` is the
+   * position's row when the caller holds it, which saves the lookup.
+   */
   const toRenderedCell = (
     position: TMDataGridCellPosition,
+    row = rows.find((candidate) => candidate.id === position.rowId),
   ): TMDataGridCellPosition => {
     if (spanColumns === null) return position;
-    const row = rows.find((candidate) => candidate.id === position.rowId);
     const spans = row ? colSpansOf(row) : null;
     if (spans === null) return position;
     const columnIndex = orderedColumns.findIndex(
@@ -1367,12 +1378,11 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
    * boundary column carries its shadow.
    */
   const spanLayout = (
-    columnId: string,
+    firstIndex: number,
     lastIndex: number,
   ): TMDataGridColumnLayout => {
-    const first = layoutFor(columnId);
+    const first = layoutFor(orderedColumns[firstIndex]!.id);
     if (first.pinnedAt === false) return first;
-    const firstIndex = orderedColumns.findIndex((c) => c.id === columnId);
     const covered = orderedColumns
       .slice(firstIndex, lastIndex + 1)
       .map((column) => layoutFor(column.id));
@@ -1893,7 +1903,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     if (!row || !column) return;
     // A column covered by a span on this row has no cell; the one covering it
     // takes the focus.
-    const cell = toRenderedCell({ rowId: row.id, columnId: column.id });
+    const cell = toRenderedCell({ rowId: row.id, columnId: column.id }, row);
     // The state moves; the effect below is what makes the DOM follow, because
     // the element for an off-screen row does not exist yet to be focused.
     wantsCellFocusRef.current = true;
@@ -2033,12 +2043,15 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       direction: move,
       rowCount: rows.length,
       columnCount: orderedColumns.length,
+      // A column covered by a span on its row has no cell to hold an editor,
+      // and a move onto it would land back on the spanning cell just left.
       isEditable: (coords) => {
         const row = rows[coords.rowIndex];
         const column = orderedColumns[coords.columnIndex];
         return (
           row !== undefined &&
           column !== undefined &&
+          !isCoveredCell(row, coords.columnIndex) &&
           edit.canEditCell(row, column)
         );
       },
@@ -2157,10 +2170,13 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
           const nextCell =
             container === null
               ? null
-              : findCellElement(container, {
-                  rowId: nextRow.id,
-                  columnId: nextColumn.id,
-                });
+              : findCellElement(
+                  container,
+                  toRenderedCell(
+                    { rowId: nextRow.id, columnId: nextColumn.id },
+                    nextRow,
+                  ),
+                );
           if (nextCell !== null) nextCell.focus({ preventScroll: true });
           else target.blur();
           return;
@@ -2381,7 +2397,10 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       return;
     }
 
-    const cellElement = findCellElement(container, toRenderedCell(focusedCell));
+    const cellElement = findCellElement(
+      container,
+      toRenderedCell(focusedCell, rows[focusedRowIndex]),
+    );
     // Still scrolling. The intent stays up, and the next render tries again.
     if (cellElement === null) return;
     wantsCellFocusRef.current = false;
@@ -2968,7 +2987,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                       colSpan={colSpan}
                       layout={
                         colSpan > 1
-                          ? spanLayout(cell.column.id, lastIndex)
+                          ? spanLayout(cellIndex, lastIndex)
                           : layoutFor(cell.column.id)
                       }
                       contentOverride={
@@ -3035,14 +3054,11 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                               tabIndex: -1,
                               // "Selected" means "in the block Ctrl+C would
                               // take" - which under `"single"` is the one cell
-                              // the user is standing on.
+                              // the user is standing on. A spanning cell is in
+                              // it by its first column alone - see
+                              // isWithinBounds.
                               selected: cellRangeSelection
-                                ? isWithinBounds(
-                                    rangeBounds,
-                                    viewIndex,
-                                    cellIndex,
-                                    lastIndex,
-                                  )
+                                ? isWithinBounds(rangeBounds, viewIndex, cellIndex)
                                 : isFocusedWithin(row.id, cellIndex, lastIndex),
                               edges: boundsEdges(
                                 rangeBounds,
