@@ -14,7 +14,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.2.0'
+  library_version: '2.3.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/cell-selection.md'
   - 'Jielga/react:packages/tmdatagrid/src/core/cellNavigation.ts'

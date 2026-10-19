@@ -15,7 +15,7 @@ description: >
 metadata:
   type: lifecycle
   library: '@jielga/tmdatagrid'
-  library_version: '2.2.0'
+  library_version: '2.3.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/migrating-to-2.md'
   - 'Jielga/react:packages/tmdatagrid/src/index.ts'
