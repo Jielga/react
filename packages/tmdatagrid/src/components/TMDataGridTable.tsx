@@ -632,6 +632,14 @@ export type TMDataGridTableProps<TData extends RowData> = {
    */
   striped?: boolean;
   /**
+   * Whether a body row takes the hover tint under the pointer. Unset, a row
+   * takes it when the row itself answers a gesture: `selectionMode: "row"`,
+   * a highlight mode, `onRowClick` or `renderRowContextMenu`. Group rows sit
+   * out those gestures and so sit out the tint too. `true` tints every row,
+   * `false` none. The row carries `data-highlight-on-hover` while it applies.
+   */
+  highlightOnHover?: boolean;
+  /**
    * Called when the scroll *arrives* at an edge - once per arrival, not per
    * scroll event, and not on mount (the grid starts at the top-left edge).
    * For loading more rows as the end approaches, `onReachEnd` is the better
@@ -751,6 +759,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
   rowClassName,
   rowStyle,
   striped = false,
+  highlightOnHover,
   onScrollToTop,
   onScrollToBottom,
   onScrollToLeft,
@@ -2833,6 +2842,14 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
               ) => {
               const isGroupRow = row.getIsGrouped();
               const isInteractive = rowGesturesFor(row);
+              // The hover tint promises that the row answers the pointer, so
+              // by default it follows the gestures the row takes: the ones
+              // behind `isInteractive`, and the context menu - which a group
+              // row sits out as well, see the row's onContextMenu below.
+              const highlightsOnHover =
+                highlightOnHover ??
+                (isInteractive ||
+                  (renderRowContextMenu !== undefined && !isGroupRow));
               const rowCells = [
                 ...row.getStartVisibleCells(),
                 ...row.getCenterVisibleCells(),
@@ -2940,6 +2957,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                   data-selects-on-click={
                     (selectsOnRowClick && !isGroupRow) || undefined
                   }
+                  data-highlight-on-hover={highlightsOnHover || undefined}
                   aria-selected={
                     features.rowSelection ? row.getIsSelected() : undefined
                   }

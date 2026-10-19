@@ -95,6 +95,21 @@ virtualization rather than sticking to particular records.
 
 Pinned rows are not striped: they have left the scrolling order.
 
+## Hover
+
+A row takes the hover tint under the pointer when the row itself answers a
+gesture: `selectionMode: "row"` or a highlight mode, `onRowClick`, or
+`renderRowContextMenu`. A grid with none of those shows no hover tint, and a
+group row never does, since it sits out those gestures.
+
+`highlightOnHover` overrides that: `true` tints every row, `false` none.
+
+```tsx
+<TMDataGrid.Table highlightOnHover={false} />
+```
+
+A row carries `data-highlight-on-hover="true"` while the tint applies.
+
 ## Styling by state
 
 Rows carry data attributes for their state, so a stylesheet can target any of
@@ -108,6 +123,7 @@ it without a callback:
 | `data-grouped` | Group rows |
 | `data-depth` | Every row. The nesting level |
 | `data-context-menu` | The row whose context menu is open |
+| `data-highlight-on-hover` | Rows that take the hover tint. See [Hover](#hover) |
 | `data-row-id` | Every row. Its id, which [tests](/docs/testing) key off |
 
 The state attributes are present, with the value `"true"`, only on the rows
@@ -127,6 +143,7 @@ they apply to, so the bare attribute and the value match the same rows:
 | `rowStyle` | Table prop | `TMDataGridRowStyle \| (row) => TMDataGridRowStyle` | – | Inline style for a body row. |
 | `rowClassName` | Table prop | `string \| (row) => string \| undefined` | – | Class for a body row, added after the grid's own. |
 | `striped` | Table prop | `boolean` | `false` | Every second row takes `--dg-row-striped-bg`. |
+| `highlightOnHover` | Table prop | `boolean` | On for rows that answer a click or a right-click | Whether a body row takes the hover tint. |
 | `TMDataGridRowStyle` | Export | type | – | `CSSProperties` or an object of `--*` custom properties. |
 | `--row-bg` | CSS variable | colour | – | The row's own background, composed over the body colour and under hover, selection and range. |
 | `--dg-row-striped-bg` | CSS variable | colour | Themed | The stripe colour. |

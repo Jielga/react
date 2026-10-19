@@ -464,6 +464,41 @@ describe("per-row styling", () => {
 
     expect(bodyRows()[1]!.hasAttribute("data-striped")).toBe(false);
   });
+
+  it("marks rows for the hover tint only when the row answers a gesture", () => {
+    const { unmount } = renderGridUi();
+    expect(bodyRows()[0]!.hasAttribute("data-highlight-on-hover")).toBe(false);
+    unmount();
+
+    const { unmount: unmountRowMode } = renderGridUi({ selectionMode: "row" });
+    expect(bodyRows()[0]!.getAttribute("data-highlight-on-hover")).toBe("true");
+    unmountRowMode();
+
+    const { unmount: unmountClick } = renderGridUi({
+      tableProps: { onRowClick: () => {} },
+    });
+    expect(bodyRows()[0]!.getAttribute("data-highlight-on-hover")).toBe("true");
+    unmountClick();
+
+    renderGridUi({
+      tableProps: { renderRowContextMenu: () => null },
+    });
+    expect(bodyRows()[0]!.getAttribute("data-highlight-on-hover")).toBe("true");
+  });
+
+  it("highlightOnHover overrides the default either way", () => {
+    const { unmount } = renderGridUi({
+      tableProps: { highlightOnHover: true },
+    });
+    expect(bodyRows()[0]!.getAttribute("data-highlight-on-hover")).toBe("true");
+    unmount();
+
+    renderGridUi({
+      selectionMode: "row",
+      tableProps: { highlightOnHover: false },
+    });
+    expect(bodyRows()[0]!.hasAttribute("data-highlight-on-hover")).toBe(false);
+  });
 });
 
 describe("cell click handlers", () => {

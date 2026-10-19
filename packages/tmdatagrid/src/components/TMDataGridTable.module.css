@@ -84,7 +84,13 @@
   --row-bg: var(--dg-row-new-bg, var(--mantine-color-body));
 }
 
-.bodyRow:hover {
+/* The hover tint, on the rows that carry `data-highlight-on-hover` - by default
+   the rows that answer a click or a right-click, see the Table's
+   `highlightOnHover`. `:where()` adds no specificity, so the rule stays at the
+   weight of the state rules around it: declared after the stripe and the entry
+   tint, which it wins, and before the selection and highlight rules, which win
+   over it. */
+.bodyRow:where([data-highlight-on-hover="true"]):hover {
   --row-bg: var(--mantine-color-default-hover);
 }
 

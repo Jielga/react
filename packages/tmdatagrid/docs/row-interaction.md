@@ -22,7 +22,7 @@ hint: Click, double-click and right-click anywhere in the body.
 
 | Prop | Argument | Notes |
 | --- | --- | --- |
-| `onRowClick` | `row` | Rows show a pointer cursor when set. |
+| `onRowClick` | `row` | Rows show a pointer cursor and the [hover tint](/docs/row-styling#hover) when set. |
 | `onCellClick` | `{ cell, row, column, event }` | The cell cursor still moves. |
 | `onCellDoubleClick` | same | A double-click that opens an editor still does. |
 | `onCellContextMenu` | same | `renderRowContextMenu` and the cell-selection menu still open. |
