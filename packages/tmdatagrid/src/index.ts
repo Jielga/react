@@ -262,6 +262,7 @@ export {
   type TMDataGridPersistKey,
   type TMDataGridSettingsSlice,
   type TMDataGridStorageMode,
+  type TMDataGridUrlStorage,
 } from "./core/persistence";
 export type {
   TMDataGridCellEventArgs,

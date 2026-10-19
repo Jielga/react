@@ -98,6 +98,18 @@ columnHelper.accessor("customer", {
 
 `getColumnOperators(column)` returns the resolved list, and `getColumnDefaultOperator(column)` the operator a fresh filter on it opens on.
 
+`meta.filter.url` determines whether the column's filter goes into the URL search param when `persist.urlKey` carries `columnFilters`.
+By default it does.
+Set it to `false` for a filter that should not travel in a shared link; the filter is then not persisted anywhere.
+See [Deep links](/docs/persistence#deep-links).
+
+```tsx
+columnHelper.accessor("owner", {
+  header: "Owner",
+  meta: { filter: { url: false } },
+});
+```
+
 ## The filters option
 
 `filters` on `useTMDataGrid` decides where the filter controls render.
@@ -426,6 +438,7 @@ stays, empty.
 | `meta.filter.operators` | Column meta | `readonly TMDataGridFilterOperator[]` | The type's list | The operators this column offers, a subset of its type's. |
 | `meta.filter.defaultOperator` | Column meta | `TMDataGridFilterOperator` | The type's default, else the first offered | The operator a fresh filter opens on. |
 | `meta.filter.control` | Column meta | `TMDataGridFilterControlComponent` | By type and operator | Replaces the value control. |
+| `meta.filter.url` | Column meta | `boolean` | `true` | Determines whether the column's filter is written to the URL under `persist.urlKey`. See [Deep links](/docs/persistence#deep-links). |
 | `filterFn` | Column option | `TMDataGridFilterFn<TData>` \| name | `"tmDataGrid"` | Custom matching for one column. Receives the `{ operator, value }` envelope. |
 | `TMDataGridFilterFn<TData>` | Type | `(row, columnId, filter: TMDataGridFilterValue, addMeta?) => boolean` | – | The signature of a column's own `filterFn`. |
 | `tmDataGridFilterFn` | Export | `(row, columnId, filterValue: unknown) => boolean`, assignable to `TMDataGridFilterFn<TData>` | – | The shared matcher, for a custom `filterFn` to delegate to. |

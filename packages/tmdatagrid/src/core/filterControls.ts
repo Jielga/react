@@ -106,4 +106,12 @@ export type TMDataGridColumnFilterOptions = {
    * See {@link TMDataGridFilterControlComponent}.
    */
   control?: TMDataGridFilterControlComponent;
+  /**
+   * Whether this column's filter goes into the `persist.urlKey` search param.
+   * Defaults to `true`. `false` keeps it out of the param, on read and on
+   * write. Only has an effect when `urlKey` carries `columnFilters`, and since such
+   * a slice is not stored under `dataKey` either, the filter is then not
+   * persisted anywhere.
+   */
+  url?: boolean;
 };

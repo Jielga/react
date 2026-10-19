@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   bodyRows,
   clickMenuItem,
@@ -1216,5 +1216,128 @@ describe("testing contract", () => {
     }
     expect(header().checked).toBe(false);
     expect(header().indeterminate).toBe(false);
+  });
+});
+
+describe("persist.urlKey", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    window.history.replaceState(null, "", "/");
+  });
+
+  const persist = {
+    urlKey: ["g", ["columnFilters"]],
+  } satisfies UseTMDataGridOptions<TestRow>["persist"];
+
+  const nameFilter = (value: string) => ({
+    id: "name",
+    value: { operator: "contains", value },
+  });
+
+  it("restores the filters in the link and writes changes back after the debounce", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    window.history.replaceState(
+      null,
+      "",
+      `/?other=1&g=${encodeURIComponent(
+        JSON.stringify({ columnFilters: [nameFilter("An")] }),
+      )}`,
+    );
+
+    const { result } = renderGrid({ persist });
+
+    expect(result.current.table.store.state.columnFilters).toEqual([
+      nameFilter("An"),
+    ]);
+
+    act(() => result.current.table.setColumnFilters([nameFilter("Er")]));
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    const search = new URLSearchParams(window.location.search);
+    expect(JSON.parse(search.get("g") ?? "")).toEqual({
+      columnFilters: [nameFilter("Er")],
+    });
+    expect(search.get("other")).toBe("1");
+
+    // Back to the initial state: the param goes away.
+    act(() => result.current.table.setColumnFilters([]));
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(window.location.search).toBe("?other=1");
+  });
+
+  it("debounces writes across re-renders", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const urlStorage = { get: () => null, set: vi.fn() };
+    const debounced = {
+      dataKey: ["d", ["sorting"]],
+      urlKey: ["g", ["columnFilters"]],
+      urlStorage,
+    } satisfies UseTMDataGridOptions<TestRow>["persist"];
+    const { result, rerender } = renderGrid({ persist: debounced });
+    // The mount writes once, to both groups.
+    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    const setItem = vi.spyOn(window.localStorage, "setItem");
+
+    rerender();
+    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    expect(setItem).not.toHaveBeenCalled();
+
+    act(() => result.current.table.setColumnFilters([nameFilter("Er")]));
+    rerender();
+    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    expect(setItem).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(urlStorage.set).toHaveBeenCalledTimes(2);
+    expect(urlStorage.set).toHaveBeenLastCalledWith(
+      "g",
+      JSON.stringify({ columnFilters: [nameFilter("Er")] }),
+    );
+    expect(setItem).toHaveBeenCalledTimes(1);
+  });
+
+  it("flushes storage on unmount but leaves the URL alone", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const { result, unmount } = renderGrid({
+      persist: { dataKey: ["d", ["sorting"]], urlKey: ["g", ["columnFilters"]] },
+    });
+
+    act(() => {
+      result.current.table.setColumnFilters([nameFilter("Er")]);
+      result.current.table.setSorting([{ id: "name", desc: true }]);
+    });
+    // Before the timer fires, as an SPA navigation would.
+    unmount();
+
+    expect(window.location.search).toBe("");
+    expect(JSON.parse(localStorage.getItem("d") ?? "{}").sorting).toEqual([
+      { id: "name", desc: true },
+    ]);
+  });
+
+  it("reports a slice listed by both dataKey and urlKey, once", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { rerender } = renderGrid({
+      persist: {
+        dataKey: ["d", ["columnFilters", "sorting"]],
+        urlKey: ["g", ["columnFilters"]],
+      },
+    });
+    rerender();
+
+    const overlaps = error.mock.calls.filter(([message]) =>
+      String(message).includes("persist.urlKey"),
+    );
+    expect(overlaps).toEqual([
+      [
+        "TMDataGrid: persist.dataKey and persist.urlKey both list columnFilters - a slice lives in one group; urlKey takes it.",
+      ],
+    ]);
   });
 });

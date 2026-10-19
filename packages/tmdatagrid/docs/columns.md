@@ -100,6 +100,7 @@ Its type is `TMDataGridColumnMeta`.
 | --- | --- | --- | --- |
 | `defaultOperator` | `TMDataGridFilterOperator` | The type's default | The operator a fresh filter starts with. See [Filtering](/docs/filtering#operators). |
 | `control` | `TMDataGridFilterControlComponent` | By type and operator | Replaces the filter panel's value control. See [Filtering](/docs/filtering#replacing-the-value-control). |
+| `url` | `boolean` | `true` | Determines whether the column's filter is written to the URL under `persist.urlKey`. See [Deep links](/docs/persistence#deep-links). |
 
 ```tsx
 meta: {
@@ -314,7 +315,7 @@ column can be placed in front of it.
 | `meta.align` | Column meta | `"left" \| "right" \| "center"` | `"left"` | Header and cell alignment. |
 | `meta.colSpan` | Column meta | `number \| (args) => number` | `1` | Columns the cell covers on a row. See [Spanning columns](#spanning-columns). |
 | `TMDataGridColSpanArgs` | Type | `{ row, table }` | – | What a `meta.colSpan` function receives. |
-| `meta.filter` | Column meta | `TMDataGridColumnFilterOptions` | – | How the column filters: `defaultOperator`, `control`. |
+| `meta.filter` | Column meta | `TMDataGridColumnFilterOptions` | – | How the column filters: `operators`, `defaultOperator`, `control`, `url`. |
 | `meta.edit` | Column meta | `TMDataGridColumnEditOptions` | – | How the column edits: `enabled`, `field`, `editor`, `validate`, `mapValue`. |
 | `resolveColumnOptions` | Export | `({ table, column, row? }) => options` | – | Normalises all three `meta.options` forms. |
 | `optionsToComboboxData` | Export | `(options) => ComboboxData` | – | Options as Mantine `Select` data. |

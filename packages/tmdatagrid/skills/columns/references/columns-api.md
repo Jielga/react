@@ -11,6 +11,7 @@ Reference for the `columns` skill.
 | `operators` | `readonly TMDataGridFilterOperator[]` | The type's list | The operators this column offers, a subset of its type's. For a backend that answers only some. |
 | `defaultOperator` | `TMDataGridFilterOperator` | The type's default, else the first offered | The operator a fresh filter on this column starts with. |
 | `control` | `TMDataGridFilterControlComponent` | By `meta.type` | Replaces the value control in this column's filter row. Module scope. |
+| `url` | `boolean` | `true` | Whether the column's filter is written to the URL under `persist.urlKey`. `false` keeps it out of the link, and out of storage. |
 
 `meta.edit` belongs to the `editing` skill, and only acts once `editing` is set:
 
