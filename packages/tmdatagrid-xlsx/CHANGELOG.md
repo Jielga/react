@@ -1,5 +1,7 @@
 # @jielga/tmdatagrid-xlsx
 
+## 2.2.0
+
 ## 2.1.4
 
 ### Patch Changes

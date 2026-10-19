@@ -231,7 +231,7 @@
     },
     "packages/tmdatagrid": {
       "name": "@jielga/tmdatagrid",
-      "version": "2.1.4",
+      "version": "2.2.0",
       "dependencies": {
         "@tanstack/match-sorter-utils": "catalog:",
       },
@@ -280,7 +280,7 @@
     },
     "packages/tmdatagrid-xlsx": {
       "name": "@jielga/tmdatagrid-xlsx",
-      "version": "2.1.4",
+      "version": "2.2.0",
       "dependencies": {
         "exceljs": "catalog:",
       },

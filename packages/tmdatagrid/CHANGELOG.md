@@ -1,5 +1,17 @@
 # @jielga/tmdatagrid
 
+## 2.2.0
+
+### Minor Changes
+
+- [#165](https://github.com/Jielga/react/pull/165) [`a282ad9`](https://github.com/Jielga/react/commit/a282ad9e60451b296b3aa48181f9663aa0fe5d55) Thanks [@Psvensso](https://github.com/Psvensso)! - - `meta.colSpan`: a column's cell covers the columns to its right, as one cell. A number, or a function of `{ row, table }` per row.
+
+  - `TMDataGridColSpanArgs` is exported.
+
+- [#167](https://github.com/Jielga/react/pull/167) [`749995f`](https://github.com/Jielga/react/commit/749995ff416ac6c218c7c93facf7cbb56daf81dc) Thanks [@Psvensso](https://github.com/Psvensso)! - - `TMDataGridFilterFn` type, `tmDataGridFilterFn` and `matchesFilter` are exported: a column's own `filterFn` receives the `{ operator, value }` envelope and can delegate to the built-in matcher.
+  - A column with no `minSize` now has the documented floor of 80 for resizing and pinned widths as well as for its fluid track; TanStack's 20 applied before. Pass `defaultColumn: { minSize }` to change it.
+  - The empty-state message and `renderEmptyState`'s `hasActiveFilters` now use the same rule as the pills: a half-typed filter no longer counts as active, so an empty grid with the filter panel just opened shows `noRows`, not `noResults`.
+
 ## 2.1.4
 
 ### Patch Changes
