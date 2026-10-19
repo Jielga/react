@@ -2,8 +2,8 @@
 name: columns
 description: >
   Define and arrange TMDataGrid columns. Covers createTMDataGridColumnHelper,
-  every column meta field (label, type, options, flex, align, colSpan,
-  autoSize, enableOrdering, and the meta.filter and meta.edit namespaces holding
+  every column meta field (label, type, options, flex, align, colSpan, autoSize,
+  enableOrdering, and the meta.filter and meta.edit namespaces holding
   operators, defaultOperator, control, enabled, field, editor, validate and
   mapValue), the six column types, fluid minmax sizing versus fixed width with
   minSize / maxSize / size, autosizing and autosizeColumn, hiding through
@@ -16,7 +16,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.1.4'
+  library_version: '2.2.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/columns.md'
   - 'Jielga/react:packages/tmdatagrid/docs/column-layout.md'

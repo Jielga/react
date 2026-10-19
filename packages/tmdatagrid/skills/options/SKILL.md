@@ -9,16 +9,16 @@ description: >
   labels, editing, filters, exportOptions, enableColumnOrdering,
   enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
   showSelectedBackground, cellSelection, renderDetails, overscan,
-  quickSearchMode), persist with dataKey/settingsKey slices and storageMode,
-  the returned api (table, ui, edit, features, labels, resetSettings,
-  scrollToRow), ui actions, and reading grid state with useSelector over
-  table.store, since table.getState() does not exist in v9. Load when
-  configuring the hook, looking up an option's default, persisting layout or
-  filters, or reacting to grid state from a parent.
+  quickSearchMode), persist with dataKey/settingsKey slices and storageMode, the
+  returned api (table, ui, edit, features, labels, resetSettings, scrollToRow),
+  ui actions, and reading grid state with useSelector over table.store, since
+  table.getState() does not exist in v9. Load when configuring the hook, looking
+  up an option's default, persisting layout or filters, or reacting to grid
+  state from a parent.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.1.4'
+  library_version: '2.2.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/use-tm-data-grid.md'
   - 'Jielga/react:packages/tmdatagrid/docs/persistence.md'

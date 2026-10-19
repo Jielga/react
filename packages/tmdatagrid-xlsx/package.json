@@ -1,6 +1,6 @@
 {
   "name": "@jielga/tmdatagrid-xlsx",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "Excel (xlsx) export format for @jielga/tmdatagrid, on exceljs.",
   "license": "MIT",
   "type": "module",
