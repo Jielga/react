@@ -1,7 +1,7 @@
 import type { TableState } from "@tanstack/react-table";
 import type { TMDataGridFeatures } from "../useTMDataGrid";
 import { sameStateValue } from "./controlledState";
-import { isFilterActive, isTMDataGridFilterValue } from "./filterOperators";
+import { filterNarrowsRows } from "./filterOperators";
 
 type GridState = TableState<TMDataGridFeatures>;
 
@@ -136,16 +136,39 @@ function resolveKey<TSlice extends string>(
 const defaultUrlStorage: TMDataGridUrlStorage = {
   get: (name) => new URLSearchParams(window.location.search).get(name),
   set: (name, value) => {
-    const url = new URL(window.location.href);
-    // Nothing to remove: `URLSearchParams.delete` would still re-serialize the
-    // query, which can re-encode params the grid does not own.
-    if (value === null && !url.searchParams.has(name)) return;
-    if (value === null) url.searchParams.delete(name);
-    else url.searchParams.set(name, value);
-    if (url.href === window.location.href) return;
-    window.history.replaceState(window.history.state, "", url);
+    // Spliced by hand rather than through `URLSearchParams`, whose serializer
+    // re-encodes every param (`/a%20b` comes back as `%2Fa+b`). Only the
+    // grid's own pair changes; every other entry is kept byte for byte.
+    const { pathname, search, hash, href } = window.location;
+    const entries = search
+      .replace(/^\?/, "")
+      .split("&")
+      .filter((entry) => entry !== "");
+    const kept = entries.filter((entry) => paramEntryKey(entry) !== name);
+    if (value === null && kept.length === entries.length) return;
+    if (value !== null) {
+      kept.push(`${encodeURIComponent(name)}=${encodeURIComponent(value)}`);
+    }
+    const next = `${pathname}${kept.length === 0 ? "" : `?${kept.join("&")}`}${hash}`;
+    if (new URL(next, href).href === href) return;
+    window.history.replaceState(window.history.state, "", next);
   },
 };
+
+/** The decoded key of one `key=value` query entry, `+` read as a space. */
+function paramEntryKey(entry: string): string {
+  const separator = entry.indexOf("=");
+  const raw = (separator === -1 ? entry : entry.slice(0, separator)).replaceAll(
+    "+",
+    " ",
+  );
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    // A malformed escape cannot be the grid's own key, which it encoded.
+    return raw;
+  }
+}
 
 function resolveUrlStorage(
   persistence: TMDataGridPersistence | undefined,
@@ -295,11 +318,15 @@ function readSlices({
     // narrowed cannot reintroduce slices the caller has since opted out of.
     for (const slice of resolved.slices) {
       if (!(slice in record)) continue;
-      if (!isValidSlice(slice, record[slice])) continue;
+      // A `null` slice stands for `undefined` - see the writers. An own key
+      // holding `undefined` still overrides `initialState` in the merge, which
+      // is the point: the user cleared the slice. The slice's guard then
+      // judges `undefined`, so only a slice that may be `undefined` (the
+      // untyped global filter) restores that way.
+      const value = record[slice] === null ? undefined : record[slice];
+      if (!isValidSlice(slice, value)) continue;
       restored[slice] =
-        slice === "columnPinning"
-          ? normalizeColumnPinning(record[slice])
-          : record[slice];
+        slice === "columnPinning" ? normalizeColumnPinning(value) : value;
     }
     return restored as Partial<GridState>;
   } catch {
@@ -315,7 +342,13 @@ function writeSlices(
 ): void {
   if (!storage || !resolved) return;
   const payload: Record<string, unknown> = { [VERSION_FIELD]: PERSIST_PAYLOAD_VERSION };
-  for (const slice of resolved.slices) payload[slice] = state[slice];
+  for (const slice of resolved.slices) {
+    // `null` for a slice the user cleared to `undefined` - the global filter
+    // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
+    // a missing slice means the initial state, so a reload would come back on
+    // the very value the user cleared. readSlices turns it back.
+    payload[slice] = state[slice] === undefined ? null : state[slice];
+  }
   try {
     storage.setItem(resolved.key, serialize(payload as Partial<GridState>));
   } catch {
@@ -361,15 +394,22 @@ function writeUrlSlices({
       slice === "columnFilters"
         ? linkableColumnFilters(baseline.columnFilters, excludedFilterColumnIds)
         : baseline[slice];
-    if (!sameStateValue(value, initial)) payload[slice] = value;
+    if (sameStateValue(value, initial)) continue;
+    // `null` for a slice the user cleared to `undefined` - the global filter
+    // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
+    // a missing slice means the initial state, so the link would reopen on
+    // the very value the user cleared. readSlices turns it back.
+    payload[slice] = value === undefined ? null : value;
   }
   try {
-    urlStorage.set(
-      resolved.key,
+    const next =
       Object.keys(payload).length === 0
         ? null
-        : serialize(payload as Partial<GridState>),
-    );
+        : serialize(payload as Partial<GridState>);
+    // Unchanged: no write. A router-backed storage may navigate on every
+    // `set`, and the debounced write runs after a resize or a selection too.
+    if (urlStorage.get(resolved.key) === next) return;
+    urlStorage.set(resolved.key, next);
   } catch {
     // History access refused, or a router's own storage threw. Best effort,
     // like storage.
@@ -385,21 +425,15 @@ function withoutColumnFilters(
 }
 
 /**
- * The column filters a link carries: not on an opted-out column, and active.
- * An inactive filter is a row the filter panel seeded or the user has not
- * filled in yet; in a link it would only reopen an empty row. A value that is
- * not the grid's `{ operator, value }` envelope is the consumer's own shape,
- * which `isFilterActive` cannot judge, so it is kept - the same rule the table
- * uses to decide which filters narrow the rows.
+ * The column filters a link carries: not on an opted-out column, and narrowing
+ * the rows. A filter that narrows nothing is a row the filter panel seeded or
+ * the user has not filled in yet; in a link it would only reopen an empty row.
  */
 function linkableColumnFilters(
   filters: GridState["columnFilters"] | undefined,
   excluded: ReadonlySet<string>,
 ): GridState["columnFilters"] | undefined {
-  return withoutColumnFilters(filters, excluded)?.filter(
-    (filter) =>
-      !isTMDataGridFilterValue(filter.value) || isFilterActive(filter.value),
-  );
+  return withoutColumnFilters(filters, excluded)?.filter(filterNarrowsRows);
 }
 
 function resolveKeys(persistence: TMDataGridPersistence | undefined) {
@@ -428,10 +462,17 @@ export function hasPersistenceKeys(
   return url !== null || data !== null || settings !== null;
 }
 
-/** The data slices that `dataKey` and `urlKey` both list; `urlKey` takes them. */
+/**
+ * The data slices that a `dataKey` tuple names and `urlKey` also lists;
+ * `urlKey` takes them. A bare `dataKey` names no slice, so it reports nothing:
+ * "every data slice" plus a `urlKey` is the ordinary setup, and resolveKeys
+ * hands the URL its slices without a word. Only a slice named twice is a
+ * contradiction worth reporting.
+ */
 export function findOverlappingSlices(
   persistence: TMDataGridPersistence | undefined,
 ): TMDataGridDataSlice[] {
+  if (typeof persistence?.dataKey === "string") return [];
   const url = resolveKey(persistence?.urlKey, DATA_STATE_SLICES);
   const data = resolveKey(persistence?.dataKey, DATA_STATE_SLICES);
   if (url === null || data === null) return [];

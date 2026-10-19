@@ -138,6 +138,18 @@ describe("readPersistedState", () => {
     expect(readPersistedState({})).toEqual({});
   });
 
+  it("round-trips a global filter cleared to undefined, over the initial state", () => {
+    const persist: TMDataGridPersistence = { dataKey: ["d", ["globalFilter"]] };
+    // `initialState: { globalFilter: "Holm" }`, and the user cleared it.
+    writePersistedState(gridState({ globalFilter: undefined }), persist);
+
+    expect(stored("d").globalFilter).toBeNull();
+    const restored = readPersistedState(persist);
+    // An own key, so it overrides `initialState.globalFilter` in the merge.
+    expect(Object.hasOwn(restored, "globalFilter")).toBe(true);
+    expect({ globalFilter: "Holm", ...restored }.globalFilter).toBeUndefined();
+  });
+
   it("ignores a payload written before the selection was narrowed", () => {
     writePersistedState(gridState(), { dataKey: "d" });
 
@@ -556,6 +568,43 @@ describe("urlKey", () => {
       );
     });
 
+    it("writes a slice cleared to undefined as null", () => {
+      const { params, urlStorage } = fakeUrl();
+
+      writePersistedState(
+        gridState({ globalFilter: undefined }),
+        { urlKey: ["g", ["globalFilter"]], urlStorage },
+        // `initialState: { globalFilter: "Holm" }`, and the user cleared it.
+        { baseline: { ...defaults, globalFilter: "Holm" } },
+      );
+
+      expect(params.get("g")).toBe('{"globalFilter":null}');
+    });
+
+    it("calls set only when the param changes", () => {
+      const { urlStorage: inner } = fakeUrl();
+      const urlStorage = { get: vi.fn(inner.get), set: vi.fn(inner.set) };
+      const persist: TMDataGridPersistence = {
+        urlKey: ["g", ["sorting"]],
+        urlStorage,
+      };
+      const write = (state: GridState) =>
+        writePersistedState(state, persist, { baseline: defaults });
+
+      // Nothing differs and there is no param: nothing to remove.
+      write(gridState({ sorting: [] }));
+      expect(urlStorage.set).not.toHaveBeenCalled();
+
+      write(gridState());
+      write(gridState());
+      expect(urlStorage.set).toHaveBeenCalledTimes(1);
+
+      write(gridState({ sorting: [] }));
+      write(gridState({ sorting: [] }));
+      expect(urlStorage.set).toHaveBeenCalledTimes(2);
+      expect(urlStorage.set).toHaveBeenLastCalledWith("g", null);
+    });
+
     it("swallows a url storage failure", () => {
       const urlStorage: TMDataGridUrlStorage = {
         get: () => null,
@@ -694,6 +743,32 @@ describe("urlKey", () => {
       );
     });
 
+    it("reads a null slice as undefined, over the initial state", () => {
+      const { urlStorage } = fakeUrl({ g: '{"globalFilter":null}' });
+
+      const restored = readPersistedState({
+        urlKey: ["g", ["globalFilter"]],
+        urlStorage,
+      });
+
+      // An own key, so it overrides `initialState.globalFilter` in the merge.
+      expect(Object.hasOwn(restored, "globalFilter")).toBe(true);
+      expect({ globalFilter: "Holm", ...restored }.globalFilter).toBeUndefined();
+    });
+
+    it("drops a null slice that may not be undefined", () => {
+      const { urlStorage } = fakeUrl({
+        g: JSON.stringify({
+          columnFilters: null,
+          sorting: null,
+          pagination: null,
+          expanded: null,
+        }),
+      });
+
+      expect(readPersistedState({ urlKey: "g", urlStorage })).toEqual({});
+    });
+
     it("drops a filter on a column that no longer exists", () => {
       const { urlStorage } = fakeUrl({
         g: JSON.stringify({
@@ -737,17 +812,27 @@ describe("urlKey", () => {
       return { ...url, persist };
     }
 
-    it("is reported", () => {
+    it("is reported when a dataKey tuple names it", () => {
       expect(findOverlappingSlices(setup().persist)).toEqual(["columnFilters"]);
       expect(
-        findOverlappingSlices({ dataKey: "d", urlKey: ["g", ["sorting"]] }),
-      ).toEqual(["sorting"]);
+        findOverlappingSlices({
+          dataKey: ["d", ["sorting", "pagination"]],
+          urlKey: "g",
+        }),
+      ).toEqual(["sorting", "pagination"]);
       expect(
         findOverlappingSlices({
           dataKey: ["d", ["sorting"]],
           urlKey: ["g", ["columnFilters"]],
         }),
       ).toEqual([]);
+    });
+
+    it("is not reported under a bare dataKey, which names no slice", () => {
+      expect(
+        findOverlappingSlices({ dataKey: "d", urlKey: ["g", ["sorting"]] }),
+      ).toEqual([]);
+      expect(findOverlappingSlices({ dataKey: "d", urlKey: "g" })).toEqual([]);
     });
 
     it("is written to the URL only", () => {
@@ -833,6 +918,42 @@ describe("urlKey", () => {
       });
 
       expect(window.location.search).toBe("?tab=2");
+    });
+
+    it("keeps every other param byte for byte, on set and on remove", () => {
+      window.history.replaceState(null, "", "/page?redirect=/a%20b&tab=x#top");
+      const encoded = encodeURIComponent(
+        JSON.stringify({ sorting: [{ id: "name", desc: true }] }),
+      );
+
+      writePersistedState(sorted, persist, { baseline: defaults });
+      expect(window.location.search).toBe(
+        `?redirect=/a%20b&tab=x&g=${encoded}`,
+      );
+      expect(window.location.hash).toBe("#top");
+
+      writePersistedState(gridState({ sorting: [] }), persist, {
+        baseline: defaults,
+      });
+      expect(window.location.search).toBe("?redirect=/a%20b&tab=x");
+      expect(window.location.hash).toBe("#top");
+    });
+
+    it("replaces its own param wherever it sits, by its decoded key", () => {
+      // `+` decodes to a space, so `my+grid` is the grid's `my grid` param.
+      window.history.replaceState(null, "", "/page?a=1&my+grid=old&b=%2F");
+
+      writePersistedState(
+        sorted,
+        { urlKey: ["my grid", ["sorting"]] },
+        { baseline: defaults },
+      );
+
+      expect(window.location.search).toBe(
+        `?a=1&b=%2F&my%20grid=${encodeURIComponent(
+          JSON.stringify({ sorting: [{ id: "name", desc: true }] }),
+        )}`,
+      );
     });
   });
 });

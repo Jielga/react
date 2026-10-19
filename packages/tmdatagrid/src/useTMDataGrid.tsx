@@ -1974,6 +1974,11 @@ export function useTMDataGrid<TData extends RowData>({
       pending = null;
     };
 
+    // Where the grid was when it subscribed, to tell an unmount by navigation
+    // from an in-page one - see the cleanup.
+    const subscribedPathname =
+      typeof window === "undefined" ? null : window.location.pathname;
+
     const subscription = tableStore.subscribe((state) => {
       pending = state;
       if (timeout !== undefined) clearTimeout(timeout);
@@ -1983,11 +1988,16 @@ export function useTMDataGrid<TData extends RowData>({
     return () => {
       subscription.unsubscribe();
       if (timeout !== undefined) clearTimeout(timeout);
-      // An unmount mid-debounce would otherwise drop the last change. Storage
-      // only: an unmount inside the debounce window is typically an SPA
-      // navigation, and by now the router has already moved to the next page -
-      // the param would land on that page's URL.
-      flush({ writeUrl: false });
+      // An unmount mid-debounce would otherwise drop the last change. The URL
+      // only while still on the page: an SPA navigation changes the pathname
+      // before React unmounts the grid, so the param would land on the next
+      // page's URL. An in-page unmount - a modal closing, a tab panel
+      // switching - leaves the pathname alone and keeps its last filter.
+      flush({
+        writeUrl:
+          subscribedPathname !== null &&
+          subscribedPathname === window.location.pathname,
+      });
     };
   }, [persist, tableStore]);
 

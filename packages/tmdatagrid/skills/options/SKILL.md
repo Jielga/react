@@ -247,9 +247,9 @@ const persist = {
 } satisfies TMDataGridPersistence;
 ```
 
-- A slice lives in one group. A slice listed in both `dataKey` and `urlKey` is
-  handled by `urlKey`, and the grid reports the overlap with `console.error` on
-  mount.
+- A slice lives in one group. A slice listed under `urlKey` is taken out of
+  `dataKey`: a bare `dataKey` hands it over silently, while a `dataKey` tuple
+  that names the slice explicitly is reported with `console.error` on mount.
 - The param carries only the slices whose value differs from the initial state
   (`initialState` merged over the grid defaults), and only the column filters
   that are active. When nothing differs, the param is removed. A link without the param, or without a slice, opens on the
@@ -266,10 +266,16 @@ const persist = {
   flag has no effect unless `urlKey` carries `columnFilters`.
 - `urlStorage` replaces the default read and write of the param, for a router
   that owns the URL. `get` returns the param's string or `null`; `set` receives
-  the string, or `null` to remove the param.
+  the string, or `null` to remove the param. `set` is only called when the
+  value changed. Keep `persist` referentially stable here too: react-router
+  rebuilds `setSearchParams` on every URL change, so read it through a ref.
 
 ```tsx
 // react-router: let the router do the replace.
+const [, setSearchParams] = useSearchParams();
+const setSearchParamsRef = useRef(setSearchParams);
+setSearchParamsRef.current = setSearchParams;
+
 const persist = useMemo(
   () =>
     ({
@@ -277,7 +283,7 @@ const persist = useMemo(
       urlStorage: {
         get: (name) => new URLSearchParams(window.location.search).get(name),
         set: (name, value) =>
-          setSearchParams(
+          setSearchParamsRef.current(
             (prev) => {
               if (value === null) prev.delete(name);
               else prev.set(name, value);
@@ -287,7 +293,7 @@ const persist = useMemo(
           ),
       },
     }) satisfies TMDataGridPersistence,
-  [setSearchParams],
+  [],
 );
 ```
 

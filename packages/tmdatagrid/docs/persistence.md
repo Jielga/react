@@ -96,8 +96,9 @@ The URL payload carries no version stamp, because a bookmarked link has to
 survive a release. The shape guards and the realignment against existing
 columns apply as they do to storage, and so do `serialize` and `deserialize`.
 
-Note that a slice listed under both `dataKey` and `urlKey` is handled by
-`urlKey`, and the grid reports the overlap with `console.error` on mount.
+Note that a bare `dataKey` hands the URL slices over silently, while a
+`dataKey` tuple that names a slice `urlKey` also lists is reported with
+`console.error` on mount; `urlKey` handles the slice either way.
 
 ### Keeping a column out of the link
 
@@ -120,11 +121,16 @@ unless `urlKey` carries `columnFilters`.
 `urlStorage` replaces the default read and write of the param, for a router
 that validates its search params and would not see a `replaceState` call.
 `get` returns the param's string or `null`; `set` receives the string, or
-`null` to remove the param:
+`null` to remove the param. Keep `persist` referentially stable here too:
+react-router rebuilds `setSearchParams` on every URL change, so read it
+through a ref rather than listing it as a dependency:
 
 ```tsx
 // react-router: let the router do the replace.
 const [, setSearchParams] = useSearchParams();
+const setSearchParamsRef = useRef(setSearchParams);
+setSearchParamsRef.current = setSearchParams;
+
 const persist = useMemo(
   () =>
     ({
@@ -132,7 +138,7 @@ const persist = useMemo(
       urlStorage: {
         get: (name) => new URLSearchParams(window.location.search).get(name),
         set: (name, value) =>
-          setSearchParams(
+          setSearchParamsRef.current(
             (prev) => {
               if (value === null) prev.delete(name);
               else prev.set(name, value);
@@ -142,7 +148,7 @@ const persist = useMemo(
           ),
       },
     }) satisfies TMDataGridPersistence,
-  [setSearchParams],
+  [],
 );
 ```
 

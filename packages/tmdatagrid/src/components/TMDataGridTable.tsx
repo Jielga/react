@@ -90,7 +90,7 @@ import {
   resolveRowSelectionClick,
 } from "../core/rowSelection";
 import { readPinnedRows } from "../core/rowPinning";
-import { isFilterActive, isTMDataGridFilterValue } from "../core/filterOperators";
+import { filterNarrowsRows } from "../core/filterOperators";
 import { buildMatchNeedles, findMatchRanges } from "../core/matchHighlight";
 import { ROW_NUMBER_COLUMN_ID } from "./TMDataGridRowNumberColumn";
 import { SearchIcon } from "./icons";
@@ -1480,18 +1480,12 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
   const isEmpty = rows.length === 0 && pinnedRowCount === 0;
   // Which emptiness this is. A column filter counts by the rule the pills, the
   // header indicator and the page reset use, so the grid has one definition
-  // of "active": an envelope counts once `isFilterActive` says so - the
-  // half-typed `{ operator, value: "" }` the filter panel seeds filters
-  // nothing - and a value that is not an envelope always counts, since a raw
-  // value written by consumer code narrows the rows as far as the grid can
-  // tell. The body already subscribes to the whole table store, so these
-  // reads are reactive.
+  // of "active" - see `filterNarrowsRows`. The half-typed
+  // `{ operator, value: "" }` the filter panel seeds filters nothing. The body
+  // already subscribes to the whole table store, so these reads are reactive.
   const emptyGlobalFilter = table.store.state.globalFilter;
   const hasActiveFilters =
-    table.store.state.columnFilters.some(
-      (entry) =>
-        !isTMDataGridFilterValue(entry.value) || isFilterActive(entry.value),
-    ) ||
+    table.store.state.columnFilters.some(filterNarrowsRows) ||
     (typeof emptyGlobalFilter === "string"
       ? emptyGlobalFilter.trim() !== ""
       : emptyGlobalFilter != null);

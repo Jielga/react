@@ -1270,30 +1270,34 @@ describe("persist.urlKey", () => {
 
   it("debounces writes across re-renders", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    const urlStorage = { get: () => null, set: vi.fn() };
+    // Every URL write reads the param first, so `get` counts the writes and
+    // `set` the ones that changed something.
+    const urlStorage = { get: vi.fn(() => null), set: vi.fn() };
     const debounced = {
       dataKey: ["d", ["sorting"]],
       urlKey: ["g", ["columnFilters"]],
       urlStorage,
     } satisfies UseTMDataGridOptions<TestRow>["persist"];
     const { result, rerender } = renderGrid({ persist: debounced });
-    // The mount writes once, to both groups.
-    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    // The mount reads the URL once and writes once, to both groups; the URL
+    // write finds nothing to change.
+    const mountReads = urlStorage.get.mock.calls.length;
+    expect(urlStorage.set).not.toHaveBeenCalled();
     const setItem = vi.spyOn(window.localStorage, "setItem");
 
     rerender();
-    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    expect(urlStorage.get).toHaveBeenCalledTimes(mountReads);
     expect(setItem).not.toHaveBeenCalled();
 
     act(() => result.current.table.setColumnFilters([nameFilter("Er")]));
     rerender();
-    expect(urlStorage.set).toHaveBeenCalledTimes(1);
+    expect(urlStorage.get).toHaveBeenCalledTimes(mountReads);
     expect(setItem).not.toHaveBeenCalled();
 
     act(() => {
       vi.advanceTimersByTime(250);
     });
-    expect(urlStorage.set).toHaveBeenCalledTimes(2);
+    expect(urlStorage.set).toHaveBeenCalledTimes(1);
     expect(urlStorage.set).toHaveBeenLastCalledWith(
       "g",
       JSON.stringify({ columnFilters: [nameFilter("Er")] }),
@@ -1301,8 +1305,10 @@ describe("persist.urlKey", () => {
     expect(setItem).toHaveBeenCalledTimes(1);
   });
 
-  it("flushes storage on unmount but leaves the URL alone", () => {
+  /** Changes a filter and a sort, then unmounts before the debounce fires. */
+  function unmountMidDebounce({ navigateFirst }: { navigateFirst: boolean }) {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    window.history.replaceState(null, "", "/grid");
     const { result, unmount } = renderGrid({
       persist: { dataKey: ["d", ["sorting"]], urlKey: ["g", ["columnFilters"]] },
     });
@@ -1311,13 +1317,30 @@ describe("persist.urlKey", () => {
       result.current.table.setColumnFilters([nameFilter("Er")]);
       result.current.table.setSorting([{ id: "name", desc: true }]);
     });
-    // Before the timer fires, as an SPA navigation would.
+    // An SPA router moves the URL before React unmounts the old page.
+    if (navigateFirst) window.history.pushState(null, "", "/elsewhere");
     unmount();
+  }
 
+  const storedSorting = () =>
+    JSON.parse(localStorage.getItem("d") ?? "{}").sorting as unknown;
+
+  it("flushes the URL and storage when the grid unmounts in place", () => {
+    unmountMidDebounce({ navigateFirst: false });
+
+    expect(window.location.pathname).toBe("/grid");
+    expect(
+      JSON.parse(new URLSearchParams(window.location.search).get("g") ?? ""),
+    ).toEqual({ columnFilters: [nameFilter("Er")] });
+    expect(storedSorting()).toEqual([{ id: "name", desc: true }]);
+  });
+
+  it("flushes storage but not the URL when a navigation unmounts the grid", () => {
+    unmountMidDebounce({ navigateFirst: true });
+
+    expect(window.location.pathname).toBe("/elsewhere");
     expect(window.location.search).toBe("");
-    expect(JSON.parse(localStorage.getItem("d") ?? "{}").sorting).toEqual([
-      { id: "name", desc: true },
-    ]);
+    expect(storedSorting()).toEqual([{ id: "name", desc: true }]);
   });
 
   it("reports a slice listed by both dataKey and urlKey, once", () => {

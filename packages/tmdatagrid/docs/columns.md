@@ -100,7 +100,7 @@ Its type is `TMDataGridColumnMeta`.
 | --- | --- | --- | --- |
 | `defaultOperator` | `TMDataGridFilterOperator` | The type's default | The operator a fresh filter starts with. See [Filtering](/docs/filtering#operators). |
 | `control` | `TMDataGridFilterControlComponent` | By type and operator | Replaces the filter panel's value control. See [Filtering](/docs/filtering#replacing-the-value-control). |
-| `url` | `boolean` | `true` | Determines whether the column's filter is written to the URL under `persist.urlKey`. See [Deep links](/docs/persistence#deep-links). |
+| `url` | `boolean` | `true` | Keeps the column's filter out of a `persist.urlKey` link when `false`. See [Deep links](/docs/persistence#deep-links). |
 
 ```tsx
 meta: {
