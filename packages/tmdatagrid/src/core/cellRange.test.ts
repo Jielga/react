@@ -114,4 +114,24 @@ describe("boundsEdges", () => {
     expect(boundsEdges(block, 0, 0)).toBeNull();
     expect(boundsEdges(null, 0, 0)).toBeNull();
   });
+
+  it("draws a rectangle edge inside a spanning cell on its side", () => {
+    const narrow = { top: 1, bottom: 1, left: 3, right: 4 };
+    // The cell covers columns 2-5, so both edges fall inside it.
+    expect(boundsEdges(narrow, 1, 2, 5)).toEqual({
+      top: true,
+      bottom: true,
+      left: true,
+      right: true,
+    });
+    // Columns 0-2: overlaps on its right end only.
+    expect(boundsEdges(narrow, 1, 0, 2)).toBeNull();
+    expect(boundsEdges({ ...narrow, left: 1 }, 1, 0, 2)).toEqual({
+      top: true,
+      bottom: true,
+      left: true,
+      right: false,
+    });
+    expect(isWithinBounds(narrow, 1, 0, 3)).toBe(true);
+  });
 });

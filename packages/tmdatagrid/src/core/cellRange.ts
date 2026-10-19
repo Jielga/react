@@ -70,17 +70,21 @@ export function resolveRangeBounds({
   };
 }
 
-/** Whether a cell is inside the rectangle. */
+/**
+ * Whether a cell is inside the rectangle. A cell spanning columns up to
+ * `lastColumnIndex` (see `meta.colSpan`) is inside when any of them is.
+ */
 export function isWithinBounds(
   bounds: TMDataGridRangeBounds | null,
   rowIndex: number,
   columnIndex: number,
+  lastColumnIndex: number = columnIndex,
 ): boolean {
   if (bounds === null) return false;
   return (
     rowIndex >= bounds.top &&
     rowIndex <= bounds.bottom &&
-    columnIndex >= bounds.left &&
+    lastColumnIndex >= bounds.left &&
     columnIndex <= bounds.right
   );
 }
@@ -105,14 +109,20 @@ export function boundsEdges(
   bounds: TMDataGridRangeBounds | null,
   rowIndex: number,
   columnIndex: number,
+  lastColumnIndex: number = columnIndex,
 ): { top: boolean; bottom: boolean; left: boolean; right: boolean } | null {
-  if (!isWithinBounds(bounds, rowIndex, columnIndex) || bounds === null) {
+  if (
+    !isWithinBounds(bounds, rowIndex, columnIndex, lastColumnIndex) ||
+    bounds === null
+  ) {
     return null;
   }
+  // A spanning cell is one box, so a rectangle edge falling anywhere inside
+  // it is drawn on its side.
   return {
     top: rowIndex === bounds.top,
     bottom: rowIndex === bounds.bottom,
-    left: columnIndex === bounds.left,
-    right: columnIndex === bounds.right,
+    left: bounds.left >= columnIndex,
+    right: bounds.right <= lastColumnIndex,
   };
 }

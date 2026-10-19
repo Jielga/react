@@ -77,6 +77,12 @@ import {
 } from "../core/export";
 import { autosizeColumn, hasMountedCells } from "../core/autosize";
 import {
+  resolveColSpans,
+  spanAnchorIndex,
+  spanEndIndex,
+  type TMDataGridColumnSection,
+} from "../core/colSpan";
+import {
   getDisplayedRows,
   getSelectableRowIds,
   isPagingActive,
@@ -253,6 +259,7 @@ function withMatchHighlights(
 function TMDataGridBodyCell({
   cell,
   rowHeight,
+  colSpan = 1,
   layout,
   nav,
   editor,
@@ -267,6 +274,8 @@ function TMDataGridBodyCell({
 }: {
   cell: Cell<TMDataGridFeatures, TMDataGridRowData, unknown>;
   rowHeight: number;
+  /** Columns this cell covers - see `meta.colSpan`. */
+  colSpan?: number;
   layout: TMDataGridColumnLayout;
   nav?: TMDataGridCellNav;
   /** The mounted editor, when this is the cell being edited. */
@@ -332,6 +341,10 @@ function TMDataGridBodyCell({
       // than always.
       role={nav ? "gridcell" : "cell"}
       aria-colindex={nav?.columnIndex}
+      aria-colspan={colSpan > 1 ? colSpan : undefined}
+      // Published for styling and for autosize, which leaves a spanning cell
+      // out of its column's measurement.
+      data-col-span={colSpan > 1 ? colSpan : undefined}
       tabIndex={nav?.tabIndex}
       // The marker the delegated key handler tests: a key event whose target is
       // a cell is the grid's, one from inside a cell belongs to whatever holds
@@ -381,6 +394,7 @@ function TMDataGridBodyCell({
         .join(" ")}
       style={{
         minHeight: rowHeight,
+        gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined,
         left: layout.pinnedAt === "left" ? layout.offset : undefined,
         right: layout.pinnedAt === "right" ? layout.offset : undefined,
         // The focus ring is drawn inside the cell's own box, so the cell has to
@@ -1182,6 +1196,82 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     ...rightLeafColumns,
   ];
 
+  // `meta.colSpan`, resolved per row over the displayed columns. Built from
+  // the three leaf arrays rather than `column.getIsPinned()`, for the reason
+  // the sticky offsets below give. `null` while no column asks to span, so a
+  // plain grid never calls into it.
+  const spanColumns = orderedColumns.some(
+    (column) => column.columnDef.meta?.colSpan !== undefined,
+  )
+    ? orderedColumns.map((column, index) => ({
+        id: column.id,
+        colSpan: column.columnDef.meta?.colSpan,
+        section: (index < leftLeafColumns.length
+          ? "left"
+          : index < leftLeafColumns.length + centerLeafColumns.length
+            ? "center"
+            : "right") as TMDataGridColumnSection,
+      }))
+    : null;
+  /**
+   * Row mode opens every editable cell of the row at once, and rows
+   * accumulate: a second row opening leaves the first one open, so every row
+   * holding a form shows its editors. Which of them holds the caret is not
+   * decided here - see placeEditCaret, which places it once per gesture.
+   *
+   * A parked row is not one of them. It keeps its form, so it is still
+   * "open", but it has been decided: it renders its draft through the
+   * column's own renderer until `begin` reopens it. A committed entry row in
+   * the body has a form too - every entry row does - but it is a value row
+   * until reopened, and reopening takes it back to the entry block.
+   *
+   * Such a row also drops its spans: the form has an editor in every column.
+   */
+  const isRowEditing = (row: Row<TMDataGridFeatures, TMDataGridRowData>) =>
+    features.editMode === "row" &&
+    editOpenRowIdSet.has(row.id) &&
+    !editDraftRowIdSet.has(row.id) &&
+    !newRowIdSet.has(row.id);
+  const colSpanCache = new Map<string, Array<number> | null>();
+  /**
+   * The spans of one row - see {@link resolveColSpans} - or `null` when every
+   * cell is one column wide. Group rows keep their cells: the tree cell and
+   * the aggregates are the grid's, not a record's.
+   */
+  const colSpansOf = (
+    row: Row<TMDataGridFeatures, TMDataGridRowData>,
+  ): Array<number> | null => {
+    if (spanColumns === null || row.getIsGrouped() || isRowEditing(row)) {
+      return null;
+    }
+    const cached = colSpanCache.get(row.id);
+    if (cached !== undefined) return cached;
+    const spans = resolveColSpans(spanColumns, (index) => {
+      const colSpan = spanColumns[index]?.colSpan;
+      return typeof colSpan === "function"
+        ? colSpan({ row, table })
+        : (colSpan ?? 1);
+    });
+    const resolved = spans.every((span) => span === 1) ? null : spans;
+    colSpanCache.set(row.id, resolved);
+    return resolved;
+  };
+  /** A position moved onto the cell that renders it, under spans. */
+  const toRenderedCell = (
+    position: TMDataGridCellPosition,
+  ): TMDataGridCellPosition => {
+    if (spanColumns === null) return position;
+    const row = rows.find((candidate) => candidate.id === position.rowId);
+    const spans = row ? colSpansOf(row) : null;
+    if (spans === null) return position;
+    const columnIndex = orderedColumns.findIndex(
+      (column) => column.id === position.columnId,
+    );
+    if (columnIndex < 0) return position;
+    const anchor = orderedColumns[spanAnchorIndex(spans, columnIndex)];
+    return anchor ? { ...position, columnId: anchor.id } : position;
+  };
+
   // Headers and cells must follow the same left → center → right order as the
   // column tracks, otherwise pinning a column would shuffle it out of its lane.
   const centerHeaderGroups = table.getCenterHeaderGroups();
@@ -1269,6 +1359,32 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
   }
   const layoutFor = (columnId: string) =>
     columnLayout.get(columnId) ?? UNPINNED_LAYOUT;
+  /**
+   * The layout of a cell spanning from `columnId` to the column at
+   * `lastIndex`. A span never leaves its pinned block, so only the sticky
+   * offset and the boundary shadow change: a right-pinned cell sticks at the
+   * offset of the last column it covers, and the cell covering a block's
+   * boundary column carries its shadow.
+   */
+  const spanLayout = (
+    columnId: string,
+    lastIndex: number,
+  ): TMDataGridColumnLayout => {
+    const first = layoutFor(columnId);
+    if (first.pinnedAt === false) return first;
+    const firstIndex = orderedColumns.findIndex((c) => c.id === columnId);
+    const covered = orderedColumns
+      .slice(firstIndex, lastIndex + 1)
+      .map((column) => layoutFor(column.id));
+    return {
+      ...first,
+      offset:
+        first.pinnedAt === "right"
+          ? (covered.at(-1)?.offset ?? first.offset)
+          : first.offset,
+      isBoundary: covered.some((layout) => layout.isBoundary),
+    };
+  };
 
   /**
    * A running resize drag paints itself, straight onto the grid element.
@@ -1612,11 +1728,15 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     findCellElement(container, tabStopCell)?.focus({ preventScroll: true });
   };
 
-  const isCellAt = (
-    position: TMDataGridCellPosition | null,
-    rowId: string,
-    columnId: string,
-  ) => position !== null && position.rowId === rowId && position.columnId === columnId;
+  /**
+   * Whether the focused cell is on this row, in columns `first` to `last` -
+   * one column for most cells, every column it covers for a spanning one.
+   */
+  const isFocusedWithin = (rowId: string, first: number, last: number) =>
+    focusedCell !== null &&
+    focusedCell.rowId === rowId &&
+    focusedColumnIndex >= first &&
+    focusedColumnIndex <= last;
 
   // The rectangle, resolved from ids to the indices the cells are rendered at.
   // `null` whenever a corner has been filtered or hidden away - the range keeps
@@ -1771,7 +1891,9 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     const row = rows[coords.rowIndex];
     const column = orderedColumns[coords.columnIndex];
     if (!row || !column) return;
-    const cell = { rowId: row.id, columnId: column.id };
+    // A column covered by a span on this row has no cell; the one covering it
+    // takes the focus.
+    const cell = toRenderedCell({ rowId: row.id, columnId: column.id });
     // The state moves; the effect below is what makes the DOM follow, because
     // the element for an off-screen row does not exist yet to be focused.
     wantsCellFocusRef.current = true;
@@ -2175,10 +2297,19 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       return;
     }
 
+    // Right steps off a spanning cell from the last column it covers, or it
+    // would land back on itself.
+    const spans = rows[rowIndex] ? colSpansOf(rows[rowIndex]) : null;
     const next = resolveCellMove({
       key: event.key,
       ctrlKey: event.ctrlKey || event.metaKey,
-      from: { rowIndex, columnIndex },
+      from: {
+        rowIndex,
+        columnIndex:
+          spans !== null && event.key === "ArrowRight"
+            ? spanEndIndex(spans, columnIndex)
+            : columnIndex,
+      },
       rowCount: rows.length,
       columnCount: orderedColumns.length,
       pageRows: Math.max(
@@ -2250,7 +2381,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       return;
     }
 
-    const cellElement = findCellElement(container, focusedCell);
+    const cellElement = findCellElement(container, toRenderedCell(focusedCell));
     // Still scrolling. The intent stays up, and the next render tries again.
     if (cellElement === null) return;
     wantsCellFocusRef.current = false;
@@ -2641,23 +2772,8 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                 ...row.getCenterVisibleCells(),
                 ...row.getEndVisibleCells(),
               ];
-              // Row mode opens every editable cell of the row at once, and
-              // rows accumulate: a second row opening leaves the first one
-              // open, so every row holding a form shows its editors. Which of
-              // them holds the caret is not decided here - see
-              // placeEditCaret, which places it once per gesture.
-              //
-              // A parked row is not one of them. It keeps its form, so it is
-              // still "open", but it has been decided: it renders its draft
-              // through the column's own renderer until `begin` reopens it.
-              // A committed entry row in the body has a form too - every
-              // entry row does - but it is a value row until reopened, and
-              // reopening takes it back to the entry block.
-              const rowEditing =
-                features.editMode === "row" &&
-                editOpenRowIdSet.has(row.id) &&
-                !editDraftRowIdSet.has(row.id) &&
-                !newRowIdSet.has(row.id);
+              const rowEditing = isRowEditing(row);
+              const spans = colSpansOf(row);
               // Cell selection takes the body's tab stop off the row and puts
               // it on a cell - two stops per row would make Tab a way of
               // walking the grid, which is what the arrow keys are for. Space
@@ -2835,6 +2951,10 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                   }
                 >
                   {rowCells.map((cell, cellIndex) => {
+                    // Covered by a spanning cell to its left - see colSpansOf.
+                    if (spans !== null && spans[cellIndex] === 0) return null;
+                    const colSpan = spans?.[cellIndex] ?? 1;
+                    const lastIndex = cellIndex + colSpan - 1;
                     const isEditingCell =
                       (editActive !== null &&
                         editActive.rowId === row.id &&
@@ -2845,7 +2965,12 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                       key={cell.id}
                       cell={cell}
                       rowHeight={rowHeight}
-                      layout={layoutFor(cell.column.id)}
+                      colSpan={colSpan}
+                      layout={
+                        colSpan > 1
+                          ? spanLayout(cell.column.id, lastIndex)
+                          : layoutFor(cell.column.id)
+                      }
                       contentOverride={
                         rowNumberById !== null &&
                         cell.column.id === ROW_NUMBER_COLUMN_ID
@@ -2897,10 +3022,12 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                           ? {
                               rowId: row.id,
                               columnIndex: cellIndex + 1,
-                              focused: isCellAt(
-                                focusedCell,
+                              // A spanning cell stands for every column it
+                              // covers, wherever the focus was put.
+                              focused: isFocusedWithin(
                                 row.id,
-                                cell.column.id,
+                                cellIndex,
+                                lastIndex,
                               ),
                               // Focusable by click and by the grid, never by
                               // Tab - the guards are the way in. See
@@ -2910,9 +3037,19 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                               // take" - which under `"single"` is the one cell
                               // the user is standing on.
                               selected: cellRangeSelection
-                                ? isWithinBounds(rangeBounds, viewIndex, cellIndex)
-                                : isCellAt(focusedCell, row.id, cell.column.id),
-                              edges: boundsEdges(rangeBounds, viewIndex, cellIndex),
+                                ? isWithinBounds(
+                                    rangeBounds,
+                                    viewIndex,
+                                    cellIndex,
+                                    lastIndex,
+                                  )
+                                : isFocusedWithin(row.id, cellIndex, lastIndex),
+                              edges: boundsEdges(
+                                rangeBounds,
+                                viewIndex,
+                                cellIndex,
+                                lastIndex,
+                              ),
                             }
                           : undefined
                       }

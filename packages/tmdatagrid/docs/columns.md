@@ -88,6 +88,7 @@ Its type is `TMDataGridColumnMeta`.
 | `options` | `TMDataGridOptionsSource` | - | The choices of a `select` / `multiSelect` column. See [Options](#options). |
 | `flex` | `number` | `1` | Share of the remaining width. |
 | `align` | `"left" \| "right" \| "center"` | `"left"` | Alignment, applied to both header and cells. |
+| `colSpan` | `number \| ({ row, table }) => number` | `1` | Columns the cell covers on a row, counting itself. See [Spanning columns](#spanning-columns). |
 | `autoSize` | `boolean` | `false` | Fit the column to its content once, on the render its first cells appear in. |
 | `enableOrdering` | `boolean` | `true` | `false` keeps the column where it is. |
 | `filter` | `TMDataGridColumnFilterOptions` | - | How this column filters. See [meta.filter](#metafilter). |
@@ -185,6 +186,48 @@ A select column that declares no options still filters: the panel falls back to
 the faceted values. Mantine's dropdowns are not virtualized, so use the function
 form for very large sets.
 
+## Spanning columns
+
+`meta.colSpan` makes a column's cell cover the columns to its right.
+A cell spanning `n` is one cell `n` columns wide, with one background and one
+border, and the `n - 1` cells it covers do not render on that row.
+A function decides per row:
+
+```tsx
+columnHelper.accessor("name", {
+  header: "Name",
+  meta: {
+    colSpan: ({ row }) => (row.getIsExpanded() ? Infinity : 1),
+  },
+});
+```
+
+```demo
+file: columns/SpanningCells.tsx
+hint: Open a row with its chevron - its name takes the rest of the row, and the panel opens below.
+```
+
+- The span is counted over the displayed columns. Hiding or moving a column
+  changes what a span covers, so `Infinity` - "to the last of my columns" - is
+  usually safer than a count.
+- A span stops at the last of your columns. It never covers the checkbox,
+  tree, details or edit lane.
+- A span stops at the edge of its pinned block.
+- A column covered by a span ignores its own `colSpan` on that row.
+- Group rows ignore `colSpan`, and so does a row open in
+  [row edit mode](/docs/editing), where every column holds an editor.
+- Sorting, filtering, copy and export still see every column. Autosize leaves
+  a spanning cell out of its column's measurement.
+- Under [cell selection](/docs/cell-selection) the spanning cell is one cell:
+  the arrow keys step over it, and a move onto a column it covers lands on it.
+
+A cell renderer that reads `row.getIsExpanded()`, as the demo's does, has to
+subscribe to the store - see
+[Opening a row from elsewhere](/docs/row-details#opening-a-row-from-elsewhere).
+
+The cell carries `aria-colspan` and `data-col-span` with the number of columns
+it covers.
+
 ## Header groups
 
 `columnHelper.group` nests columns under a shared header. The group is a header
@@ -259,6 +302,8 @@ column can be placed in front of it.
 | `meta.options` | Column meta | array \| `"faceted"` \| `(args) => …` | – | The choices of an option column. |
 | `TMDataGridOptionsArgs` | Type | – | – | What a `meta.options` function receives: `{ table, column, row? }`. `row` is absent when the filter panel asks. |
 | `meta.align` | Column meta | `"left" \| "right" \| "center"` | `"left"` | Header and cell alignment. |
+| `meta.colSpan` | Column meta | `number \| (args) => number` | `1` | Columns the cell covers on a row. See [Spanning columns](#spanning-columns). |
+| `TMDataGridColSpanArgs` | Type | `{ row, table }` | – | What a `meta.colSpan` function receives. |
 | `meta.filter` | Column meta | `TMDataGridColumnFilterOptions` | – | How the column filters: `defaultOperator`, `control`. |
 | `meta.edit` | Column meta | `TMDataGridColumnEditOptions` | – | How the column edits: `enabled`, `field`, `editor`, `validate`, `mapValue`. |
 | `resolveColumnOptions` | Export | `({ table, column, row? }) => options` | – | Normalises all three `meta.options` forms. |

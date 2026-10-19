@@ -47,8 +47,9 @@ function mountedCells(
 ): NodeListOf<HTMLElement> {
   const id = CSS.escape(columnId);
   return container.querySelectorAll<HTMLElement>(
-    `[role="cell"][data-column-id="${id}"],` +
-      `[role="gridcell"][data-column-id="${id}"]`,
+    // A cell spanning several columns says nothing about this one's width.
+    `[role="cell"][data-column-id="${id}"]:not([data-col-span]),` +
+      `[role="gridcell"][data-column-id="${id}"]:not([data-col-span])`,
   );
 }
 

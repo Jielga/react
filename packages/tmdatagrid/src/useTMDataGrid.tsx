@@ -195,6 +195,28 @@ export type TMDataGridColumnMeta<TData extends RowData = TMDataGridRowData> = {
   flex?: number;
   align?: "left" | "right" | "center";
   /**
+   * How many columns this column's cell covers on a row, counting itself.
+   * Defaults to `1`.
+   *
+   * A cell spanning `n` is one cell `n` columns wide; the `n - 1` cells to its
+   * right do not render on that row. A function decides per row:
+   *
+   * ```tsx
+   * meta: {
+   *   // An open row's title takes the rest of the row.
+   *   colSpan: ({ row }) => (row.getIsExpanded() ? Infinity : 1),
+   * }
+   * ```
+   *
+   * Counted over the displayed columns, so hiding or moving a column changes
+   * what a span covers. A span stops at the last of your columns - it never
+   * covers the checkbox, tree, details or edit lane - and at the edge of its
+   * pinned block. Group rows, and a row open in row edit mode, ignore it.
+   *
+   * Display only: sorting, filtering, copy and export still see every column.
+   */
+  colSpan?: number | ((args: TMDataGridColSpanArgs<TData>) => number);
+  /**
    * Size the column to its widest mounted content once, after the first rows
    * render - unless a persisted or user-set width already covers it. The same
    * measurement as double-clicking the resize divider; see `autosizeColumn`.
@@ -381,6 +403,12 @@ export function createTMDataGridColumnHelper<
 
 /** What the `renderDetails` render prop is handed for an expanded row. */
 export type TMDataGridDetailsArgs<TData extends RowData> = {
+  row: Row<TMDataGridFeatures, TData>;
+  table: TMDataGridTable<TData>;
+};
+
+/** What a `meta.colSpan` function receives. */
+export type TMDataGridColSpanArgs<TData extends RowData> = {
   row: Row<TMDataGridFeatures, TData>;
   table: TMDataGridTable<TData>;
 };
