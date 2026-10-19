@@ -88,6 +88,7 @@ Pass the row type so the handlers are typed:
 | `rowClassName` | `string \| (row) => string` | – | Class for a body row. See [Row styling](/docs/row-styling). |
 | `rowStyle` | `TMDataGridRowStyle \| (row) => TMDataGridRowStyle` | – | Inline style for a body row. Set `--row-bg` rather than `background`. See [Row styling](/docs/row-styling#set-the-row-background). |
 | `striped` | `boolean` | `false` | If set, every second row takes `--dg-row-striped-bg`. See [Striping](/docs/row-styling#striping). |
+| `highlightOnHover` | `boolean` | On for rows that answer a click or a right-click | Whether a body row takes the hover tint. See [Hover](/docs/row-styling#hover). |
 | `onScrollToTop` · `onScrollToBottom` · `onScrollToLeft` · `onScrollToRight` | `() => void` | – | Called once on arriving at that edge, not on mount and not per scroll event. See [Edge callbacks](/docs/scrolling#edge-callbacks). |
 | `onReachEnd` | `() => void` | – | Called as the scroll nears the last row, once per row count. Sorting and filtering must be server-side. See [Infinite scroll](/docs/server-side#infinite-scroll). |
 | `reachEndThreshold` | `number` | `10` | Rows before the end at which `onReachEnd` fires. |

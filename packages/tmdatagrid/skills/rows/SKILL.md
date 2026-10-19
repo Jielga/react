@@ -8,8 +8,9 @@ description: >
   reading a selection through the table store, onRowClick / onCellClick /
   onCellDoubleClick / onCellContextMenu, the renderRowContextMenu slot with its
   internalItems handback, renderColumnMenuItems and rowContextMenuProps, per-row
-  styling with rowStyle, rowClassName, striped and the --row-bg rule, the row
-  details panel through renderDetails, detailsColumnPosition and
+  styling with rowStyle, rowClassName, striped, highlightOnHover and the
+  --row-bg rule, the row details panel through renderDetails,
+  detailsColumnPosition and
   DETAILS_COLUMN_ID, row pinning with enableRowPinning and row.pin, and the
   row-number gutter through enableRowNumbers. Load when selecting rows, reacting
   to a click, opening a detail panel, colouring rows by their data, pinning rows
@@ -213,8 +214,15 @@ them and they stop showing. `striped` follows position in the view, so it
 survives sorting and filtering rather than sticking to records, and pinned rows
 are not striped.
 
+The hover tint follows the gestures a row answers: a row takes it under
+`selectionMode: "row"` or a highlight mode, `onRowClick` or
+`renderRowContextMenu`, and a group row never does. A grid with none of those
+shows no hover tint. `highlightOnHover` on the Table overrides that: `true`
+tints every row, `false` none.
+
 Rows carry `data-selected`, `data-selected-bg`, `data-highlighted`,
-`data-grouped`, `data-depth`, `data-context-menu` and `data-row-id`, so a
+`data-grouped`, `data-depth`, `data-context-menu`, `data-highlight-on-hover`
+and `data-row-id`, so a
 stylesheet can target any of it without a callback. The boolean attributes are
 present, with the value `"true"`, only while they apply - `data-grouped` only
 on group rows - so `[data-grouped]` and `[data-grouped="true"]` are
