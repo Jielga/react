@@ -1252,7 +1252,21 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
         ? colSpan({ row, table })
         : (colSpan ?? 1);
     });
-    const resolved = spans.every((span) => span === 1) ? null : spans;
+    // The open cell editor lives in its column's cell. A span landing on that
+    // column - the row expanding under the edit, say - would unmount the
+    // editor without closing it, so the row keeps its cells until the edit
+    // ends.
+    const editIndex =
+      editActive !== null && editActive.rowId === row.id
+        ? orderedColumns.findIndex(
+            (column) => column.id === editActive.columnId,
+          )
+        : -1;
+    const resolved =
+      spans.every((span) => span === 1) ||
+      (editIndex >= 0 && spans[editIndex] === 0)
+        ? null
+        : spans;
     colSpanCache.set(row.id, resolved);
     return resolved;
   };
@@ -1265,21 +1279,25 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     return spans !== null && spans[columnIndex] === 0;
   };
   /**
-   * A position moved onto the cell that renders it, under spans. `row` is the
-   * position's row when the caller holds it, which saves the lookup.
+   * A position moved onto the cell that renders it, under spans: the input
+   * itself when its cell renders, so a caller can compare by identity. `row`
+   * is the position's row; `undefined` for a pinned row, which is not in
+   * `rows` and keeps its position as it is.
    */
   const toRenderedCell = (
     position: TMDataGridCellPosition,
-    row = rows.find((candidate) => candidate.id === position.rowId),
+    row: Row<TMDataGridFeatures, TMDataGridRowData> | undefined,
   ): TMDataGridCellPosition => {
-    if (spanColumns === null) return position;
-    const spans = row ? colSpansOf(row) : null;
+    if (spanColumns === null || row === undefined) return position;
+    const spans = colSpansOf(row);
     if (spans === null) return position;
     const columnIndex = orderedColumns.findIndex(
       (column) => column.id === position.columnId,
     );
     if (columnIndex < 0) return position;
-    const anchor = orderedColumns[spanAnchorIndex(spans, columnIndex)];
+    const anchorIndex = spanAnchorIndex(spans, columnIndex);
+    if (anchorIndex === columnIndex) return position;
+    const anchor = orderedColumns[anchorIndex];
     return anchor ? { ...position, columnId: anchor.id } : position;
   };
 
@@ -2339,7 +2357,11 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     // through at the last row would scroll the body out from under a focus that
     // did not move.
     event.preventDefault();
-    if (next.rowIndex === rowIndex && next.columnIndex === columnIndex) return;
+    // A move landing on this cell again - clamped at an edge, or onto a column
+    // this cell covers - changes nothing, the rectangle included.
+    const landing =
+      spans === null ? next.columnIndex : spanAnchorIndex(spans, next.columnIndex);
+    if (next.rowIndex === rowIndex && landing === columnIndex) return;
     // Shift extends the rectangle instead of collapsing it - the same key that
     // extends a text selection, a file list and a spreadsheet range.
     moveFocusedCell(next, { extend: event.shiftKey && cellRangeSelection });
@@ -2377,6 +2399,23 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     // never in this grid.
     const activeElement = container.ownerDocument.activeElement;
 
+    // The column the focus sits on has just been covered by a span - the row
+    // expanded under it, say. Its cell is gone, and the browser dropped the
+    // focus with it, so the state follows the cell that now stands for the
+    // column, and the render after this one puts the focus there. A focus
+    // that had moved elsewhere on the page stays there: only the ring moves.
+    const rendered = toRenderedCell(focusedCell, rows[focusedRowIndex]);
+    if (rendered !== focusedCell) {
+      if (
+        activeElement === null ||
+        activeElement === container.ownerDocument.body
+      ) {
+        wantsCellFocusRef.current = true;
+      }
+      ui.actions.setFocusedCell(rendered);
+      return;
+    }
+
     // Never take the focus from elsewhere on the page. A consumer moving the
     // cell while the user is typing in a form somewhere means "move the ring",
     // not "move the caret" - the scroll above already did the visible part.
@@ -2397,10 +2436,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       return;
     }
 
-    const cellElement = findCellElement(
-      container,
-      toRenderedCell(focusedCell, rows[focusedRowIndex]),
-    );
+    const cellElement = findCellElement(container, rendered);
     // Still scrolling. The intent stays up, and the next render tries again.
     if (cellElement === null) return;
     wantsCellFocusRef.current = false;

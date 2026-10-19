@@ -223,9 +223,12 @@ hint: Open a row with its chevron - its name takes the rest of the row, and the 
   the arrow keys step over it, and a move onto a column it covers lands on it.
   It is addressed by its first column: a range holds it when it holds that
   column, and a range over only the columns it covers leaves it out. Copy and
-  export take every column of the range either way.
+  export take every column of the range either way. When the column the focus
+  is on becomes covered, the focus moves to the spanning cell.
 - Under [cell editing](/docs/editing) a covered column has no cell to open,
   and Tab from the spanning cell's editor moves past the columns it covers.
+  A row keeps its cells while an editor is open in a column a span would
+  cover, and the span lands when the edit ends.
 
 A cell renderer that reads `row.getIsExpanded()`, as the demo's does, has to
 subscribe to the store - see

@@ -1,16 +1,19 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
   part,
   queryPart,
+  renderGrid,
   renderGridUi,
+  renderWithMantine,
   type TestRow,
 } from "../../test/gridHarness";
 import {
   createTMDataGridColumnHelper,
   type TMDataGridColumnMeta,
 } from "../useTMDataGrid";
+import { TMDataGrid } from "./TMDataGrid";
 import { DETAILS_COLUMN_ID } from "./TMDataGridDetailsColumn";
 
 const helper = createTMDataGridColumnHelper<TestRow>();
@@ -111,6 +114,23 @@ describe("meta.colSpan", () => {
     ).not.toBeNull();
   });
 
+  it("sticks a right-pinned spanning cell at the offset of the last column it covers", () => {
+    renderGridUi({
+      columns: secondRowSpan,
+      initialState: { columnPinning: { start: [], end: ["name", "age"] } },
+    });
+
+    // Row 1 is unspanned: Name sits one Age-width in from the right edge.
+    // Row 2's Name covers Age, the last column, so it sticks where Age does.
+    const unspannedName = bodyCell("1", "name")!;
+    const unspannedAge = bodyCell("1", "age")!;
+    const spanning = bodyCell("2", "name")!;
+    expect(spanning).toHaveAttribute("aria-colspan", "2");
+    expect(spanning).toHaveStyle({ position: "sticky" });
+    expect(spanning.style.right).toBe(unspannedAge.style.right);
+    expect(spanning.style.right).not.toBe(unspannedName.style.right);
+  });
+
   it("is ignored on a group row", () => {
     renderGridUi({
       columns: infiniteSpan,
@@ -186,6 +206,43 @@ describe("meta.colSpan", () => {
       expect(bodyCell("2", "name")).not.toHaveAttribute("data-selected");
     });
 
+    it("leaves the range alone when Right is clamped at the spanning cell's end", async () => {
+      const user = userEvent.setup();
+      renderGridUi({ columns: infiniteSpan, cellSelection: "range" });
+
+      await user.click(bodyCell("1", "id")!);
+      await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
+      expect(bodyCell("1", "id")).toHaveAttribute("data-selected", "true");
+      expect(bodyCell("1", "name")).toHaveAttribute("data-selected", "true");
+
+      // Name runs to the last column: there is nowhere to go, and a move that
+      // goes nowhere does not collapse the rectangle.
+      await user.keyboard("{ArrowRight}");
+      expect(bodyCell("1", "id")).toHaveAttribute("data-selected", "true");
+      expect(document.activeElement).toBe(bodyCell("1", "name"));
+    });
+
+    it("follows the focus onto the spanning cell when its column is covered", async () => {
+      const user = userEvent.setup();
+      renderGridUi({
+        columns: openRowSpan,
+        renderDetails: () => "panel",
+        cellSelection: "single",
+        // Click-to-expand: the click focuses Age and then opens the row,
+        // whose Name now covers Age.
+        tableProps: { onRowClick: (row) => row.toggleExpanded() },
+      });
+
+      await user.click(bodyCell("1", "age")!);
+
+      expect(queryPart("details", { rowId: "1" })).toBeInTheDocument();
+      expect(bodyCell("1", "age")).toBeNull();
+      await waitFor(() =>
+        expect(document.activeElement).toBe(bodyCell("1", "name")),
+      );
+      expect(focusedCell()?.dataset.columnId).toBe("name");
+    });
+
     it("walks Shift+Tab onto the spanning cell covering the previous row's last column", async () => {
       const user = userEvent.setup();
       renderGridUi({ columns: firstRowSpanWithButton, cellSelection: "single" });
@@ -220,6 +277,36 @@ describe("meta.colSpan", () => {
 
       // Age is covered on this row; City is the next cell with an editor.
       expect(document.activeElement).toBe(bodyCell("1", "city"));
+    });
+
+    it("keeps the row's cells while an editor is open where a span would land", async () => {
+      const user = userEvent.setup();
+      const { result } = renderGrid({
+        columns: openRowSpan,
+        renderDetails: () => "panel",
+        editing: { mode: "cell" },
+      });
+      renderWithMantine(
+        <TMDataGrid {...result.current}>
+          <TMDataGrid.Table<TestRow> />
+        </TMDataGrid>,
+      );
+
+      await user.dblClick(bodyCell("1", "age")!);
+      const editor = screen.getByLabelText("Edit Age");
+
+      // The row opens under the edit, from outside the grid: Name would now
+      // cover Age, and the editor with it.
+      act(() => result.current.table.getRow("1").toggleExpanded());
+      expect(queryPart("details", { rowId: "1" })).toBeInTheDocument();
+      expect(editor).toBeInTheDocument();
+      expect(bodyCell("1", "name")).not.toHaveAttribute("aria-colspan");
+
+      // The edit over, the span lands.
+      await user.keyboard("{Escape}");
+      expect(screen.queryByLabelText("Edit Age")).toBeNull();
+      expect(bodyCell("1", "name")).toHaveAttribute("aria-colspan", "3");
+      expect(bodyCell("1", "age")).toBeNull();
     });
   });
 });
