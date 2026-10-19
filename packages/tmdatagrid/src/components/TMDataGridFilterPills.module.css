@@ -13,13 +13,15 @@
    shape readable against any surface. Scoped through `.filterPills` for the
    specificity to beat Mantine's own rule whichever stylesheet loads last. */
 .filterPills .pill {
-  background-color: light-dark(
-    var(--mantine-color-gray-1),
-    var(--mantine-color-dark-5)
-  );
-  color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-0));
-  border: 1px solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-3));
+  background-color: var(--mantine-color-gray-1);
+  color: var(--mantine-color-black);
+  border: 1px solid var(--mantine-color-gray-3);
+}
+
+:where([data-mantine-color-scheme="dark"]) .filterPills .pill {
+  background-color: var(--mantine-color-dark-5);
+  color: var(--mantine-color-dark-0);
+  border-color: var(--mantine-color-dark-3);
 }
 
 /* The label is a button so a pill can be clicked back open, but it must read as

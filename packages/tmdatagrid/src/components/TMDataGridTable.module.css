@@ -477,12 +477,13 @@
    the browser's default so the colour is the grid's to state - override with
    `--dg-match-highlight-bg` on the grid. */
 .matchHighlight {
-  background-color: var(
-    --dg-match-highlight-bg,
-    light-dark(var(--mantine-color-yellow-2), rgba(250, 176, 5, 0.35))
-  );
+  background-color: var(--dg-match-highlight-bg, var(--mantine-color-yellow-2));
   color: inherit;
   border-radius: 2px;
+}
+
+:where([data-mantine-color-scheme="dark"]) .matchHighlight {
+  background-color: var(--dg-match-highlight-bg, rgba(250, 176, 5, 0.35));
 }
 
 /* The summary row - one sticky row of column footers along the bottom edge,
