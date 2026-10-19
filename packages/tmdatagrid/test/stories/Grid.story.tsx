@@ -148,7 +148,11 @@ export function PinningOff() {
     columns: pinnedColumns,
     getRowId: (row) => String(row.id),
     enableColumnPinning: false,
-    renderDetails: ({ row }) => <div>Details for {row.original.id}</div>,
+    renderDetails: ({ row }) => (
+      <div style={{ padding: "var(--dg-padding)" }}>
+        Details for {row.original.id}
+      </div>
+    ),
   });
 
   return (

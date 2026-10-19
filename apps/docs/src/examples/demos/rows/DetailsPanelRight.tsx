@@ -9,7 +9,7 @@ export function DetailsPanelRight() {
     columns: compactEmployeeColumns,
     getRowId: (row) => String(row.id),
     renderDetails: ({ row }) => (
-      <Text size="sm">
+      <Text size="sm" p="var(--dg-padding)">
         {row.original.email} · {row.original.location}
       </Text>
     ),

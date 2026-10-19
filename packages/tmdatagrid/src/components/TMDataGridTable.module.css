@@ -326,7 +326,9 @@
   /* Base and tint, exactly as .bodyCell paints them. */
   background-color: var(--mantine-color-body);
   background-image: linear-gradient(var(--row-bg), var(--row-bg));
-  padding: var(--dg-padding);
+  /* No padding: the panel is the user's content, and a nested grid or a tab
+     strip wants the full width. Content that should line up with the cell
+     text pads itself with var(--dg-padding). */
   /* The row above may be the selection control, which turns text selection off
      for everything inside it. A panel is content, so it takes both back. */
   user-select: text;

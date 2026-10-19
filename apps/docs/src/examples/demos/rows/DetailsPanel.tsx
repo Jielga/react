@@ -13,11 +13,12 @@ const NOTES = [
 /**
  * Whatever `renderDetails` returns. Nothing here is the grid's - it renders
  * what comes back, at whatever height it comes back at, and measures the
- * result. The estimate below only has to be in the right region.
+ * result. The estimate below only has to be in the right region. The panel
+ * has no padding of its own; `--dg-padding` lines the text up with the cells.
  */
 function EmployeeDetails({ employee }: { employee: Employee }) {
   return (
-    <Stack gap="sm">
+    <Stack gap="sm" p="var(--dg-padding)">
       <Group gap="xl">
         <Text size="sm">
           {employee.email} · {employee.location} · {sek(employee.salary)}
