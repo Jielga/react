@@ -10,15 +10,14 @@ description: >
   internalItems handback, renderColumnMenuItems and rowContextMenuProps, per-row
   styling with rowStyle, rowClassName, striped, highlightOnHover and the
   --row-bg rule, the row details panel through renderDetails,
-  detailsColumnPosition and
-  DETAILS_COLUMN_ID, row pinning with enableRowPinning and row.pin, and the
-  row-number gutter through enableRowNumbers. Load when selecting rows, reacting
-  to a click, opening a detail panel, colouring rows by their data, pinning rows
-  to an edge, or numbering them.
+  detailsColumnPosition and DETAILS_COLUMN_ID, row pinning with enableRowPinning
+  and row.pin, and the row-number gutter through enableRowNumbers. Load when
+  selecting rows, reacting to a click, opening a detail panel, colouring rows by
+  their data, pinning rows to an edge, or numbering them.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.2.0'
+  library_version: '2.3.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/row-selection.md'
   - 'Jielga/react:packages/tmdatagrid/docs/row-interaction.md'

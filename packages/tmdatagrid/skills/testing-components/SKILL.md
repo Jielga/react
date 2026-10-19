@@ -12,7 +12,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.2.0'
+  library_version: '2.3.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/testing.md'
   - 'Jielga/react:packages/tmdatagrid/test/gallery/main.tsx'

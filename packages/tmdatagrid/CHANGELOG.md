@@ -1,5 +1,27 @@
 # @jielga/tmdatagrid
 
+## 2.3.0
+
+### Minor Changes
+
+- [#172](https://github.com/Jielga/react/pull/172) [`f0cc025`](https://github.com/Jielga/react/commit/f0cc025320c79c4aa19c35dd5402407f95802cac) Thanks [@Psvensso](https://github.com/Psvensso)! - - A body row takes the hover tint only when the row itself answers a click or a right-click: `selectionMode: "row"` or a highlight mode, `onRowClick`, or `renderRowContextMenu`. Group rows never do. Before, every row took it.
+
+  - `highlightOnHover` on the Table forces the tint on or off for every row.
+  - Rows carry `data-highlight-on-hover="true"` while the tint applies.
+
+- [#169](https://github.com/Jielga/react/pull/169) [`1aa083f`](https://github.com/Jielga/react/commit/1aa083fb99b8cc511bf2eb44a7b6acd455a680e6) Thanks [@Psvensso](https://github.com/Psvensso)! - - `persist.urlKey` keeps selected data slices in a URL search param, written with `history.replaceState`.
+  - `persist.urlStorage` replaces the default URL access, for routers that own the URL.
+  - `meta.filter.url: false` keeps a column's filter out of the link.
+  - A global filter cleared over an `initialState.globalFilter` is persisted as cleared; before, a reload came back on the initial value.
+  - Persistence writes are debounced across re-renders, as intended; before, a re-render wrote at once.
+
+### Patch Changes
+
+- [#173](https://github.com/Jielga/react/pull/173) [`00f8e2e`](https://github.com/Jielga/react/commit/00f8e2e8945e20142cae824420439046a04be828) Thanks [@Psvensso](https://github.com/Psvensso)! - - The details panel no longer pads its content. Content that should line up with the cell text pads itself with `var(--dg-padding)`.
+
+- [#170](https://github.com/Jielga/react/pull/170) [`02b1dec`](https://github.com/Jielga/react/commit/02b1dec44e5559173f5c61adfd5c11e958cde444) Thanks [@Psvensso](https://github.com/Psvensso)! - The pinned-lane edge band, the filter pills and the match highlight get their colours back in the built stylesheet.
+  `light-dark()` was lowered by the library build into an invalid declaration, so every dev server showed them and `dist/styles.css` did not.
+
 ## 2.2.0
 
 ### Minor Changes
