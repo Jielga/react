@@ -109,6 +109,34 @@ It is the label a server-paged grid usually shows in place of a row range, so it
 
 It reads `pageCount`, so a grid declaring `pageCount: -1` shows "Page 3" alone.
 
+Numbered page buttons come from Mantine's `Pagination`, bound to `state` and
+`actions`. Its `total` is `pageCount` and its `value` is 1-based, so `pageIndex`
+shifts by one in both directions; `disabled` greys it out while a grouping
+suspends paging, as the built-in controls do.
+
+```tsx
+import { Pagination } from "@mantine/core";
+
+<TMDataGrid.Footer
+  renderPagination={({ state, actions, Controls }) => (
+    <>
+      <Controls.PageSize />
+      <Controls.Range />
+      <Pagination
+        total={state.pageCount}
+        value={state.pageIndex + 1}
+        onChange={(page) => actions.setPageIndex(page - 1)}
+        disabled={!state.isPagingActive}
+        withEdges
+      />
+    </>
+  )}
+/>
+```
+
+A manual grid declaring `pageCount: -1` gives `Pagination` no total to count;
+keep `Controls.Pager` for that grid.
+
 `state` carries `pageIndex`, `pageSize`, `pageCount`, `rowCount`,
 `canPreviousPage`, `canNextPage`, the `from` / `to` bounds of the current page,
 and `isPagingActive`. `actions` carries `setPageIndex`, `setPageSize`,

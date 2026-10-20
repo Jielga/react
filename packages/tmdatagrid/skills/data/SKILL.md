@@ -93,6 +93,34 @@ greying out while paging is suspended. `Controls.PageNumber` renders
 "Page 3 of 200", the label a server-paged grid usually shows in place of the
 row range. It is not in the default footer; add it through the slot.
 
+Numbered page buttons are not built in. Render Mantine's `Pagination` in the
+slot, bound to `state` and `actions`: `total` is `pageCount`, `value` is 1-based
+so `pageIndex` shifts by one in both directions, and `disabled` is
+`!state.isPagingActive` so it greys out while grouping suspends paging.
+
+```tsx
+import { Pagination } from "@mantine/core";
+
+<TMDataGrid.Footer
+  renderPagination={({ state, actions, Controls }) => (
+    <>
+      <Controls.PageSize />
+      <Controls.Range />
+      <Pagination
+        total={state.pageCount}
+        value={state.pageIndex + 1}
+        onChange={(page) => actions.setPageIndex(page - 1)}
+        disabled={!state.isPagingActive}
+        withEdges
+      />
+    </>
+  )}
+/>
+```
+
+A manual grid declaring `pageCount: -1` gives `Pagination` no total to count;
+keep `Controls.Pager` for that grid.
+
 `state` carries `pageIndex`, `pageSize`, `pageCount`, `rowCount`,
 `canPreviousPage`, `canNextPage`, `from`, `to` and `isPagingActive`. `actions`
 carries `setPageIndex`, `setPageSize`, `previousPage`, `nextPage`, `firstPage`
