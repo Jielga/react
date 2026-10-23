@@ -6,6 +6,9 @@ import type {
   TableFeatures,
 } from "@tanstack/react-table";
 import type { TMDataGridFeatures, TMDataGridTable } from "../useTMDataGrid";
+import type { TMDataGridOption } from "./columnOptions";
+import type { TMDataGridLabels } from "./labels";
+import { formatValueText } from "./valueText";
 
 /**
  * The value shape stored in `columnFilters` for every TMDataGrid column.
@@ -307,30 +310,39 @@ export function activeColumnFilters<TData extends RowData>(
  *
  * The type's default operator is left implicit - "First name: Sofia" reads the
  * way a person would say it - while any other operator is spelled out, since
- * that is the part a reader cannot guess.
+ * that is the part a reader cannot guess. A value with an option reads as the
+ * option's label, and a boolean as `labels.booleanTrue` / `booleanFalse`.
  */
 export function formatFilterLabel({
   label,
   type,
   filter,
   operatorLabels = FILTER_OPERATOR_LABELS,
+  options,
+  labels,
 }: {
   label: string;
   type: TMDataGridColumnType;
   filter: TMDataGridFilterValue;
   /** Localized operator names - `labels.operators`. Defaults to English. */
   operatorLabels?: Record<TMDataGridFilterOperator, string>;
+  /** The column's options, so a value reads as its option's label. */
+  options?: ReadonlyArray<TMDataGridOption>;
+  /** What a boolean value reads as. Defaults to English. */
+  labels?: Pick<TMDataGridLabels, "booleanTrue" | "booleanFalse">;
 }): string {
   const { operator, value } = filter;
   if (!operatorNeedsValue(operator)) {
     return `${label} ${operatorLabels[operator]}`;
   }
+  const valueText = (entry: string) =>
+    formatValueText(String(entry).trim(), { type, options, labels });
   const text =
     operator === "between" && Array.isArray(value)
-      ? value.map((entry) => String(entry).trim()).join("–")
+      ? value.map(valueText).join("–")
       : Array.isArray(value)
-        ? value.join(", ")
-        : String(value).trim();
+        ? value.map(valueText).join(", ")
+        : valueText(String(value));
   if (operator === getDefaultOperator(type)) return `${label}: ${text}`;
   return `${label} ${operatorLabels[operator]} ${text}`;
 }

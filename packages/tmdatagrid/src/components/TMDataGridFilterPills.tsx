@@ -2,6 +2,7 @@ import { Box, type BoxProps, Button, Pill, UnstyledButton } from "@mantine/core"
 import type { RowData } from "@tanstack/react-table";
 import { useSelector } from "@tanstack/react-store";
 import classes from "./TMDataGridFilterPills.module.css";
+import { resolveColumnOptions } from "../core/columnOptions";
 import { getColumnLabel, getColumnType } from "../core/columnUtils";
 import {
   formatFilterLabel,
@@ -9,7 +10,12 @@ import {
   isTMDataGridFilterValue,
 } from "../core/filterOperators";
 import type { TMDataGridSize } from "../core/sizes";
-import { openColumnFilter, type TMDataGridApi } from "../useTMDataGrid";
+import type { TMDataGridRowData } from "../TMDataGridContext";
+import {
+  openColumnFilter,
+  type TMDataGridApi,
+  type TMDataGridTable,
+} from "../useTMDataGrid";
 
 /** Mantine's style props (`mb="sm"`, `hiddenFrom="sm"`) are set on the wrapper. */
 export type TMDataGridFilterPillsProps<TData extends RowData> = BoxProps & {
@@ -55,6 +61,9 @@ export function TMDataGridFilterPills<TData extends RowData>({
   ...others
 }: TMDataGridFilterPillsProps<TData>) {
   const { table, labels } = api;
+  // The options readers take the row-type-erased table, like the rest of the
+  // chrome does through context.
+  const erased = table as unknown as TMDataGridTable<TMDataGridRowData>;
   const columnFilters = useSelector(
     table.store,
     (state) => state.columnFilters,
@@ -76,6 +85,7 @@ export function TMDataGridFilterPills<TData extends RowData>({
       <Pill.Group size={size}>
         {activeFilters.map((filter) => {
           const column = table.getColumn(filter.id);
+          const erasedColumn = erased.getColumn(filter.id);
           const label = column ? getColumnLabel(column) : filter.id;
           const value = filter.value;
           // isFilterActive already vouched for the shape; this narrows it.
@@ -125,6 +135,10 @@ export function TMDataGridFilterPills<TData extends RowData>({
                   type: column ? getColumnType(column) : "string",
                   filter: value,
                   operatorLabels: labels.operators,
+                  options: erasedColumn
+                    ? resolveColumnOptions({ table: erased, column: erasedColumn })
+                    : undefined,
+                  labels,
                 })}
               </UnstyledButton>
             </Pill>

@@ -1,7 +1,16 @@
 import { act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { erased, renderGrid, visibleColumnIds } from "../../test/gridHarness";
+import {
+  erased,
+  part,
+  renderGrid,
+  renderWithMantine,
+  visibleColumnIds,
+} from "../../test/gridHarness";
+import { TMDataGrid } from "../components/TMDataGrid";
 import { GROUP_COLUMN_ID } from "../components/TMDataGridGroupColumn";
+import { createTMDataGridColumnHelper, useTMDataGrid } from "../useTMDataGrid";
+import { TMDATAGRID_LABELS_SV } from "./labelsSv";
 import { getGroupDataRows } from "./grouping";
 import {
   getDisplayedRows,
@@ -325,5 +334,77 @@ describe("aggregation", () => {
       .reduce((total, row) => total + Number(row.getValue("age")), 0);
 
     expect(group?.getValue("age")).toBe(summed);
+  });
+});
+
+describe("the group label", () => {
+  type LabelRow = {
+    id: number;
+    active: boolean;
+    status: string;
+    hired: Date;
+    note: string | null;
+  };
+  const HIRED = new Date(2026, 0, 15);
+  const helper = createTMDataGridColumnHelper<LabelRow>();
+  const columns = helper.columns([
+    helper.accessor("active", { header: "Aktiv", meta: { type: "boolean" } }),
+    helper.accessor("status", {
+      header: "Status",
+      meta: { type: "select", options: [{ value: "leave", label: "Ledig" }] },
+    }),
+    helper.accessor("hired", { header: "Anställd", meta: { type: "date" } }),
+    helper.accessor("note", { header: "Not" }),
+  ]);
+  const rows: LabelRow[] = [
+    { id: 1, active: true, status: "leave", hired: HIRED, note: null },
+    { id: 2, active: false, status: "leave", hired: HIRED, note: null },
+  ];
+
+  function LabelGrid({ groupBy }: { groupBy: string }) {
+    const grid = useTMDataGrid<LabelRow>({
+      data: rows,
+      columns,
+      getRowId: (row) => String(row.id),
+      labels: TMDATAGRID_LABELS_SV,
+      enableGrouping: true,
+      initialState: { grouping: [groupBy] },
+    });
+    return (
+      <TMDataGrid {...grid}>
+        <TMDataGrid.Table<LabelRow> />
+      </TMDataGrid>
+    );
+  }
+
+  // TanStack keys a group by the value turned into a string, so the label is
+  // read from the record: otherwise `true` reads "true" and `null` "null".
+  it("writes a boolean group through the boolean labels", () => {
+    renderWithMantine(<LabelGrid groupBy="active" />);
+
+    expect(part("group-toggle", { rowId: "active:true" })).toHaveTextContent("Ja");
+    expect(part("group-toggle", { rowId: "active:false" })).toHaveAccessibleName(
+      "Expandera Nej",
+    );
+  });
+
+  it("writes a select group as its option's label", () => {
+    renderWithMantine(<LabelGrid groupBy="status" />);
+
+    expect(part("group-toggle", { rowId: "status:leave" })).toHaveTextContent("Ledig");
+  });
+
+  it("writes a date group as a date", () => {
+    renderWithMantine(<LabelGrid groupBy="hired" />);
+
+    expect(
+      part("group-toggle", { rowId: `hired:${String(HIRED)}` }),
+    ).toHaveTextContent(HIRED.toLocaleDateString());
+  });
+
+  it("writes a null group as the blank label", () => {
+    renderWithMantine(<LabelGrid groupBy="note" />);
+
+    expect(part("group-toggle", { rowId: "note:null" })).toHaveTextContent("(Tomt)");
   });
 });

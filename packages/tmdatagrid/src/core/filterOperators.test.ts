@@ -304,6 +304,48 @@ describe("formatFilterLabel", () => {
       }),
     ).toBe("Stad är tom");
   });
+
+  it("reads a boolean value through the boolean labels", () => {
+    expect(
+      formatFilterLabel({
+        label: "Active",
+        type: "boolean",
+        filter: { operator: "equals", value: "true" },
+      }),
+    ).toBe("Active: Yes");
+    expect(
+      formatFilterLabel({
+        label: "Aktiv",
+        type: "boolean",
+        filter: { operator: "notEquals", value: "false" },
+        operatorLabels: TMDATAGRID_LABELS_SV.operators,
+        labels: TMDATAGRID_LABELS_SV,
+      }),
+    ).toBe("Aktiv är inte lika med Nej");
+  });
+
+  it("reads a value with an option as the option's label", () => {
+    const options = [
+      { value: "paid", label: "Betald" },
+      { value: "pending", label: "Väntande" },
+    ];
+    expect(
+      formatFilterLabel({
+        label: "Status",
+        type: "select",
+        filter: { operator: "isAnyOf", value: ["paid", "pending", "gone"] },
+        options,
+      }),
+    ).toBe("Status: Betald, Väntande, gone");
+    expect(
+      formatFilterLabel({
+        label: "Status",
+        type: "select",
+        filter: { operator: "equals", value: "paid" },
+        options,
+      }),
+    ).toBe("Status equals Betald");
+  });
 });
 
 describe("isTMDataGridFilterValue", () => {

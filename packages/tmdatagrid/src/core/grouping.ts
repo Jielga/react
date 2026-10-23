@@ -1,5 +1,6 @@
 import type { Row, RowData } from "@tanstack/react-table";
 import type { TMDataGridFeatures } from "../useTMDataGrid";
+import { formatValueText, type TMDataGridValueTextOptions } from "./valueText";
 
 /**
  * The data rows under a group row, at any depth.
@@ -29,14 +30,21 @@ const BLANK_GROUP_LABEL = "(Blank)";
  * Deliberately not the grouped column's own `cell` renderer: that renderer is
  * written for a data row and is free to reach into `row.original`, which on a
  * group row is the first leaf's record rather than anything about the group.
+ * `options` carries what the chrome knows of the column instead - its type,
+ * its option labels and the boolean labels.
  */
 export function formatGroupValue(
   value: unknown,
   blankLabel = BLANK_GROUP_LABEL,
+  options?: TMDataGridValueTextOptions,
 ): string {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    (Array.isArray(value) && value.length === 0)
+  ) {
     return blankLabel;
   }
-  if (value instanceof Date) return value.toLocaleDateString();
-  return String(value);
+  return formatValueText(value, options);
 }
