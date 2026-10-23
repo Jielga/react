@@ -264,6 +264,19 @@ export {
   type TMDataGridStorageMode,
   type TMDataGridUrlStorage,
 } from "./core/persistence";
+export {
+  createTMDataGridUrlState,
+  type TMDataGridColumnInfo,
+  type TMDataGridColumnInfoOf,
+  type TMDataGridDateInput,
+  type TMDataGridTypedColumn,
+  type TMDataGridUrlFiltersInput,
+  type TMDataGridUrlInput,
+  type TMDataGridUrlPayload,
+  type TMDataGridUrlSearchStorage,
+  type TMDataGridUrlSortableId,
+  type TMDataGridUrlState,
+} from "./core/urlState";
 export type {
   TMDataGridCellEventArgs,
   TMDataGridRowContextMenuArgs,

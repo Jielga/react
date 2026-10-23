@@ -10,7 +10,7 @@ description: >
   enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
   showSelectedBackground, cellSelection, renderDetails, overscan,
   quickSearchMode), persist with dataKey/settingsKey slices, storageMode and
-  urlKey deep links, the returned api (table, ui, edit, features, labels,
+  urlKey and createTMDataGridUrlState deep links, the returned api (table, ui, edit, features, labels,
   resetSettings, scrollToRow), ui actions, and reading grid state with
   useSelector over table.store, since table.getState() does not exist in v9.
   Load when configuring the hook, looking up an option's default, persisting
@@ -22,8 +22,10 @@ metadata:
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/use-tm-data-grid.md'
   - 'Jielga/react:packages/tmdatagrid/docs/persistence.md'
+  - 'Jielga/react:packages/tmdatagrid/docs/typed-deep-links.md'
   - 'Jielga/react:packages/tmdatagrid/src/useTMDataGrid.tsx'
   - 'Jielga/react:packages/tmdatagrid/src/core/persistence.ts'
+  - 'Jielga/react:packages/tmdatagrid/src/core/urlState.ts'
 ---
 
 # TMDataGrid - useTMDataGrid
@@ -297,6 +299,28 @@ const persist = useMemo(
 ```
 
 Source: `packages/tmdatagrid/docs/persistence.md` (Deep links).
+
+### Typed links
+
+`createTMDataGridUrlState({ key, columns, slices? })` defines a grid's deep
+links from the columns the grid renders, built with
+`createTMDataGridColumnHelper`. A link can name only the filters, operators,
+values and sorts those columns offer; anything else is a type error. The
+definition gives `urlKey` for `persist`, the link as `searchParams`, `search`
+or `payload`, a route `validateSearch`, and `persist(storage?)`, which keeps
+the param in a router's search such as TanStack Router's.
+
+```tsx
+export const employeesUrl = createTMDataGridUrlState({ key: "employees", columns });
+
+const persist = { urlKey: employeesUrl.urlKey } satisfies TMDataGridPersistence;
+const href = `/employees?${employeesUrl.searchParams({
+  filters: { department: { operator: "isAnyOf", value: ["Design"] } },
+})}`;
+```
+
+Every rule, every member and the TanStack Router setup are in
+[references/typed-links.md](references/typed-links.md).
 
 ## Return value
 

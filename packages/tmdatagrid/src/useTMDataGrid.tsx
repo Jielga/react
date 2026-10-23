@@ -77,6 +77,7 @@ import {
 import {
   emptyValueForOperator,
   type TMDataGridColumnType,
+  type TMDataGridFilterOperator,
   tmDataGridFilterFn,
 } from "./core/filterOperators";
 import {
@@ -137,6 +138,12 @@ import {
   type TMDataGridQueryTable,
 } from "./core/pageReset";
 import type { TMDataGridCellRange } from "./core/cellRange";
+import type {
+  TMDataGridAccessorColumnId,
+  TMDataGridColumnInfoHints,
+  TMDataGridColumnInfoOf,
+  TMDataGridTypedColumn,
+} from "./core/urlState";
 import {
   resolveExportOptions,
   type TMDataGridExportOptions,
@@ -361,6 +368,13 @@ type WithRowTypedMeta<TDef, TData extends RowData> = TDef extends unknown
  * TanStack's column helper with `meta` typed against `TData`, so the
  * `meta.options` and `meta.edit.enabled` callbacks receive
  * `Row<TMDataGridFeatures, TData>`.
+ *
+ * Every column it returns also carries `TMDataGridColumnInfo` in its type,
+ * read from the literal values of `id`, `meta.type`,
+ * `meta.filter.operators`, `meta.filter.url`, `enableColumnFilter` and
+ * `enableSorting`. `createTMDataGridUrlState` reads it to type the links into
+ * the grid. TanStack's own return type keeps none of this: it types
+ * `accessorKey` as a plain string.
  */
 export type TMDataGridColumnHelper<TData extends RowData> = {
   accessor: <
@@ -370,6 +384,12 @@ export type TMDataGridColumnHelper<TData extends RowData> = {
       : TAccessor extends DeepKeys<TData>
         ? DeepValue<TData, TAccessor>
         : never,
+    const TId extends string = never,
+    TType extends TMDataGridColumnType = "string",
+    TOperator extends TMDataGridFilterOperator = TMDataGridFilterOperator,
+    TFilterable extends boolean = true,
+    TSortable extends boolean = true,
+    TUrl extends boolean = true,
   >(
     accessor: TAccessor,
     column: WithRowTypedMeta<
@@ -377,20 +397,43 @@ export type TMDataGridColumnHelper<TData extends RowData> = {
         ? DisplayColumnDef<TMDataGridFeatures, TData, TValue>
         : IdentifiedColumnDef<TMDataGridFeatures, TData, TValue>,
       TData
-    >,
-  ) => TAccessor extends AccessorFn<TData>
+    > &
+      TMDataGridColumnInfoHints<
+        TId,
+        TType,
+        TOperator,
+        TFilterable,
+        TSortable,
+        TUrl
+      >,
+  ) => (TAccessor extends AccessorFn<TData>
     ? AccessorFnColumnDef<TMDataGridFeatures, TData, TValue>
-    : AccessorKeyColumnDef<TMDataGridFeatures, TData, TValue>;
+    : AccessorKeyColumnDef<TMDataGridFeatures, TData, TValue>) &
+    TMDataGridTypedColumn<{
+      id: TMDataGridAccessorColumnId<TAccessor, TId>;
+      type: TType;
+      value: TValue;
+      operators: TOperator;
+      filterable: TFilterable;
+      sortable: TSortable;
+      url: TUrl;
+    }>;
   columns: ColumnHelper<TMDataGridFeatures, TData>["columns"];
   display: (
     column: WithRowTypedMeta<DisplayColumnDef<TMDataGridFeatures, TData>, TData>,
   ) => DisplayColumnDef<TMDataGridFeatures, TData, unknown>;
-  group: (
-    column: WithRowTypedMeta<
-      GroupColumnDef<TMDataGridFeatures, TData, unknown>,
-      TData
+  /** A header group. Carries the column info of every column under it. */
+  group: <
+    const TChildren extends ReadonlyArray<
+      ColumnDef<TMDataGridFeatures, TData, any>
     >,
-  ) => GroupColumnDef<TMDataGridFeatures, TData, unknown>;
+  >(
+    column: WithRowTypedMeta<
+      Omit<GroupColumnDef<TMDataGridFeatures, TData, unknown>, "columns">,
+      TData
+    > & { columns: TChildren },
+  ) => GroupColumnDef<TMDataGridFeatures, TData, unknown> &
+    TMDataGridTypedColumn<TMDataGridColumnInfoOf<TChildren[number]>>;
 };
 
 export function createTMDataGridColumnHelper<

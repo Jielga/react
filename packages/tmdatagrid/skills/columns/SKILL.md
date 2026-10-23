@@ -61,6 +61,9 @@ replaces the dots: `accessorKey: "address.city"` makes column id
 addresses the column by id - `initialState`, `editing.columns`, `moveColumn`,
 a test selector - takes the underscore form.
 
+Helper columns, groups included, carry their id, `meta.type`, value type, `meta.filter.operators` and filter, sort and URL switches in their type (`TMDataGridColumnInfo`).
+`createTMDataGridUrlState` (the `options` skill) reads them to type deep links; only literal values count.
+
 `columnHelper.group` nests columns under a shared header; `columns` takes
 another `columnHelper.columns` call, not a bare array:
 

@@ -1,4 +1,4 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { findDemoFences } from "docs-shell/docs/demoFence.ts";
@@ -94,19 +94,26 @@ describe("example demos", () => {
     expect(demoFiles.length).toBeGreaterThan(0);
   });
 
-  it.each(demoFiles)("%s mounts cleanly", (file) => {
+  /**
+   * Renders a demo and waits for its grid root. Every demo renders one; not
+   * every one renders a Table, so the root is what proves the mount got that
+   * far. A demo inside a router renders its first route a tick later.
+   */
+  async function mountDemo(file: string) {
     const { Component } = loadDemo(file);
     renderWithMantine(<Component />);
+    await waitFor(() =>
+      expect(document.querySelector("[data-dg-root]")).not.toBeNull(),
+    );
+  }
 
-    // Every demo renders a grid root; not every one renders a Table, so the
-    // root is what proves the mount got that far.
-    expect(document.querySelector("[data-dg-root]")).not.toBeNull();
+  it.each(demoFiles)("%s mounts cleanly", async (file) => {
+    await mountDemo(file);
     expect(errors).toEqual([]);
   });
 
   it.each(demoFiles)("%s survives a sort", async (file) => {
-    const { Component } = loadDemo(file);
-    renderWithMantine(<Component />);
+    await mountDemo(file);
 
     // Mounting is half a smoke test. What only a state change produces - a
     // store publish landing mid-render, a callback that throws the second

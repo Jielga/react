@@ -75,7 +75,7 @@ export const FILTER_OPERATOR_LABELS: Record<TMDataGridFilterOperator, string> = 
   isNotEmpty: "is not empty",
 };
 
-const STRING_OPERATORS: readonly TMDataGridFilterOperator[] = [
+const STRING_OPERATORS = [
   "contains",
   "equals",
   "notEquals",
@@ -83,9 +83,9 @@ const STRING_OPERATORS: readonly TMDataGridFilterOperator[] = [
   "endsWith",
   "isEmpty",
   "isNotEmpty",
-];
+] as const satisfies readonly TMDataGridFilterOperator[];
 
-const NUMBER_OPERATORS: readonly TMDataGridFilterOperator[] = [
+const NUMBER_OPERATORS = [
   "equals",
   "notEquals",
   "greaterThan",
@@ -95,12 +95,12 @@ const NUMBER_OPERATORS: readonly TMDataGridFilterOperator[] = [
   "between",
   "isEmpty",
   "isNotEmpty",
-];
+] as const satisfies readonly TMDataGridFilterOperator[];
 
 // `equals` doubles as a date's "is": it compares by calendar day whenever the
 // cell holds a Date (see matchesFilter), so a separate `is` operator would be
 // the same comparison under a second name.
-const DATE_OPERATORS: readonly TMDataGridFilterOperator[] = [
+const DATE_OPERATORS = [
   "equals",
   "notEquals",
   "before",
@@ -110,23 +110,23 @@ const DATE_OPERATORS: readonly TMDataGridFilterOperator[] = [
   "between",
   "isEmpty",
   "isNotEmpty",
-];
+] as const satisfies readonly TMDataGridFilterOperator[];
 
-const BOOLEAN_OPERATORS: readonly TMDataGridFilterOperator[] = [
+const BOOLEAN_OPERATORS = [
   "equals",
   "notEquals",
   "isEmpty",
   "isNotEmpty",
-];
+] as const satisfies readonly TMDataGridFilterOperator[];
 
 // One set for both select types: the operators are about membership in the
 // filter's set, which reads the same whether the cell holds one value or many.
-const SELECT_OPERATORS: readonly TMDataGridFilterOperator[] = [
+const SELECT_OPERATORS = [
   "isAnyOf",
   "isNoneOf",
   "isEmpty",
   "isNotEmpty",
-];
+] as const satisfies readonly TMDataGridFilterOperator[];
 
 /** Operators that ignore the value input (the input is disabled for these). */
 const VALUELESS_OPERATORS: readonly TMDataGridFilterOperator[] = [
@@ -143,16 +143,27 @@ const ARRAY_OPERATORS: readonly TMDataGridFilterOperator[] = [
 /** Operators whose value is a `[min, max]` pair. */
 const RANGE_OPERATORS: readonly TMDataGridFilterOperator[] = ["between"];
 
-const OPERATORS_BY_TYPE: Record<
-  TMDataGridColumnType,
-  readonly TMDataGridFilterOperator[]
-> = {
+const OPERATORS_BY_TYPE = {
   string: STRING_OPERATORS,
   number: NUMBER_OPERATORS,
   boolean: BOOLEAN_OPERATORS,
   date: DATE_OPERATORS,
   select: SELECT_OPERATORS,
   multiSelect: SELECT_OPERATORS,
+} as const satisfies Record<
+  TMDataGridColumnType,
+  readonly TMDataGridFilterOperator[]
+>;
+
+/**
+ * The operators each column type offers, as a type: the same lists the filter
+ * panel offers, so a typed link can never name an operator the panel lacks.
+ *
+ * @internal Feeds the typed links in urlState.ts; not exported from the
+ * package.
+ */
+export type OperatorsByColumnType = {
+  [TType in TMDataGridColumnType]: (typeof OPERATORS_BY_TYPE)[TType][number];
 };
 
 const DEFAULT_OPERATOR_BY_TYPE: Record<
