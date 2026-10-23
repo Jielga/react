@@ -35,6 +35,7 @@ import stylingDoc from "@jielga/tmdatagrid/docs/styling.md?raw";
 import summaryRowDoc from "@jielga/tmdatagrid/docs/summary-row.md?raw";
 import testingDoc from "@jielga/tmdatagrid/docs/testing.md?raw";
 import toolbarDoc from "@jielga/tmdatagrid/docs/toolbar.md?raw";
+import typedDeepLinksDoc from "@jielga/tmdatagrid/docs/typed-deep-links.md?raw";
 import useTMDataGridDoc from "@jielga/tmdatagrid/docs/use-tm-data-grid.md?raw";
 import xlsxDoc from "@jielga/tmdatagrid-xlsx/docs/xlsx.md?raw";
 
@@ -320,6 +321,13 @@ export const DOCS_PAGES: DocsPageEntry[] = [
     label: "A portfolio rebalancer",
     description: "Derived columns, and a rule over every row",
     source: portfolioRebalancerDoc,
+  },
+  {
+    id: "typed-deep-links",
+    section: "Recipes",
+    label: "Typed links with TanStack Router",
+    description: "Links into a grid, checked against its columns",
+    source: typedDeepLinksDoc,
   },
   {
     id: "card-view",

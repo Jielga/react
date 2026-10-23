@@ -47,6 +47,13 @@ addresses the column by id - `initialState`, `editing.columns`, `moveColumn`,
 a test selector - takes the underscore form; the dotted form silently matches
 nothing.
 
+Each column the helper returns also carries, in its type only, its id,
+`meta.type`, value type, `meta.filter.operators`, and its `enableColumnFilter`,
+`enableSorting` and `meta.filter.url` switches.
+[Typed links](/docs/persistence#typed-links) read them, so a link into the grid
+can name only the filters and sorts its columns offer.
+Only literal values count: `enableSorting: isAdmin` reads as not sortable.
+
 ### Columns derived from the other rows
 
 `accessorFn` is handed one row, so a value that depends on the rest - a share

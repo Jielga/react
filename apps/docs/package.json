@@ -26,6 +26,7 @@
     "@tanstack/store": "catalog:",
     "@tanstack/table-core": "catalog:",
     "docs-shell": "workspace:*",
+    "jsurl2": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"

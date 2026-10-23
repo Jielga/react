@@ -515,7 +515,15 @@ export function collectUrlExcludedColumnIds(
   return into;
 }
 
-function forEachLeafColumnDef(
+/**
+ * Visits every leaf column definition under `defs` with the id TanStack gives
+ * it: `id`, else the `accessorKey` with dots replaced by underscores, else a
+ * string `header`.
+ *
+ * @internal Shared by persistence and the typed links in urlState.ts; not
+ * exported from the package.
+ */
+export function forEachLeafColumnDef(
   defs: ReadonlyArray<unknown>,
   visit: (id: string, record: Record<string, unknown>) => void,
 ): void {

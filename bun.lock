@@ -39,6 +39,7 @@
         "@tanstack/store": "catalog:",
         "@tanstack/table-core": "catalog:",
         "docs-shell": "workspace:*",
+        "jsurl2": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
         "zod": "catalog:",
@@ -326,6 +327,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "exceljs": "^4.4.0",
     "jsdom": "^29.1.1",
+    "jsurl2": "^2.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-resizable-panels": "^4.12.2",
@@ -1076,6 +1078,8 @@
     "jsonc-parser": ["jsonc-parser@3.3.1", "", {}, "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ=="],
 
     "jsonfile": ["jsonfile@4.0.0", "", { "optionalDependencies": { "graceful-fs": "^4.1.6" } }, "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg=="],
+
+    "jsurl2": ["jsurl2@2.2.0", "", {}, "sha512-jFwgc2G7eVMF6/uyxsF+7DbNEg7fj7SRWmJuVfu/SAOK0iIH9gOpLK9FL1jLvENCXS7kYsYcmFxRFQFyQEb7jg=="],
 
     "jszip": ["jszip@3.10.1", "", { "dependencies": { "lie": "~3.3.0", "pako": "~1.0.2", "readable-stream": "~2.3.6", "setimmediate": "^1.0.5" } }, "sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g=="],
 

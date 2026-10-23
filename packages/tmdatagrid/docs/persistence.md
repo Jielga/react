@@ -116,6 +116,55 @@ The column's filter is then not persisted anywhere. A filter on it in
 `initialState` still applies when a link is opened. The flag has no effect
 unless `urlKey` carries `columnFilters`.
 
+### Typed links
+
+`createTMDataGridUrlState` defines a grid's deep links from its columns.
+Pass it the array the grid renders, built with `createTMDataGridColumnHelper`:
+
+```tsx
+const columns = columnHelper.columns([
+  columnHelper.accessor("department", { header: "Department", meta: { type: "select" } }),
+  columnHelper.accessor("salary", { header: "Salary", meta: { type: "number" } }),
+  columnHelper.accessor("email", { header: "Email", enableColumnFilter: false }),
+]);
+
+export const employeesUrl = createTMDataGridUrlState({
+  key: "employees",
+  columns,
+  slices: ["columnFilters", "sorting"],
+});
+
+// The grid
+const persist = { urlKey: employeesUrl.urlKey } satisfies TMDataGridPersistence;
+
+// A link from anywhere in the app
+const href = `/employees?${employeesUrl.searchParams({
+  filters: { department: { operator: "isAnyOf", value: ["Design"] } },
+  sorting: [{ id: "salary", desc: true }],
+})}`;
+```
+
+A link may name only what the grid's columns offer:
+
+- `filters` takes the columns that can be filtered: `enableColumnFilter` is not `false` and `meta.filter.url` is not `false`.
+- The operators are the ones the column's `meta.type` offers, narrowed by `meta.filter.operators`.
+- The value has the column's type: a `number` for a number column, a `Date` or a `YYYY-MM-DD` string for a date column, the column's own values for a select column, and no value for `isEmpty` and `isNotEmpty`.
+- `sorting` takes the columns whose `enableSorting` is not `false`.
+- Only the slices in `slices` are accepted. By default, every data slice is.
+
+Anything else is a type error.
+The column helper reads these switches from literal values, so `enableSorting: isAdmin` reads as not sortable.
+A column with an accessor function is named by its `id`; without an `id` it cannot be named.
+Columns built without the helper offer nothing to a link.
+
+The definition builds the link in three forms:
+
+- `searchParams(input)` - `URLSearchParams` for a plain URL, encoded the way the default `serialize` encodes the param
+- `search(input)` - `{ [key]: payload }`, for a router that keeps objects in its search
+- `payload(input)` - the param's value alone, in the grid's state shape
+
+Pass `searchParams` the same `serialize` as `persist` when you set one.
+
 ### Routers that own the URL
 
 `urlStorage` replaces the default read and write of the param, for a router
@@ -151,6 +200,31 @@ const persist = useMemo(
   [],
 );
 ```
+
+A router that keeps objects in its search params and encodes them itself,
+such as TanStack Router, takes the payload as an object.
+Pass its search to `persist` on a typed link definition:
+
+```tsx
+const router = useRouter();
+const persist = useMemo(
+  () =>
+    employeesUrl.persist({
+      get: (name) => (router.state.location.search as Record<string, unknown>)[name],
+      set: (name, value) =>
+        void router.navigate({
+          to: ".",
+          search: (prev: Record<string, unknown>) => ({ ...prev, [name]: value }),
+          replace: true,
+        }),
+    }),
+  [router],
+);
+```
+
+`get` returns the param's value, or `undefined`; `set` receives the payload, or `undefined` to remove the param.
+Leave `serialize` and `deserialize` at their defaults with `persist(storage)`, since the router does the encoding.
+[Typed links with TanStack Router](/docs/typed-deep-links) puts the route, the grid and the links together.
 
 ## Behaviour
 
@@ -201,6 +275,20 @@ its `StorageType`.
 | `urlKey` | persist field | `string \| [string, DataSlice[]]` | – | Search param for data slices kept in the URL. See [Deep links](#deep-links). |
 | `urlStorage` | persist field | `TMDataGridUrlStorage` | `location.search` and `history.replaceState` | Reads and writes the URL param. |
 | `TMDataGridUrlStorage` | Type | `{ get(name): string \| null; set(name, value: string \| null): void }` | – | The type of `urlStorage`. |
+| `createTMDataGridUrlState` | Export | `({ key, columns, slices? }) => TMDataGridUrlState` | – | Defines typed links into the grid from its columns. See [Typed links](#typed-links). |
+| `key` | Definition field | `string` | – | The URL search param. |
+| `slices` | Definition field | `TMDataGridDataSlice[]` | Every data slice | The data slices the param carries. |
+| `urlKey` | Definition field | `TMDataGridPersistKey` | – | For `persist.urlKey`: the key, or `[key, slices]` when `slices` is set. |
+| `searchParams` | Definition method | `(input, { serialize? }) => URLSearchParams` | `serialize`: `JSON.stringify` | The link as search params. Empty when the input sets nothing. |
+| `search` | Definition method | `(input) => { [key]: TMDataGridUrlPayload \| undefined }` | – | The link as a router search object. |
+| `payload` | Definition method | `(input) => TMDataGridUrlPayload \| undefined` | – | The param's value, or `undefined` when the input sets nothing. |
+| `validateSearch` | Definition method | `(search) => { [key]?: TMDataGridUrlPayload }` | – | A route search validator. Keeps the param when it is an object. |
+| `persist` | Definition method | `(storage?: TMDataGridUrlSearchStorage) => { urlKey, urlStorage? }` | – | Spread into `persist`. If not given a storage, the grid uses the browser's URL. |
+| `TMDataGridUrlInput` | Type | `{ filters?, globalFilter?, sorting?, pagination? }` | – | What a link may set, typed from the columns and `slices`. |
+| `TMDataGridUrlPayload` | Type | `{ columnFilters?, globalFilter?, sorting?, pagination?, expanded? }` | – | The param's value, in the grid's state shape. |
+| `TMDataGridUrlSearchStorage` | Type | `{ get(name): unknown; set(name, value: TMDataGridUrlPayload \| undefined): void }` | – | A router search read and written as values. |
+| `TMDataGridColumnInfo` · `TMDataGridColumnInfoOf` · `TMDataGridTypedColumn` | Types | – | – | What a helper column tells a link about itself: id, type, value, operators, and its filter, sort and URL switches. |
+| `TMDataGridUrlFiltersInput` · `TMDataGridUrlSortableId` · `TMDataGridDateInput` | Types | – | – | The parts of `TMDataGridUrlInput`. |
 | `meta.filter.url` | Column meta | `boolean` | `true` | Determines whether the column's filter is written to the URL under `urlKey`. |
 | `TMDataGridPersistKey` | Type | `string \| [string, slices]` | – | The type of `dataKey`, `settingsKey` and `urlKey`. |
 | `storageMode` | persist field | `"localStorage" \| "sessionStorage"` | `"localStorage"` | Storage area. `"sessionStorage"` is per tab. |
