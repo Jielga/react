@@ -268,7 +268,13 @@ export function TMDataGridHeaderFilterRow({
           <div
             key={header.id}
             role="columnheader"
-            aria-label={labels.filterOn(getColumnLabel(column))}
+            // Named only where there is a filter: a generated lane or a column
+            // that does not filter holds no control to name.
+            aria-label={
+              column.getCanFilter()
+                ? labels.filterOn(getColumnLabel(column))
+                : undefined
+            }
             data-dg-part="header-filter-cell"
             data-column-id={column.id}
             data-control-column={isControlColumn(column.id) || undefined}

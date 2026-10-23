@@ -160,7 +160,7 @@ server-side can set `enableGrouping: true` alongside `manualGrouping: true`. See
 | `aggregationFn` | Column option | `TMDataGridAggregationName \| fn` | – | How a column fills in its group cells. Unset leaves them blank. |
 | `aggregatedCell` | Column option | `(ctx) => ReactNode` | `cell` over the aggregate when `aggregationFn` is set, else blank | Renders a group row's value differently from a data row's. |
 | `GROUP_COLUMN_ID` | Export | `"__group__"` | – | Id of the generated tree column. |
-| `formatGroupValue` | Export | `(value) => string` | – | How the tree lane renders a group's value. |
+| `formatGroupValue` | Export | `(value, blankLabel?, { type?, options?, labels? }?) => string` | – | How the tree lane writes a group's value: `blankLabel` for an empty value, an option's label for a value with an option, `labels.booleanTrue` / `booleanFalse` for a boolean, and `toLocaleDateString()` for a `Date`. |
 | `getGroupDataRows` | Export | `(row) => Row[]` | – | Every record under a group row, at any depth. |
 | `isPagingActive` | Export | `(table, features) => boolean` | – | Whether the pager is slicing anything. `false` while grouped. |
 | `--dg-row-group-bg` | CSS variable | colour | Themed | Group row background. |

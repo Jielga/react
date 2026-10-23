@@ -303,6 +303,8 @@ describe("filters.inHeader", () => {
     renderHeaderFilters();
     const cell = part("header-filter-cell", { columnId: SELECT_COLUMN_ID });
     expect(cell.querySelector("input")).toBeNull();
+    // Nothing to filter on, so not named as if there were.
+    expect(cell).not.toHaveAttribute("aria-label");
   });
 
   it("takes the Filter menu item and the funnel indicator off the header", async () => {

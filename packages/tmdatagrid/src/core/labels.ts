@@ -2,6 +2,7 @@ import {
   FILTER_OPERATOR_LABELS,
   type TMDataGridFilterOperator,
 } from "./filterOperators";
+import { BOOLEAN_LABELS_EN } from "./valueText";
 
 /**
  * Every user-facing string in the grid - menu items, panels, tooltips, the
@@ -55,7 +56,7 @@ export type TMDataGridLabels = {
   filterTo: string;
   /** `DgTriStateFilter`'s no-filter segment. */
   filterAll: string;
-  /** What a boolean column's `true` reads as - its filter choice and cell text. */
+  /** What a boolean `true` reads as - its filter choice, filter pill and group row. */
   booleanTrue: string;
   booleanFalse: string;
   addFilter: string;
@@ -225,8 +226,8 @@ export const TMDATAGRID_LABELS_EN: TMDataGridLabels = {
   filterFrom: "From",
   filterTo: "To",
   filterAll: "All",
-  booleanTrue: "Yes",
-  booleanFalse: "No",
+  booleanTrue: BOOLEAN_LABELS_EN.booleanTrue,
+  booleanFalse: BOOLEAN_LABELS_EN.booleanFalse,
   addFilter: "Add filter",
   clearAllFilters: "Clear all",
   closeFilters: "Close filters",

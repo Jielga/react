@@ -206,6 +206,7 @@ file: columns/FilterPanelPlaced.tsx
 ## TMDataGrid.FilterPills
 
 One pill per active filter - `First name: Sofia ✕` - where the ✕ clears that filter and a click on the label sends the user to that column's control through [openColumnFilter](#opencolumnfilter).
+A value with an option reads as the option's label, and a boolean value as `labels.booleanTrue` or `labels.booleanFalse`.
 Half-typed filters produce no pill.
 The label spells the operator out unless it is the column type's default: `Age is greater than 30`, but `First name: Sofia`.
 
@@ -447,7 +448,7 @@ stays, empty.
 | `getColumnOperators` · `getColumnDefaultOperator` | Exports | `(column) => operators` · `(column) => operator` | – | The list one column offers after `meta.filter.operators`, and the operator a fresh filter on it opens on. |
 | `FILTER_OPERATOR_LABELS` | Export | record | – | The label shown for each operator. |
 | `TMDataGridFilterValueInput` | Export | component | – | The default value control, for falling back to. |
-| `formatFilterLabel` | Export | `({ label, type, filter }) => string` | – | The one-line description used on the pills. |
+| `formatFilterLabel` | Export | `({ label, type, filter, operatorLabels?, options?, labels? }) => string` | – | The one-line description used on the pills. `operatorLabels` names the operators, `options` gives a value its option's label, and `labels` gives a boolean its `booleanTrue` / `booleanFalse`; each defaults to English or to the value itself. |
 | `emptyValueForOperator` · `operatorNeedsValue` · `operatorTakesArrayValue` · `operatorTakesRangeValue` · `filterValueShape` | Exports | – | – | What shape of value an operator expects. |
 | `TMDataGridFilterValueShape` | Type | `"scalar" \| "set" \| "range"` | – | What `filterValueShape` returns for an operator. |
 | `TMDataGridFiltersOptions` · `TMDataGridFiltersSettings` · `TMDataGridFilterSurface` · `TMDataGridFilterSidebarSide` | Types | – | – | The `filters` option, and the resolved form of it on `api.filters`. |

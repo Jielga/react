@@ -44,8 +44,8 @@ The `labels` option takes a partial override, `TMDataGridLabelsOverride`, merged
 | `filterFrom` | `From` | The lower bound of a `between` filter: its input, or its slider thumb. |
 | `filterTo` | `To` | The upper bound of a `between` filter: its input, or its slider thumb. |
 | `filterAll` | `All` | The no-filter segment of the tri-state filter. |
-| `booleanTrue` | `Yes` | The `true` choice of a boolean filter value control and of the tri-state filter. |
-| `booleanFalse` | `No` | The `false` choice of a boolean filter value control and of the tri-state filter. |
+| `booleanTrue` | `Yes` | The `true` choice of a boolean filter value control and of the tri-state filter, and a `true` value on a filter pill and in a group row. |
+| `booleanFalse` | `No` | The `false` choice of a boolean filter value control and of the tri-state filter, and a `false` value on a filter pill and in a group row. |
 | `addFilter` | `Add filter` | Button in `TMDataGrid.FilterPanel`. |
 | `clearAllFilters` | `Clear all` | Button in `TMDataGrid.FilterPanel` and in `TMDataGrid.FilterPills`. |
 | `closeFilters` | `Close filters` | `aria-label` of the close button of the filter popup and sidebar. |
@@ -67,7 +67,7 @@ The `labels` option takes a partial override, `TMDataGridLabelsOverride`, merged
 | `moveRight` | `Move right` | Column menu item. |
 | `autosizeColumn` | `Autosize column` | Column menu item. |
 | `hideColumn` | `Hide column` | Column menu item. |
-| `filterOn` | `` `Filter on ${column}` `` | `aria-label` of the header filter button, of a header filter cell, and of the value control in it. |
+| `filterOn` | `` `Filter on ${column}` `` | `aria-label` of the header filter button, of the header filter cell of a column that can filter, and of the value control in it. |
 | `sortColumn` | `` `Sort ${column}` `` | `aria-label` of the header sort button. |
 | `columnMenu` | `` `${column} column menu` `` | `aria-label` of the column menu trigger. |
 | `rowsPerPage` | `Rows per page:` | `TMDataGrid.Footer`: the text before the page size select. |

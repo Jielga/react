@@ -8,7 +8,8 @@ import { useSelector } from "@tanstack/react-store";
 import { shallow } from "@tanstack/store";
 import classes from "./TMDataGridGroupColumn.module.css";
 import { ChevronRightIcon } from "./icons";
-import { getColumnLabel } from "../core/columnUtils";
+import { resolveColumnOptions } from "../core/columnOptions";
+import { getColumnLabel, getColumnType } from "../core/columnUtils";
 import { formatGroupValue, getGroupDataRows } from "../core/grouping";
 import type { TMDataGridFeatures, TMDataGridTable } from "../useTMDataGrid";
 
@@ -30,7 +31,7 @@ export function GroupCell<TData extends RowData>({
 }: {
   row: Row<TMDataGridFeatures, TData>;
 }) {
-  const { labels } = useTMDataGridContext();
+  const { table, labels } = useTMDataGridContext();
   const tabIndex = useBodyControlTabIndex();
   const expanded = useSelector(row.table.store, () => row.getIsExpanded());
 
@@ -38,7 +39,21 @@ export function GroupCell<TData extends RowData>({
   // the indent alone is what places them under their group.
   if (!row.getIsGrouped()) return null;
 
-  const label = formatGroupValue(row.groupingValue, labels.blankGroupValue);
+  // `groupingValue` is TanStack's map key, the value already turned into a
+  // string: `true` arrives as "true", a Date as its English timestamp, `null`
+  // as "null". The first record's grouping value is the value itself.
+  const columnId = row.groupingColumnId;
+  const column = columnId === undefined ? undefined : table.getColumn(columnId);
+  const dataRows = getGroupDataRows(row);
+  const value =
+    columnId === undefined || dataRows[0] === undefined
+      ? row.groupingValue
+      : dataRows[0].getGroupingValue(columnId);
+  const label = formatGroupValue(value, labels.blankGroupValue, {
+    type: column ? getColumnType(column) : undefined,
+    options: column ? resolveColumnOptions({ table, column }) : undefined,
+    labels,
+  });
 
   return (
     <UnstyledButton
@@ -68,7 +83,7 @@ export function GroupCell<TData extends RowData>({
       {/* Data rows, not direct children and not `getLeafRows()`: a nested group
           counts the records under it, never the sub-groups in between. */}
       <span className={classes.groupCount}>
-        ({getGroupDataRows(row).length})
+        ({dataRows.length})
       </span>
     </UnstyledButton>
   );

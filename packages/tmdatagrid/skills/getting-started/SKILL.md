@@ -355,7 +355,7 @@ Source: `packages/tmdatagrid/docs/card-view.md`,
 | `openColumnFilter(api, columnId)` | Adds an empty filter for a column and opens the panel. |
 | `getColumnLabel(column)` | `meta.label`, a string header, or the column id. |
 | `getColumnType(column)` | `meta.type`, defaulting to `"string"`. |
-| `formatFilterLabel({ label, type, filter })` | The one-line filter description used on the pills. |
+| `formatFilterLabel({ label, type, filter, operatorLabels?, options?, labels? })` | The one-line filter description used on the pills. |
 | `moveColumn({ table, columnId, targetId, side })` | Moves a column next to another. See the `columns` skill. |
 | `moveColumnByStep({ table, columnId, direction })` | Moves a column one position within its region. |
 | `SELECT_COLUMN_ID` | Id of the generated checkbox column. |

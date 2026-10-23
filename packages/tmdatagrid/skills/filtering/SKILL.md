@@ -197,6 +197,7 @@ No props.
 
 One pill per **active** filter, `First name: Sofia ✕`, where the ✕ clears it and a click on the label calls `openColumnFilter`.
 The label spells the operator out unless it is the type's default: `Age is greater than 30`, but `First name: Sofia`.
+A value with an option reads as the option's label, and a boolean value as `labels.booleanTrue` or `labels.booleanFalse`.
 It takes the grid as an `api` prop instead of reading context, so it renders anywhere on the page.
 
 ```tsx
@@ -481,7 +482,7 @@ Source: `packages/tmdatagrid/docs/quick-search.md` (Fuzzy by default).
 | `getOperatorsForType` | Export | `(type) => operators` | – | The operator list a type offers. |
 | `getColumnOperators` · `getColumnDefaultOperator` | Exports | `(column) => operators` · `(column) => operator` | – | One column's list after `meta.filter.operators`, and the operator a fresh filter on it opens on. |
 | `FILTER_OPERATOR_LABELS` | Export | record | – | The label shown for each operator. |
-| `formatFilterLabel` | Export | `({ label, type, filter }) => string` | – | The one-line description used on the pills. |
+| `formatFilterLabel` | Export | `({ label, type, filter, operatorLabels?, options?, labels? }) => string` | – | The one-line description used on the pills. `operatorLabels` names the operators, `options` gives a value its option's label, and `labels` gives a boolean its `booleanTrue` / `booleanFalse`; each defaults to English or to the value itself. |
 | `emptyValueForOperator` · `operatorNeedsValue` · `operatorTakesArrayValue` · `operatorTakesRangeValue` | Exports | – | – | What shape of value an operator expects. |
 | `TMDataGridFilterValueInput` | Export | component | – | The default value control, for falling back to. |
 | `DgRangeSliderFilter` · `DgDateRangeFilter` · `DgAutocompleteFilter` · `DgTriStateFilter` | Exports | components | – | The four ready-made controls. |

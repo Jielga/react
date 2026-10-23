@@ -20,6 +20,7 @@ import {
   type TMDataGridFilterFn,
   tmDataGridFilterFn,
 } from "../core/filterOperators";
+import { TMDATAGRID_LABELS_SV } from "../core/labelsSv";
 import { TMDataGrid } from "./TMDataGrid";
 import { DgAutocompleteFilter } from "./filters/DgAutocompleteFilter";
 import { DgDateRangeFilter } from "./filters/DgDateRangeFilter";
@@ -193,6 +194,61 @@ describe("filter pills", () => {
     expect(
       screen.queryByRole("group", { name: "Active filters" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("writes values in the configured language, options by their label", () => {
+    type PillRow = { id: number; active: boolean; status: string; tags: string[] };
+    const helper = createTMDataGridColumnHelper<PillRow>();
+    const columns = helper.columns([
+      helper.accessor("active", { header: "Aktiv", meta: { type: "boolean" } }),
+      helper.accessor("status", {
+        header: "Status",
+        meta: {
+          type: "select",
+          options: [{ value: "leave", label: "Ledig" }],
+        },
+      }),
+      helper.accessor("tags", {
+        header: "Taggar",
+        meta: {
+          type: "multiSelect",
+          options: [
+            { value: "a", label: "Alfa" },
+            { value: "b", label: "Beta" },
+          ],
+        },
+      }),
+    ]);
+    function PillGrid() {
+      const grid = useTMDataGrid<PillRow>({
+        data: [{ id: 1, active: true, status: "leave", tags: ["a"] }],
+        columns,
+        getRowId: (row) => String(row.id),
+        labels: TMDATAGRID_LABELS_SV,
+        initialState: {
+          columnFilters: [
+            { id: "active", value: { operator: "equals", value: "false" } },
+            { id: "status", value: { operator: "isNoneOf", value: ["leave"] } },
+            { id: "tags", value: { operator: "isAnyOf", value: ["a", "b"] } },
+          ],
+        },
+      });
+      return (
+        <TMDataGrid {...grid}>
+          <TMDataGrid.FilterPills api={grid} />
+          <TMDataGrid.Table<PillRow> />
+        </TMDataGrid>
+      );
+    }
+    renderWithMantine(<PillGrid />);
+
+    expect(part("filter-pill", { columnId: "active" })).toHaveTextContent("Aktiv: Nej");
+    expect(part("filter-pill", { columnId: "status" })).toHaveTextContent(
+      "Status är ingen av Ledig",
+    );
+    expect(part("filter-pill", { columnId: "tags" })).toHaveTextContent(
+      "Taggar: Alfa, Beta",
+    );
   });
 });
 
