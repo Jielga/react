@@ -18,7 +18,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.3.0'
+  library_version: '2.4.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/pagination.md'
   - 'Jielga/react:packages/tmdatagrid/docs/scrolling.md'

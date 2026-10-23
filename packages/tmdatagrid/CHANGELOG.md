@@ -1,5 +1,19 @@
 # @jielga/tmdatagrid
 
+## 2.4.0
+
+### Minor Changes
+
+- [#175](https://github.com/Jielga/react/pull/175) [`1c440f8`](https://github.com/Jielga/react/commit/1c440f87c8af446196bfcf86f33b50817f28cc79) Thanks [@Psvensso](https://github.com/Psvensso)! - - Filter pills and group rows write values in the configured language: a boolean as `labels.booleanTrue` / `booleanFalse` instead of `true` / `false`, and a value with an option as the option's label instead of its value.
+
+  - A group row of a `Date` column shows the date instead of an English timestamp, and a group of `null` values shows `labels.blankGroupValue` instead of "null".
+  - `formatFilterLabel` takes `options` and `labels`, and `formatGroupValue` takes a third argument `{ type, options, labels }`, for the same text.
+  - The header filter cell of a column that cannot filter, the generated lanes included, is no longer named "Filter on …".
+
+- [#174](https://github.com/Jielga/react/pull/174) [`3fcdbf3`](https://github.com/Jielga/react/commit/3fcdbf3e8a3e957a056316369231fd19a2c93a2d) Thanks [@Psvensso](https://github.com/Psvensso)! - - `createTMDataGridUrlState({ key, columns, slices })` builds typed deep links from the grid's columns: a filter, operator, value or sort the columns do not offer is a type error.
+  It gives `urlKey`, the link as `searchParams`, `search` or `payload`, a route `validateSearch`, and `persist(storage)` for a router that keeps objects in its search, such as TanStack Router.
+  - Columns from `createTMDataGridColumnHelper` carry their id, `meta.type`, value type, operators and filter, sort and URL switches in their type, as `TMDataGridColumnInfo`. Runtime column objects are unchanged.
+
 ## 2.3.0
 
 ### Minor Changes
