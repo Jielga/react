@@ -133,7 +133,8 @@ Types: `TMDataGridEditMode`, `TMDataGridEditApi`, `TMDataGridEditState`,
 `TMDataGridRowValidators`, `TMDataGridRowEditForm`, `TMDataGridRowAddArgs`,
 `TMDataGridRowDeleteArgs`, `TMDataGridEditingOptions`,
 `TMDataGridSaveOutcomes`, `TMDataGridAddRowsOptions`,
-`TMDataGridEditValueMapArgs`, `TMDataGridTableValidateArgs`.
+`TMDataGridEditValueMapArgs`, `TMDataGridEditCommitMapArgs`,
+`TMDataGridTableValidateArgs`.
 
 ## The edit lane
 

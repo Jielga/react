@@ -182,6 +182,30 @@ otherwise drops the caret at the end of the field. A custom editor rendering its
 own input has to do the same: record `selectionStart` on change, restore it in a
 layout effect.
 
+## Mapping the value at commit
+
+`meta.edit.mapCommitValue` maps a field once, as its row commits, where `mapValue` runs on every write.
+Use it for a rule the user must be free to break while typing: trimming a string, because with `mapValue` a trailing space could never be typed.
+
+```tsx
+meta: {
+  edit: {
+    mapCommitValue: ({ value }) =>
+      typeof value === "string" ? value.trim() : value,
+  },
+}
+```
+
+- It runs before the submit validators, so `"   "` trimmed to `""` fails a required rule.
+- The result is written back into the form: the draft store, `changes` and `onCommit` hold the mapped value, and so does an editor still open after the commit (row mode, or a refused commit).
+  Trimming in `onCommit` or on the server instead leaves the grid's own state untrimmed.
+- It maps only the fields the user changed.
+  A row being added maps every editable field.
+- A field written by `edit.setCellValue()`, `edit.setRowValues()`, `edit.clearCell()` or the Delete key is not mapped; the other fields the user changed in that row still are.
+  The rows of `edit.addRows({ commit: true })` are not mapped at all.
+- The map receives `TMDataGridEditCommitMapArgs`: `{ value, previous, row, column, table }`.
+  `previous` is the value when editing began; `row` is `undefined` for a row being added.
+
 ## Field validation
 
 `meta.edit.validate` takes TanStack Form's field-validator vocabulary. A bare schema

@@ -22,6 +22,7 @@ Reference for the `columns` skill.
 | `editor` | `TMDataGridEditorComponent` | By `meta.type` | Replaces the cell editor. Module scope. |
 | `validate` | `TMDataGridFieldValidate` | – | Field-level validation. A bare schema means `onChange`. |
 | `mapValue` | `TMDataGridEditValueMap` | – | Maps each value an editor writes, on every keystroke. |
+| `mapCommitValue` | `TMDataGridEditCommitMap` | – | Maps each changed field once, as its row commits. |
 
 ## Column-level feature options
 
