@@ -18,7 +18,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.4.0'
+  library_version: '2.5.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/use-tm-data-grid.md'
   - 'Jielga/react:packages/tmdatagrid/docs/persistence.md'
