@@ -777,7 +777,7 @@ type TMDataGridEditingCallbacks<TData extends RowData> = {
  * One TanStack Form per editing row; drafts survive scrolling because the
  * forms live outside the DOM, keyed by row id. Which columns edit, and with
  * what, is declared per column under `meta.edit`: `meta.type` picks the
- * built-in editor, and `enabled`, `field`, `editor`, `validate` and `mapValue`
+ * built-in editor, and `enabled`, `field`, `editor`, `validate`, `mapValue` and `mapCommitValue`
  * override the rest.
  */
 export type TMDataGridEditingOptions<TData extends RowData> =

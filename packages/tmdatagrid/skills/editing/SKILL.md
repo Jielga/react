@@ -6,7 +6,7 @@ description: >
   and editing.onSaveDrafts, why the grid never mutates data, gating with
   editing.columns, meta.edit.enabled and meta.edit.field, the built-in editors
   picked by meta.type, custom editors via meta.edit.editor, value mapping with
-  meta.edit.mapValue, validation at every level - meta.edit.validate,
+  mapValue and mapCommitValue, validation at every level - meta.edit.validate,
   cross-field editing.rowValidators, cross-row editing.tableValidators over the
   draft-overlaid collection - adding and deleting rows (edit.addRow,
   newRowDefaults, onRowAdd, onRowDelete), the edit lane, TMDataGrid.DraftActions
@@ -272,6 +272,19 @@ validators check and what is committed.
 
 ```tsx
 meta: { edit: { mapValue: ({ value }) => String(value).toUpperCase() } }
+```
+
+`meta.edit.mapCommitValue` maps once, as the row commits, for a rule the user must be free to break while typing: trimming a string.
+It runs before the submit validators on the fields the user changed, and writes the result back into the form, so the draft store, `changes` and `onCommit` all hold the mapped value.
+Trimming only in `onCommit` or on the server leaves the grid's own state untrimmed.
+
+```tsx
+meta: {
+  edit: {
+    mapCommitValue: ({ value }) =>
+      typeof value === "string" ? value.trim() : value,
+  },
+}
 ```
 
 Detail for all three: [references/editors-and-validation.md](references/editors-and-validation.md).

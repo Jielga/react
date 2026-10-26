@@ -125,6 +125,7 @@ meta: {
 | `editor` | `TMDataGridEditorComponent` | By `type` | Replaces the cell editor. See [Editors](/docs/editors#writing-your-own). |
 | `validate` | `TMDataGridFieldValidate` | - | Per-cell validation. See [Validation](/docs/editors#validation). |
 | `mapValue` | `TMDataGridEditValueMap` | - | Maps each value an editor writes. See [Mapping the value](/docs/editors#mapping-the-value-as-it-is-typed). |
+| `mapCommitValue` | `TMDataGridEditCommitMap` | - | Maps each changed field once, as its row commits. See [Mapping the value at commit](/docs/editors#mapping-the-value-at-commit). |
 
 ```tsx
 meta: {

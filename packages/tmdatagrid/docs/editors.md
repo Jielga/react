@@ -134,6 +134,35 @@ A custom editor rendering its own input has the same problem, and solves it the
 same way: record `selectionStart` as the value is handed over, and restore it in
 a layout effect once the mapped value has rendered.
 
+## Mapping the value at commit
+
+`meta.edit.mapCommitValue` maps a field once, as its row commits, instead of on every write.
+Use it for a rule the user must be free to break while typing, such as trimming a string: with `mapValue`, a trailing space could never be typed.
+
+```tsx
+meta: {
+  edit: {
+    mapCommitValue: ({ value }) =>
+      typeof value === "string" ? value.trim() : value,
+  },
+}
+```
+
+It runs before the validators of the submit, so a field that trims to `""` fails a required rule.
+The result is written back into the form, so the draft, `changes` and `onCommit` all hold the mapped value.
+An editor still open after the commit shows it too: in row mode, or after a commit the validators refused.
+When a draft is held for `saveDrafts`, the mapped value is what the pending change shows.
+
+It runs for the fields the user changed.
+A stored value nobody edited is left as it is.
+A row being added has no stored value, so every editable field of it is mapped, a field `meta.edit.enabled` keeps the user out of included.
+A field written by `edit.setCellValue()`, `edit.setRowValues()`, `edit.clearCell()` or the Delete key is not mapped, because the caller passes the stored value itself; the other fields the user changed in the same row still are.
+The rows of `edit.addRows({ commit: true })` are not mapped at all.
+
+The map receives `TMDataGridEditCommitMapArgs`: `{ value, previous, row, column, table }`.
+`previous` is the value the field held when editing began, and `row` is `undefined` for a row being added.
+`mapValue` runs first, and its result is what `value` holds here.
+
 ## Validation
 
 The validators are TanStack Form's own: a Standard Schema (Zod, Valibot,
@@ -240,11 +269,13 @@ validator instead. See [A query builder form](/docs/query-builder).
 | `meta.edit.editor` | Column meta | `TMDataGridEditorComponent` | By `meta.type` | Replaces the cell editor. |
 | `meta.edit.validate` | Column meta | `TMDataGridFieldValidate` | – | Field-level validation. A bare schema or function means `onChange`. |
 | `meta.edit.mapValue` | Column meta | `TMDataGridEditValueMap` | – | Maps each value an editor writes, before it reaches the draft. |
+| `meta.edit.mapCommitValue` | Column meta | `TMDataGridEditCommitMap` | – | Maps each changed field once, as its row commits. See [Mapping the value at commit](#mapping-the-value-at-commit). |
 | `editing.rowValidators` | Option | `TMDataGridRowValidators` | – | Form-level validation, for cross-field rules. |
 | `editing.tableValidators` | Option | `TMDataGridTableValidators` | – | Cross-row rules, handed the collection with every draft overlaid. See [Cross-row rules](#cross-row-rules). |
 | `TMDataGridTableValidateArgs` | Export | type | – | What a table validator receives: `value`, `rowId`, `isNew`, `rows`. |
 | `TMDataGridEditorArgs` | Export | type | – | What an editor component receives: `field`, `commit`, `cancel`, `row`, `column`. |
 | `TMDataGridEditValueMapArgs` | Export | type | – | What `mapValue` receives: `value`, `previous`, `row`, `column`, `table`. |
+| `TMDataGridEditCommitMapArgs` | Export | type | – | What `mapCommitValue` receives: `value`, `previous`, `row`, `column`, `table`. |
 | `TMDataGridStringEditor` · `NumberEditor` · `BooleanEditor` · `DateEditor` · `SelectEditor` · `MultiSelectEditor` | Exports | components | – | The six built-ins, for wrapping. |
 | `normalizeFieldValidate` | Export | `(validate) => validators` | – | Turns a bare schema into TanStack Form's validator shape. |
 | `getEditFieldName` | Export | `(column) => string` | – | The data path a column's edits write to. |

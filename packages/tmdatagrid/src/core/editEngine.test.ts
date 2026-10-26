@@ -3308,3 +3308,210 @@ describe("bulk deletes over the draft store", () => {
     expect(draftCount(edit.state)).toBe(0);
   });
 });
+
+/**
+ * `meta.edit.mapCommitValue` - maps a changed field once, as its row commits.
+ * What these guard is where in the commit it runs (before the validators, into
+ * the form) and which writes it leaves alone.
+ */
+describe("meta.edit.mapCommitValue", () => {
+  const trimmed = helper.columns([
+    helper.accessor("name", {
+      header: "Name",
+      meta: {
+        edit: {
+          validate: { onSubmit: z.string().min(1, "Required") },
+          mapCommitValue: ({ value }) =>
+            typeof value === "string" ? value.trim() : value,
+        },
+      },
+    }),
+    helper.accessor("address.city", {
+      id: "city",
+      header: "City",
+      meta: {
+        edit: {
+          mapCommitValue: ({ value }) =>
+            typeof value === "string" ? value.trim() : value,
+        },
+      },
+    }),
+  ]);
+
+  const spacedPeople: Array<Person> = [
+    { id: 1, name: "Anna", age: 34, address: { city: "Stockholm " } },
+  ];
+
+  function renderTrimGrid(
+    editing: Partial<TMDataGridEditingOptions<Person>> = {},
+  ) {
+    const { result } = renderHook(
+      () =>
+        useTMDataGrid<Person>({
+          data: spacedPeople,
+          columns: trimmed,
+          getRowId: (row) => String(row.id),
+          editing: { mode: "cell", ...editing },
+        } as UseTMDataGridOptions<Person>),
+      { wrapper: MantineWrapper },
+    );
+    return result;
+  }
+
+  it("hands onCommit the mapped value and writes it back into the form", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ onCommit });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    // Typing keeps the space; only the commit trims it.
+    edit.getForm("1")?.setFieldValue("name", "Annika ");
+    expect(edit.getForm("1")?.state.values.name).toBe("Annika ");
+
+    await expect(edit.commit("1")).resolves.toBe(true);
+
+    const args = onCommit.mock
+      .calls[0]?.[0] as TMDataGridEditCommitArgs<Person>;
+    expect(args.value.name).toBe("Annika");
+    expect(args.changes).toEqual([
+      expect.objectContaining({ field: "name", previous: "Anna", next: "Annika" }),
+    ]);
+  });
+
+  it("runs before the submit validators", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ onCommit });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    edit.getForm("1")?.setFieldValue("name", "   ");
+
+    await expect(edit.commit("1")).resolves.toBe(false);
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.getForm("1")?.state.values.name).toBe("");
+    expect(edit.state.rows["1"]?.errorFields).toContain("name");
+  });
+
+  it("leaves a field the user did not change as it was stored", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ onCommit });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    edit.getForm("1")?.setFieldValue("name", "Annika");
+
+    await edit.commit("1");
+
+    const args = onCommit.mock
+      .calls[0]?.[0] as TMDataGridEditCommitArgs<Person>;
+    expect(args.value.address.city).toBe("Stockholm ");
+  });
+
+  it("drops a commit whose mapped value is the stored one", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ onCommit });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    edit.getForm("1")?.setFieldValue("name", "Anna ");
+
+    await expect(edit.commit("1")).resolves.toBe(true);
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.state.openRowIds).toEqual([]);
+  });
+
+  it("parks the mapped value in the draft store", async () => {
+    const grid = renderTrimGrid({ mode: "row", draft: true });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    edit.getForm("1")?.setFieldValue("name", "Annika ");
+
+    await edit.commit("1");
+
+    expect(edit.state.committedValues["1"]?.name).toBe("Annika");
+  });
+
+  it("does not run for a value the caller writes itself", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ onCommit });
+    const { edit } = grid.current;
+
+    await edit.setCellValue("1", "name", "Annika ");
+
+    const args = onCommit.mock
+      .calls[0]?.[0] as TMDataGridEditCommitArgs<Person>;
+    expect(args.changes[0]?.next).toBe("Annika ");
+  });
+
+  it("maps what the user typed when a caller's write commits the same row", async () => {
+    const onCommit = vi.fn();
+    const grid = renderTrimGrid({ mode: "row", onCommit });
+    const { edit } = grid.current;
+    edit.begin({ rowId: "1", columnId: null });
+    edit.getForm("1")?.setFieldValue("name", "Annika ");
+
+    // The Delete key in another cell of the open row - its write is the
+    // caller's, the name is still the user's.
+    await expect(edit.clearCell("1", "city")).resolves.toBe(true);
+
+    const args = onCommit.mock
+      .calls[0]?.[0] as TMDataGridEditCommitArgs<Person>;
+    expect(args.value.name).toBe("Annika");
+    expect(args.value.address.city).toBe("");
+  });
+
+  it("runs before a bare validate, which means onChange", async () => {
+    const required = helper.columns([
+      helper.accessor("name", {
+        header: "Name",
+        meta: {
+          edit: {
+            validate: z.string().min(1, "Required"),
+            mapCommitValue: ({ value }) =>
+              typeof value === "string" ? value.trim() : value,
+          },
+        },
+      }),
+    ]);
+    const onCommit = vi.fn();
+    const { result } = renderHook(
+      () =>
+        useTMDataGrid<Person>({
+          data: spacedPeople,
+          columns: required,
+          getRowId: (row) => String(row.id),
+          editing: { mode: "cell", onCommit },
+        } as UseTMDataGridOptions<Person>),
+      { wrapper: MantineWrapper },
+    );
+    const { edit } = result.current;
+    edit.begin({ rowId: "1", columnId: "name" });
+    edit.getForm("1")?.setFieldValue("name", "   ");
+
+    await expect(edit.commit("1")).resolves.toBe(false);
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.state.rows["1"]?.errorFields).toContain("name");
+  });
+
+  it("maps every field of a row being added", async () => {
+    const onRowAdd = vi.fn();
+    const grid = renderTrimGrid({
+      onRowAdd,
+      newRowDefaults: () => ({
+        id: 9,
+        name: " Nils ",
+        age: 20,
+        address: { city: " Lund " },
+      }),
+    });
+    const { edit } = grid.current;
+    const tempId = edit.addRow();
+
+    await expect(edit.commit(tempId)).resolves.toBe(true);
+
+    const args = onRowAdd.mock.calls[0]?.[0] as {
+      value: Person;
+    };
+    expect(args.value.name).toBe("Nils");
+    expect(args.value.address.city).toBe("Lund");
+  });
+});

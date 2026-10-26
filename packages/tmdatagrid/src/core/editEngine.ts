@@ -367,6 +367,28 @@ export type TMDataGridEditValueMap = (
   args: TMDataGridEditValueMapArgs,
 ) => unknown;
 
+/** What `meta.edit.mapCommitValue` is handed for one field of a row being committed. */
+export type TMDataGridEditCommitMapArgs = {
+  /** The value the field holds as the row is committed. */
+  value: unknown;
+  /** What the field held when editing began. */
+  previous: unknown;
+  /** The row being committed. `undefined` for a row that is being added. */
+  row: ErasedRow | undefined;
+  column: ErasedColumn;
+  table: TMDataGridTable<TMDataGridRowData>;
+};
+
+/**
+ * `meta.edit.mapCommitValue` - the value as the row commits, mapped.
+ *
+ * Runs once per field, not per keystroke, so the user can type what the
+ * mapped value would not allow, like a trailing space.
+ */
+export type TMDataGridEditCommitMap = (
+  args: TMDataGridEditCommitMapArgs,
+) => unknown;
+
 /**
  * `meta.edit` - everything about how this column is edited, in one place,
  * mirroring the `edit.*` engine the grid exposes at runtime.
@@ -419,6 +441,14 @@ export type TMDataGridColumnEditOptions<
    * {@link TMDataGridEditValueMap}.
    */
   mapValue?: TMDataGridEditValueMap;
+  /**
+   * Maps the value of each field the user changed, once, as its row commits -
+   * trim a string the user was free to type spaces into. It runs before the
+   * validators of the submit, and its result is written back into the form,
+   * so the draft, `changes` and `onCommit` hold the mapped value. See
+   * {@link TMDataGridEditCommitMap}.
+   */
+  mapCommitValue?: TMDataGridEditCommitMap;
 };
 
 /** A new row being committed - `onRowAdd`, and `saveDrafts`'s `created`. */
@@ -1822,7 +1852,64 @@ export function createEditEngine(
     );
   };
 
-  const commit = async (rowId: string): Promise<boolean> => {
+  /**
+   * Runs every `meta.edit.mapCommitValue` over the row's form and writes the
+   * results back. An open row maps the fields the user changed - a value that
+   * was already stored is not the user's to have rewritten; a row being added
+   * has no stored value, so every editable field of it is mapped. A field in
+   * `callerFields` holds a value the caller wrote, not the user, and is left
+   * as written. Written without validation: the submit that follows judges
+   * the mapped values.
+   */
+  const applyCommitMaps = (
+    entry: FormEntry,
+    rowId: string,
+    callerFields: ReadonlySet<string>,
+  ) => {
+    const { table } = getContext();
+    const values = entry.form.state.values as TMDataGridRowData;
+    const changed = entry.isNew
+      ? null
+      : new Set(diff(entry.original, values).map((change) => change.columnId));
+    const row = entry.isNew ? undefined : getRow(rowId);
+    for (const column of editableColumns()) {
+      const map = column.columnDef.meta?.edit?.mapCommitValue;
+      if (map === undefined) continue;
+      if (changed !== null && !changed.has(column.id)) continue;
+      const field = getEditFieldName(column);
+      if (field === null || callerFields.has(field)) continue;
+      const value: unknown = getBy(
+        entry.form.state.values as TMDataGridRowData,
+        field,
+      );
+      const mapped = map({
+        value,
+        previous: getBy(entry.original, field),
+        row,
+        column,
+        table,
+      });
+      if (sameValue(value, mapped)) continue;
+      entry.form.setFieldValue(field as never, mapped as never, {
+        dontValidate: true,
+      });
+    }
+  };
+
+  const commit = (rowId: string): Promise<boolean> =>
+    commitRow(rowId, new Set());
+
+  /**
+   * `callerFields` names the fields a caller wrote itself, which no editor
+   * touched - `writeFields` passes the ones it writes, the rows of
+   * `addRows({ commit: true })` pass `"all"`. They hold stored values already,
+   * as `meta.edit.mapValue` has always assumed, so `mapCommitValue` leaves
+   * them alone; every other field the user changed is still mapped.
+   */
+  const commitRow = async (
+    rowId: string,
+    callerFields: ReadonlySet<string> | "all",
+  ): Promise<boolean> => {
     const entry = forms.get(rowId);
     // No form: the row is committed already, or the grid never held it.
     // Either way there is nothing left to decide.
@@ -1830,6 +1917,9 @@ export function createEditEngine(
     // Enter and blur race on the same edit; the second caller joins the
     // first's commit instead of submitting the row twice.
     if (entry.pendingCommit !== null) return entry.pendingCommit;
+    // Before the pristine check: a value mapped back to the original leaves
+    // nothing to commit.
+    if (callerFields !== "all") applyCommitMaps(entry, rowId, callerFields);
     // A pristine form has nothing to say - drop it without a consumer call.
     // Not for a new row: adding an untouched entry is still an add.
     if (
@@ -2030,10 +2120,14 @@ export function createEditEngine(
       // validate side by side. Out to `onRowAdd`, one at a time and in
       // order, so the consumer sees the rows as the file had them.
       const results = getContext().draft
-        ? await Promise.all(tempIds.map((tempId) => commit(tempId)))
+        ? await Promise.all(
+            tempIds.map((tempId) => commitRow(tempId, "all")),
+          )
         : [];
       if (!getContext().draft) {
-        for (const tempId of tempIds) results.push(await commit(tempId));
+        for (const tempId of tempIds) {
+          results.push(await commitRow(tempId, "all"));
+        }
       }
       return splitCommitted(tempIds, results);
     });
@@ -2382,7 +2476,9 @@ export function createEditEngine(
    * round trip would stall every other row's markers and the caret.
    *
    * No editor is involved, so `meta.edit.mapValue` does not run - the caller
-   * writes the stored value itself. Validation is untouched: this is the same
+   * writes the stored value itself - and `meta.edit.mapCommitValue` skips the
+   * fields written here, while still mapping what the user typed elsewhere in
+   * an open row. Validation is untouched: this is the same
    * `commit`, so `meta.edit.validate` and `editing.rowValidators` still decide
    * whether the row lands, and a failure leaves the row open carrying its
    * errors.
@@ -2400,7 +2496,7 @@ export function createEditEngine(
       for (const { field, value } of writes) {
         entry.form.setFieldValue(field as never, value as never);
       }
-      return commit(rowId);
+      return commitRow(rowId, new Set(writes.map(({ field }) => field)));
     };
     const open = forms.get(rowId);
     if (open !== undefined) return write(open);

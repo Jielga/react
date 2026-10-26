@@ -110,6 +110,8 @@ export {
   type TMDataGridEditRowProjection,
   type TMDataGridEditRowSnapshot,
   type TMDataGridEditState,
+  type TMDataGridEditCommitMap,
+  type TMDataGridEditCommitMapArgs,
   type TMDataGridEditValueMap,
   type TMDataGridEditValueMapArgs,
   type TMDataGridFieldValidate,

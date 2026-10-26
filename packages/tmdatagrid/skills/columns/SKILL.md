@@ -98,7 +98,7 @@ with it sits in their namespaces. `type` and `options` are read by both stages,
 which is why they are in neither.
 
 `meta.filter` holds `operators`, `defaultOperator`, `control` and `url`; `meta.edit`
-holds `enabled`, `field`, `editor`, `validate` and `mapValue`. Their fields are
+holds `enabled`, `field`, `editor`, `validate`, `mapValue` and `mapCommitValue`. Their fields are
 in [references/columns-api.md](references/columns-api.md).
 
 ```tsx
