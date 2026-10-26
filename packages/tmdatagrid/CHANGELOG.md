@@ -1,5 +1,12 @@
 # @jielga/tmdatagrid
 
+## 2.5.0
+
+### Minor Changes
+
+- [#177](https://github.com/Jielga/react/pull/177) [`ba4198e`](https://github.com/Jielga/react/commit/ba4198eb60cf18fe9071e311f5d33be1674326d7) Thanks [@Psvensso](https://github.com/Psvensso)! - - New `meta.edit.mapCommitValue`: maps each field the user changed once, as its row commits, instead of on every keystroke like `mapValue`. It runs before the submit validators and writes the result back into the form, so the draft store, `changes` and `onCommit` hold the mapped value. Use it to trim a string the user was free to type spaces into.
+  - New types `TMDataGridEditCommitMap` and `TMDataGridEditCommitMapArgs`.
+
 ## 2.4.0
 
 ### Minor Changes
