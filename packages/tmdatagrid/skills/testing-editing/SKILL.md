@@ -102,7 +102,9 @@ async saveDrafts(): Promise<void> {
 
 `fillRow` covers the built-in editors. A column with `meta.edit.editor` renders
 the app's own component inside the `editor` part; scope through
-`part("editor", { rowId, columnId })` and fill whatever is inside.
+`part("editor", { rowId, columnId })` and fill whatever is inside. A built-in
+editor rendered through `meta.edit.editor` with `inputProps` keeps
+`editor-input`, so `fillRow` covers it.
 
 ## Recipes
 

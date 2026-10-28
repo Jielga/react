@@ -124,7 +124,8 @@ type TMDataGridEditState = {
 | `hasPendingEdits` | Export | `(state) => boolean` - unsaved work: an open row with a changed value, any entry row, the draft store, or a save in flight. `useSelector(grid.edit.store, hasPendingEdits)` for a navigation blocker; do not use `openRowIds.length`, which also counts committed rows and rows that are only open. |
 | `getEditFieldName` | Export | `(column) => string` - the data path a column's edits write to. |
 | `normalizeFieldValidate` | Export | `(validate) => validators` - a bare schema into Form's shape. |
-| `TMDataGridStringEditor` … `TMDataGridMultiSelectEditor` | Exports | The six built-in editors, for wrapping. |
+| `TMDataGridStringEditor` … `TMDataGridMultiSelectEditor` | Exports | The six built-in editors, for extending with `inputProps` or wrapping. |
+| `TMDataGridStringEditorProps` · `TMDataGridNumberEditorProps` · `TMDataGridBooleanEditorProps` · `TMDataGridDateEditorProps` · `TMDataGridSelectEditorProps` · `TMDataGridMultiSelectEditorProps` | Exports | The props of each built-in editor: `TMDataGridEditorArgs` and `inputProps`. |
 
 Types: `TMDataGridEditMode`, `TMDataGridEditApi`, `TMDataGridEditState`,
 `TMDataGridEditCommitArgs`, `TMDataGridSaveDraftsArgs`,

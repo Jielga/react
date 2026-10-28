@@ -1,7 +1,33 @@
 import { useStore } from "@tanstack/react-form";
-import { useLayoutEffect, useRef, type RefObject } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  type Ref,
+  type RefCallback,
+  type RefObject,
+} from "react";
 import { isInputElement } from "../../core/dom";
 import { firstErrorText, type TMDataGridEditField } from "../../core/editEngine";
+
+/**
+ * `data-*` attributes for a built-in editor's `inputProps`. JSX accepts them
+ * on any element, but a props object literal only takes declared keys.
+ */
+export type EditorDataAttributes = {
+  [attribute: `data-${string}`]: string | number | boolean | undefined;
+};
+
+/** One ref callback feeding the grid's own ref and the consumer's. */
+export function mergeRefs<T>(
+  ...refs: Array<Ref<T> | undefined>
+): RefCallback<T> {
+  return (node) => {
+    for (const ref of refs) {
+      if (typeof ref === "function") ref(node);
+      else if (ref !== null && ref !== undefined) ref.current = node;
+    }
+  };
+}
 
 /** The field's live value - one subscription, on the field's own store. */
 export function useFieldValue(field: TMDataGridEditField): unknown {

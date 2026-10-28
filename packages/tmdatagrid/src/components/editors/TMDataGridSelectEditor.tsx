@@ -1,4 +1,4 @@
-import { Select } from "@mantine/core";
+import { Select, type SelectProps } from "@mantine/core";
 import type { TMDataGridEditorArgs } from "../../core/editEngine";
 import {
   optionsToComboboxData,
@@ -6,7 +6,35 @@ import {
 } from "../../core/columnOptions";
 import { getColumnLabel } from "../../core/columnUtils";
 import { useTMDataGridContext } from "../../TMDataGridContext";
-import { useFieldInvalid, useFieldValue } from "./editorShared";
+import {
+  useFieldInvalid,
+  useFieldValue,
+  type EditorDataAttributes,
+} from "./editorShared";
+
+export type TMDataGridSelectEditorProps = TMDataGridEditorArgs & {
+  /**
+   * Props for the Mantine `Select`. The grid keeps `data`, the value,
+   * `onChange`, `error`, `size`, the accessible name and
+   * `comboboxProps.withinPortal`; `onBlur` runs after the grid's own.
+   */
+  inputProps?: Omit<
+    SelectProps,
+    | "data"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "error"
+    | "size"
+    | "aria-label"
+    | "comboboxProps"
+  > & {
+    comboboxProps?: Omit<
+      NonNullable<SelectProps["comboboxProps"]>,
+      "withinPortal"
+    >;
+  } & EditorDataAttributes;
+};
 
 /**
  * The built-in editor for `meta.type: "select"`. Options come from the same
@@ -20,18 +48,20 @@ export function TMDataGridSelectEditor({
   table,
   size,
   commit,
-}: TMDataGridEditorArgs) {
+  inputProps,
+}: TMDataGridSelectEditorProps) {
   const { labels, features } = useTMDataGridContext();
   const value = useFieldValue(field);
   const invalid = useFieldInvalid(field);
   return (
     <Select
-      size={size}
       w="100%"
       searchable
+      {...inputProps}
+      size={size}
       // Inside the cell, so picking an option is not a click-away - the same
       // reason the filter panel keeps its dropdowns unportalled.
-      comboboxProps={{ withinPortal: false }}
+      comboboxProps={{ ...inputProps?.comboboxProps, withinPortal: false }}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
       data={optionsToComboboxData(
@@ -44,7 +74,10 @@ export function TMDataGridSelectEditor({
         // The confirming modes leave the draft for their explicit commit.
         if (next !== null && features.editMode === "cell") void commit();
       }}
-      onBlur={field.handleBlur}
+      onBlur={(event) => {
+        field.handleBlur();
+        inputProps?.onBlur?.(event);
+      }}
       error={invalid}
     />
   );
