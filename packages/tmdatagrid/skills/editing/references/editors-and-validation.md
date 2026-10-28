@@ -94,11 +94,86 @@ columnHelper.accessor("salary", {
 });
 ```
 
-## Wrapping a built-in
+## Extending a built-in
 
-The built-ins take `TMDataGridEditorArgs` as their props, so a custom editor can
-pass the whole object through and render around it instead of starting from
-scratch.
+The built-ins take `TMDataGridEditorArgs` and `inputProps` as their props. To
+change the Mantine control a built-in renders, render it from a
+`meta.edit.editor`, pass `args` through whole, and add props with `inputProps`.
+Extend a built-in rather than copying its source: keeping the caret in place
+while `mapValue` rewrites the value, select-all on focus, the invalid border,
+the translated accessible name and `data-dg-part="editor-input"` all come with
+it. The props type requires every field of `TMDataGridEditorArgs`, so spread
+`{...args}`; never spread or rebuild `field` itself.
+
+```tsx
+import { Text } from "@mantine/core";
+import { IconBarcode } from "@tabler/icons-react";
+import {
+  TMDataGridNumberEditor,
+  TMDataGridSelectEditor,
+  TMDataGridStringEditor,
+  type TMDataGridEditorComponent,
+} from "@jielga/tmdatagrid";
+
+// Module scope. A new identity per render remounts the editor mid-edit.
+const SkuEditor: TMDataGridEditorComponent = (args) => (
+  <TMDataGridStringEditor
+    {...args}
+    inputProps={{ leftSection: <IconBarcode size={14} /> }}
+  />
+);
+
+const PriceEditor: TMDataGridEditorComponent = (args) => (
+  <TMDataGridNumberEditor
+    {...args}
+    inputProps={{ allowNegative: false, rightSection: <Text size="xs">kr</Text> }}
+  />
+);
+
+// comboboxProps is merged with the grid's; withinPortal is not accepted.
+const CategoryEditor: TMDataGridEditorComponent = (args) => (
+  <TMDataGridSelectEditor {...args} inputProps={{ comboboxProps: { shadow: "md" } }} />
+);
+```
+
+| Editor | Mantine control | Set by the grid, left out of `inputProps` |
+| --- | --- | --- |
+| `TMDataGridStringEditor` | `TextInput` | `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridNumberEditor` | `NumberInput` | `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridBooleanEditor` | `Checkbox` | `checked`, `defaultChecked`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridDateEditor` | `TextInput` | `type`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridSelectEditor` | `Select` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
+| `TMDataGridMultiSelectEditor` | `MultiSelect` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
+
+- `inputProps` also takes `data-*` attributes; `data-dg-part` stays
+  `"editor-input"`, because the grid sets it after the spread.
+- `onFocus` and `onBlur` run after the grid's own: select-all on focus in the
+  string and number editors, `field.handleBlur()` (touched, `onBlur`
+  validators) in every editor.
+- `onBlur` runs only when focus leaves the editor, such as a click outside it.
+  Enter, Tab, Escape and a committing select pick close the editor before the
+  focus moves, so it does not run. Code for "the edit ended" belongs in
+  `editing.onCommit` or `meta.edit.mapCommitValue`.
+- `ref` receives the input element; the grid's own ref stays attached.
+- `comboboxProps` is merged with the grid's and `withinPortal` is always
+  `false`, because an option picked from a portal is a click outside the cell.
+- A consumer `onKeyDown` must not stop the propagation of Enter, Tab or Escape:
+  the grid handles them on an ancestor.
+- `label` and `description` make the editor taller than the cell;
+  `aria-labelledby` replaces the grid's translated accessible name.
+- `onChange` is the grid's; to rewrite the value as it is typed, use
+  `meta.edit.mapValue`.
+- The grid's defaults can be overridden: `w="100%"` (not on the checkbox),
+  `hideControls` on the number editor, `searchable` on the select editors.
+- The select editors read options from `meta.options` only; `data` is not
+  accepted.
+- The props types are exported: `TMDataGridStringEditorProps`,
+  `TMDataGridNumberEditorProps`, `TMDataGridBooleanEditorProps`,
+  `TMDataGridDateEditorProps`, `TMDataGridSelectEditorProps`,
+  `TMDataGridMultiSelectEditorProps`.
+
+To place content beside the control instead of inside it, render the built-in
+inside your own layout:
 
 ```tsx
 import { Group, Text } from "@mantine/core";

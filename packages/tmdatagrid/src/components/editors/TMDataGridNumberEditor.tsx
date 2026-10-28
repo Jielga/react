@@ -1,17 +1,37 @@
-import { NumberInput } from "@mantine/core";
+import { NumberInput, type NumberInputProps } from "@mantine/core";
 import { useState } from "react";
 import type { TMDataGridEditorArgs } from "../../core/editEngine";
 import { getColumnLabel } from "../../core/columnUtils";
 import { useTMDataGridContext } from "../../TMDataGridContext";
 import {
+  mergeRefs,
   selectAllOnFocus,
   useCaretKeeper,
   useFieldInvalid,
   useFieldValue,
+  type EditorDataAttributes,
 } from "./editorShared";
 
+export type TMDataGridNumberEditorProps = TMDataGridEditorArgs & {
+  /**
+   * Props for the Mantine `NumberInput`. The grid keeps the value, `onChange`,
+   * `error`, `size` and the accessible name; `onFocus` and `onBlur` run after
+   * the grid's own, and `ref` receives the input beside the grid's ref.
+   */
+  inputProps?: Omit<
+    NumberInputProps,
+    "value" | "defaultValue" | "onChange" | "error" | "size" | "aria-label"
+  > &
+    EditorDataAttributes;
+};
+
 /** The built-in editor for `meta.type: "number"`. */
-export function TMDataGridNumberEditor({ field, column, size }: TMDataGridEditorArgs) {
+export function TMDataGridNumberEditor({
+  field,
+  column,
+  size,
+  inputProps,
+}: TMDataGridNumberEditorProps) {
   const { labels } = useTMDataGridContext();
   const value = useFieldValue(field);
   const invalid = useFieldInvalid(field);
@@ -31,11 +51,15 @@ export function TMDataGridNumberEditor({ field, column, size }: TMDataGridEditor
     : value === null;
   return (
     <NumberInput
-      ref={inputRef}
-      size={size}
       w="100%"
-      onFocus={selectAllOnFocus}
       hideControls
+      {...inputProps}
+      ref={mergeRefs(inputRef, inputProps?.ref)}
+      size={size}
+      onFocus={(event) => {
+        selectAllOnFocus(event);
+        inputProps?.onFocus?.(event);
+      }}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
       value={
@@ -63,7 +87,10 @@ export function TMDataGridNumberEditor({ field, column, size }: TMDataGridEditor
           next !== "" && Number.isFinite(parsed) ? parsed : null,
         );
       }}
-      onBlur={field.handleBlur}
+      onBlur={(event) => {
+        field.handleBlur();
+        inputProps?.onBlur?.(event);
+      }}
       error={invalid}
     />
   );

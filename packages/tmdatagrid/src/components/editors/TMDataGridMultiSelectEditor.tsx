@@ -1,4 +1,4 @@
-import { MultiSelect } from "@mantine/core";
+import { MultiSelect, type MultiSelectProps } from "@mantine/core";
 import type { TMDataGridEditorArgs } from "../../core/editEngine";
 import {
   optionsToComboboxData,
@@ -6,7 +6,35 @@ import {
 } from "../../core/columnOptions";
 import { getColumnLabel } from "../../core/columnUtils";
 import { useTMDataGridContext } from "../../TMDataGridContext";
-import { useFieldInvalid, useFieldValue } from "./editorShared";
+import {
+  useFieldInvalid,
+  useFieldValue,
+  type EditorDataAttributes,
+} from "./editorShared";
+
+export type TMDataGridMultiSelectEditorProps = TMDataGridEditorArgs & {
+  /**
+   * Props for the Mantine `MultiSelect`. The grid keeps `data`, the value,
+   * `onChange`, `error`, `size`, the accessible name and
+   * `comboboxProps.withinPortal`; `onBlur` runs after the grid's own.
+   */
+  inputProps?: Omit<
+    MultiSelectProps,
+    | "data"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "error"
+    | "size"
+    | "aria-label"
+    | "comboboxProps"
+  > & {
+    comboboxProps?: Omit<
+      NonNullable<MultiSelectProps["comboboxProps"]>,
+      "withinPortal"
+    >;
+  } & EditorDataAttributes;
+};
 
 /**
  * The built-in editor for `meta.type: "multiSelect"` - cells holding string
@@ -19,16 +47,18 @@ export function TMDataGridMultiSelectEditor({
   row,
   table,
   size,
-}: TMDataGridEditorArgs) {
+  inputProps,
+}: TMDataGridMultiSelectEditorProps) {
   const { labels } = useTMDataGridContext();
   const value = useFieldValue(field);
   const invalid = useFieldInvalid(field);
   return (
     <MultiSelect
-      size={size}
       w="100%"
       searchable
-      comboboxProps={{ withinPortal: false }}
+      {...inputProps}
+      size={size}
+      comboboxProps={{ ...inputProps?.comboboxProps, withinPortal: false }}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
       data={optionsToComboboxData(
@@ -36,7 +66,10 @@ export function TMDataGridMultiSelectEditor({
       )}
       value={Array.isArray(value) ? value.map(String) : []}
       onChange={(next) => field.handleChange(next)}
-      onBlur={field.handleBlur}
+      onBlur={(event) => {
+        field.handleBlur();
+        inputProps?.onBlur?.(event);
+      }}
       error={invalid}
     />
   );

@@ -1,9 +1,32 @@
-import { TextInput } from "@mantine/core";
+import { TextInput, type TextInputProps } from "@mantine/core";
 import { useRef } from "react";
 import type { TMDataGridEditorArgs } from "../../core/editEngine";
 import { getColumnLabel } from "../../core/columnUtils";
 import { useTMDataGridContext } from "../../TMDataGridContext";
-import { useFieldInvalid, useFieldValue } from "./editorShared";
+import {
+  useFieldInvalid,
+  useFieldValue,
+  type EditorDataAttributes,
+} from "./editorShared";
+
+export type TMDataGridDateEditorProps = TMDataGridEditorArgs & {
+  /**
+   * Props for the Mantine `TextInput`. The grid keeps `type`, the value,
+   * `onChange`, `error`, `size` and the accessible name; `onBlur` runs after
+   * the grid's own.
+   */
+  inputProps?: Omit<
+    TextInputProps,
+    | "type"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "error"
+    | "size"
+    | "aria-label"
+  > &
+    EditorDataAttributes;
+};
 
 /**
  * The built-in editor for `meta.type: "date"` - the native
@@ -14,7 +37,8 @@ export function TMDataGridDateEditor({
   field,
   column,
   size,
-}: TMDataGridEditorArgs) {
+  inputProps,
+}: TMDataGridDateEditorProps) {
   const { labels } = useTMDataGridContext();
   const value = useFieldValue(field);
   const invalid = useFieldInvalid(field);
@@ -32,8 +56,9 @@ export function TMDataGridDateEditor({
 
   return (
     <TextInput
-      size={size}
       w="100%"
+      {...inputProps}
+      size={size}
       type="date"
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
@@ -48,7 +73,10 @@ export function TMDataGridDateEditor({
           writesDates.current ? new Date(`${next}T00:00:00`) : next,
         );
       }}
-      onBlur={field.handleBlur}
+      onBlur={(event) => {
+        field.handleBlur();
+        inputProps?.onBlur?.(event);
+      }}
       error={invalid}
     />
   );

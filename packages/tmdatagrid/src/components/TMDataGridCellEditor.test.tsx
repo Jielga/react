@@ -5,9 +5,11 @@ import { renderWithMantine } from "../../test/gridHarness";
 import { TMDataGrid } from "./TMDataGrid";
 import {
   createTMDataGridColumnHelper,
+  TMDataGridStringEditor,
   useTMDataGrid,
   type TMDataGridEditCommitArgs,
   type TMDataGridEditingOptions,
+  type TMDataGridEditorComponent,
   type UseTMDataGridOptions,
 } from "../index";
 
@@ -534,5 +536,144 @@ describe("mapping the value on its way in", () => {
 
     await waitFor(() => expect(commits.length).toBe(1));
     expect(commits[0]?.changes[0]?.next).toBe("");
+  });
+});
+
+/**
+ * `inputProps` hands a consumer the built-in's Mantine control without
+ * handing over the binding: what it adds renders, its handlers run beside the
+ * grid's, and the props the grid owns keep working. The select editor's
+ * dropdown placement needs a real portal, which `env="test"` renders inline,
+ * so playwright/docs/extended-editors.spec.ts covers it.
+ */
+describe("extending a built-in editor with inputProps", () => {
+  type Ticket = { id: number; code: string };
+
+  const focused: Array<string> = [];
+  const blurred: Array<string> = [];
+  const consumerRef: { current: HTMLInputElement | null } = { current: null };
+
+  const CodeEditor: TMDataGridEditorComponent = (args) => (
+    <TMDataGridStringEditor
+      {...args}
+      inputProps={{
+        leftSection: <span data-testid="code-prefix">#</span>,
+        onFocus: () => void focused.push("code"),
+        onBlur: () => void blurred.push("code"),
+        ref: consumerRef,
+        "data-testid": "code-input",
+        // The grid's part wins: it is set after the spread.
+        "data-dg-part": "mine",
+      }}
+    />
+  );
+
+  const ticketColumns = (() => {
+    const helper = createTMDataGridColumnHelper<Ticket>();
+    return helper.columns([
+      helper.accessor("code", {
+        header: "Code",
+        meta: {
+          edit: {
+            editor: CodeEditor,
+            mapValue: ({ value }) =>
+              typeof value === "string" ? value.toUpperCase() : value,
+          },
+        },
+      }),
+    ]);
+  })();
+
+  const tickets: Array<Ticket> = [{ id: 1, code: "ab" }];
+
+  type TicketCommit = TMDataGridEditCommitArgs<Ticket>;
+
+  function renderTicketGrid(): {
+    container: HTMLElement;
+    commits: Array<TicketCommit>;
+  } {
+    const commits: Array<TicketCommit> = [];
+    function TicketGrid() {
+      const grid = useTMDataGrid<Ticket>({
+        data: tickets,
+        columns: ticketColumns,
+        getRowId: (row) => String(row.id),
+        editing: {
+          mode: "cell",
+          onCommit: (args) => void commits.push(args as TicketCommit),
+        },
+        selectionMode: "highlight",
+      } as UseTMDataGridOptions<Ticket>);
+      return (
+        <TMDataGrid {...grid}>
+          <TMDataGrid.Table<Ticket> />
+        </TMDataGrid>
+      );
+    }
+    const { container } = renderWithMantine(<TicketGrid />);
+    return { container, commits };
+  }
+
+  function ticketCell(container: HTMLElement, columnId: string): HTMLElement {
+    const found = container.querySelector<HTMLElement>(
+      `[role="gridcell"][data-row-id="1"][data-column-id="${columnId}"]`,
+    );
+    if (found === null) throw new Error(`no cell for column "${columnId}"`);
+    return found;
+  }
+
+  it("renders what inputProps adds, and still edits and commits", async () => {
+    const user = userEvent.setup();
+    const { container, commits } = renderTicketGrid();
+
+    await user.dblClick(ticketCell(container, "code"));
+    expect(screen.getByTestId("code-prefix")).toBeInTheDocument();
+    const input = screen.getByLabelText("Edit Code") as HTMLInputElement;
+    expect(input).toHaveAttribute("data-dg-part", "editor-input");
+    await user.keyboard("xy{Enter}");
+
+    await waitFor(() => expect(commits.length).toBe(1));
+    expect(commits[0]?.changes[0]?.next).toBe("XY");
+  });
+
+  it("runs the consumer's onFocus and onBlur after the grid's own", async () => {
+    const user = userEvent.setup();
+    focused.length = 0;
+    blurred.length = 0;
+    const { container } = renderTicketGrid();
+
+    await user.dblClick(ticketCell(container, "code"));
+    const input = screen.getByLabelText("Edit Code") as HTMLInputElement;
+    // The grid's select-all ran, so typing replaces the value.
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+    expect(focused).toEqual(["code"]);
+
+    // Tab and Enter close the editor before the focus moves, so no blur fires
+    // there; focus leaving the grid is the blur a consumer sees.
+    fireEvent.blur(input);
+    expect(blurred).toEqual(["code"]);
+  });
+
+  it("hands the input to the consumer's ref and keeps the grid's own", async () => {
+    const user = userEvent.setup();
+    const { container, commits } = renderTicketGrid();
+
+    await user.dblClick(ticketCell(container, "code"));
+    const input = screen.getByTestId("code-input") as HTMLInputElement;
+    expect(consumerRef.current).toBe(input);
+    expect(input).toHaveAttribute("data-dg-part", "editor-input");
+
+    // The grid's ref still reaches the input: the column's mapValue rewrites
+    // what was typed, and the caret stays where it was typed.
+    await user.keyboard("xy");
+    input.setSelectionRange(0, 0);
+    await user.keyboard("z");
+    expect(input).toHaveValue("ZXY");
+    expect(input.selectionStart).toBe(1);
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(commits.length).toBe(1));
+    expect(commits[0]?.changes[0]?.next).toBe("ZXY");
   });
 });

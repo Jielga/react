@@ -245,7 +245,9 @@ The grid picks one from the column's `meta.type`, and `meta.edit.editor` replace
 | `TMDataGridSelectEditor` | `Select`, committing on pick in `"cell"` mode | `"select"` |
 | `TMDataGridMultiSelectEditor` | `MultiSelect`, committing on Enter or blur | `"multiSelect"` |
 
-Every editor takes the same argument object, `TMDataGridEditorArgs`, so a custom editor can wrap a built-in rather than replace it:
+Each built-in editor also takes `inputProps`, passed to its Mantine control. See [Extending a built-in editor](/docs/editors#extending-a-built-in-editor).
+
+Every editor takes the same argument object, `TMDataGridEditorArgs`:
 
 | Field | Type | What it is |
 | --- | --- | --- |

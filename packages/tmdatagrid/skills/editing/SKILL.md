@@ -5,7 +5,7 @@ description: >
   (mode: cell, cellConfirm, row; draft), the required getRowId, editing.onCommit
   and editing.onSaveDrafts, why the grid never mutates data, gating with
   editing.columns, meta.edit.enabled and meta.edit.field, the built-in editors
-  picked by meta.type, custom editors via meta.edit.editor, value mapping with
+  (meta.type, inputProps), custom editors via meta.edit.editor, value mapping with
   mapValue and mapCommitValue, validation at every level - meta.edit.validate,
   cross-field editing.rowValidators, cross-row editing.tableValidators over the
   draft-overlaid collection - adding and deleting rows (edit.addRow,
@@ -207,11 +207,9 @@ columnHelper.accessor("salary", {
 
 ## Editors and validation
 
-`meta.type` picks the editor - `"string"` (the default), `"number"`,
-`"boolean"`, `"date"`, `"select"` and `"multiSelect"` - and `meta.options` feeds
-the two select editors from the same declaration the filter panel reads. Each
-one, with the value it writes into the draft and the export that wraps it, is in
-[references/editors-and-validation.md](references/editors-and-validation.md#the-built-in-editors).
+`meta.type` picks the editor - `"string"` (the default), `"number"`, `"boolean"`, `"date"`, `"select"` and `"multiSelect"` - and `meta.options` feeds the two select editors from the same declaration the filter panel reads.
+Each one, with the value it writes into the draft and its export, is in [references/editors-and-validation.md](references/editors-and-validation.md#the-built-in-editors).
+To add a `leftSection`, a unit or a wider dropdown, do not copy a built-in: render it from `meta.edit.editor` with `inputProps` ([Extending a built-in](references/editors-and-validation.md#extending-a-built-in)).
 
 `meta.edit.editor` replaces one, `meta.edit.validate` guards the field, and
 `editing.rowValidators` carries cross-field rules. The validators are TanStack
@@ -487,7 +485,7 @@ are in [references/common-mistakes.md](references/common-mistakes.md).
 ## References
 
 - [Editors and validation](references/editors-and-validation.md) - the editor
-  API, wrapping a built-in, what `mapValue` leaves alone, field, row and
+  API, extending a built-in with `inputProps`, what `mapValue` leaves alone, field, row and
   cross-row validators, derived columns with a table-wide rule, server-side
   errors.
 - [Editing API](references/editing-api.md) - every option, callback, column meta

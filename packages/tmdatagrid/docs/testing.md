@@ -185,6 +185,7 @@ None of them carries `data-column-id`; scope through the row.
 A column declaring `meta.filter.control` or `meta.edit.editor` renders your component
 in that slot, so `filter-value` and `editor-input` cover the built-ins only.
 `filter-row` and `editor` still apply; scope your own queries through them.
+A built-in editor extended through `inputProps` keeps `editor-input`.
 
 `editor-input` is also where the grid puts the caret when an editor opens. An
 editor that does not publish it is focused on the first focusable element inside

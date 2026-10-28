@@ -143,12 +143,30 @@ export { DgRangeSliderFilter } from "./components/filters/DgRangeSliderFilter";
 export { DgDateRangeFilter } from "./components/filters/DgDateRangeFilter";
 export { DgAutocompleteFilter } from "./components/filters/DgAutocompleteFilter";
 export { DgTriStateFilter } from "./components/filters/DgTriStateFilter";
-export { TMDataGridStringEditor } from "./components/editors/TMDataGridStringEditor";
-export { TMDataGridNumberEditor } from "./components/editors/TMDataGridNumberEditor";
-export { TMDataGridBooleanEditor } from "./components/editors/TMDataGridBooleanEditor";
-export { TMDataGridDateEditor } from "./components/editors/TMDataGridDateEditor";
-export { TMDataGridSelectEditor } from "./components/editors/TMDataGridSelectEditor";
-export { TMDataGridMultiSelectEditor } from "./components/editors/TMDataGridMultiSelectEditor";
+export {
+  TMDataGridStringEditor,
+  type TMDataGridStringEditorProps,
+} from "./components/editors/TMDataGridStringEditor";
+export {
+  TMDataGridNumberEditor,
+  type TMDataGridNumberEditorProps,
+} from "./components/editors/TMDataGridNumberEditor";
+export {
+  TMDataGridBooleanEditor,
+  type TMDataGridBooleanEditorProps,
+} from "./components/editors/TMDataGridBooleanEditor";
+export {
+  TMDataGridDateEditor,
+  type TMDataGridDateEditorProps,
+} from "./components/editors/TMDataGridDateEditor";
+export {
+  TMDataGridSelectEditor,
+  type TMDataGridSelectEditorProps,
+} from "./components/editors/TMDataGridSelectEditor";
+export {
+  TMDataGridMultiSelectEditor,
+  type TMDataGridMultiSelectEditorProps,
+} from "./components/editors/TMDataGridMultiSelectEditor";
 export {
   mergeLabels,
   TMDATAGRID_LABELS_EN,
