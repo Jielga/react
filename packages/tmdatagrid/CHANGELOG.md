@@ -1,5 +1,12 @@
 # @jielga/tmdatagrid
 
+## 2.6.0
+
+### Minor Changes
+
+- [#179](https://github.com/Jielga/react/pull/179) [`2e99ee4`](https://github.com/Jielga/react/commit/2e99ee462acae8a35470785bb92e6d5f1fa714d8) Thanks [@Psvensso](https://github.com/Psvensso)! - The six built-in editors take `inputProps`, passed to their Mantine control, so a `meta.edit.editor` can extend a built-in (a `leftSection`, a unit, `comboboxProps`) instead of copying it.
+  Their props types are exported: `TMDataGridStringEditorProps`, `TMDataGridNumberEditorProps`, `TMDataGridBooleanEditorProps`, `TMDataGridDateEditorProps`, `TMDataGridSelectEditorProps`, `TMDataGridMultiSelectEditorProps`.
+
 ## 2.5.0
 
 ### Minor Changes
