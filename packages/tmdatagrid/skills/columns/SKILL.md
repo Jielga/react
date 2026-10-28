@@ -16,7 +16,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.5.0'
+  library_version: '2.6.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/columns.md'
   - 'Jielga/react:packages/tmdatagrid/docs/column-layout.md'

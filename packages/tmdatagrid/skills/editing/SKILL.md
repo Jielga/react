@@ -5,20 +5,20 @@ description: >
   (mode: cell, cellConfirm, row; draft), the required getRowId, editing.onCommit
   and editing.onSaveDrafts, why the grid never mutates data, gating with
   editing.columns, meta.edit.enabled and meta.edit.field, the built-in editors
-  (meta.type, inputProps), custom editors via meta.edit.editor, value mapping with
-  mapValue and mapCommitValue, validation at every level - meta.edit.validate,
-  cross-field editing.rowValidators, cross-row editing.tableValidators over the
-  draft-overlaid collection - adding and deleting rows (edit.addRow,
-  newRowDefaults, onRowAdd, onRowDelete), the edit lane, TMDataGrid.DraftActions
-  and renderActions, and the edit engine (begin, commit, commitAll, saveDrafts,
-  addRows, setCellValue, setRowValues, getForm, store). Load when making a grid
-  editable, choosing an edit mode, wiring a save, writing a cell editor,
-  validating an edit, writing cells from a toolbar action or bulk fill, or when
-  cells will not open.
+  (meta.type, inputProps), custom editors via meta.edit.editor, value mapping
+  with mapValue and mapCommitValue, validation at every level -
+  meta.edit.validate, cross-field editing.rowValidators, cross-row
+  editing.tableValidators over the draft-overlaid collection - adding and
+  deleting rows (edit.addRow, newRowDefaults, onRowAdd, onRowDelete), the edit
+  lane, TMDataGrid.DraftActions and renderActions, and the edit engine (begin,
+  commit, commitAll, saveDrafts, addRows, setCellValue, setRowValues, getForm,
+  store). Load when making a grid editable, choosing an edit mode, wiring a
+  save, writing a cell editor, validating an edit, writing cells from a toolbar
+  action or bulk fill, or when cells will not open.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.5.0'
+  library_version: '2.6.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/editing.md'
   - 'Jielga/react:packages/tmdatagrid/docs/draft-store.md'
