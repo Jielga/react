@@ -129,6 +129,13 @@ so a part that repeats is addressed by adding the coordinate.
 | `export-picker` | The export column picker, in a dialog. Holds `export-picker-search`, `export-picker-hint`, `export-column-all` with the count `export-picker-count`, and the buttons `export-picker-confirm` and `export-picker-cancel` |
 | `columns-panel`, `columns-search` | The column chooser panel, and the search box in the panel or in `TMDataGrid.Menu.Columns` |
 | `columns-toggle-all`, `columns-reset` | Show/hide all and Reset layout, in the panel or in the menu |
+| `views-button` | The `TMDataGrid.ViewsMenu` trigger |
+| `views-item` | One saved view in a menu. Carries `data-view-id`; the selected one has `aria-checked="true"` |
+| `views-none` | The text shown in place of the list when there is no view |
+| `views-restore`, `views-overwrite`, `views-delete` | The saved-view actions, in a menu or in the panel |
+| `views-save-as` | The menu item that turns into the name field |
+| `views-save-form`, `views-name`, `views-save` | The name form, its field and its button |
+| `views-panel`, `views-select` | The panel's views row and its view picker |
 | `footer` | The pager row |
 | `page-size`, `page-range`, `page-number`, `page-prev`, `page-next` | The pager |
 | `summary-row` | The footer summary row |
@@ -200,7 +207,8 @@ your grid runs in one language.
 
 These surfaces render in a portal at the end of `<body>`, outside the grid's root, so a locator scoped to the root does not reach them:
 
-- the dropdown of `TMDataGrid.Menu` - `page.getByRole("menu")`; holds `columns-toggle`, `columns-toggle-all`, `columns-reset`, `menu-export` and `menu-export-selected`
+- the dropdown of `TMDataGrid.Menu` - `page.getByRole("menu")`; holds `columns-toggle`, `columns-toggle-all`, `columns-reset`, `menu-export`, `menu-export-selected` and the `views-*` items
+- the dropdown of `TMDataGrid.ViewsMenu` - `page.getByRole("menu")`; holds the `views-*` items and `columns-reset`
 - a column's menu, opened by `header-menu` or by a right click on the header - `page.getByRole("menu")`; its items (sort, filter, group, pin, hide) carry no part, so reach one by role and label, `menu.getByRole("menuitem", { name: "Group by Location" })`, and note that the label is translated
 - the `header-filter-operator` menu - `page.getByRole("menu")`
 - the export column picker - `page.getByRole("dialog")`; holds the `export-*` parts

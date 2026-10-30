@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { TMDataGridSize } from "./core/sizes";
+import type { TMDataGridViewsApi } from "./core/views";
 import type { TMDataGridApi } from "./useTMDataGrid";
 
 /**
@@ -29,6 +30,14 @@ export function useTMDataGridContext(): TMDataGridContextValue {
     );
   }
   return api as TMDataGridContextValue;
+}
+
+/**
+ * `grid.views` from inside `<TMDataGrid>`, for a views control of your own.
+ * Outside the grid, read `views` off what `useTMDataGrid` returned.
+ */
+export function useTMDataGridViews(): TMDataGridViewsApi {
+  return useTMDataGridContext().views;
 }
 
 /**

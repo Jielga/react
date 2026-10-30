@@ -48,6 +48,25 @@ export type {
   TMDataGridMenuExportProps,
   TMDataGridMenuProps,
 } from "./components/TMDataGridMenu";
+export { useTMDataGridViews } from "./TMDataGridContext";
+export type { TMDataGridViewsMenuProps } from "./components/TMDataGridViews";
+export {
+  captureViewState,
+  createLocalStorageViewStore,
+  validateViewName,
+  VIEW_PAYLOAD_VERSION,
+  type TMDataGridLocalViewStoreOptions,
+  type TMDataGridSaveViewResult,
+  type TMDataGridStoredViews,
+  type TMDataGridView,
+  type TMDataGridViewEntry,
+  type TMDataGridViewNameError,
+  type TMDataGridViewPreset,
+  type TMDataGridViewsApi,
+  type TMDataGridViewsOptions,
+  type TMDataGridViewState,
+  type TMDataGridViewStore,
+} from "./core/views";
 export {
   type TMDataGridColumnFilter,
   type TMDataGridColumnType,

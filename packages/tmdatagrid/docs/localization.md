@@ -103,6 +103,21 @@ shows it; a function label shows its template:
 | `columnsReset` | `Reset layout` | `TMDataGrid.ColumnsPanel` and `TMDataGrid.Menu.ResetLayout`. |
 | `columnsResetHint` | `Resets column visibility, order, widths, pinning and grouping` | Tooltip of the reset button in `TMDataGrid.ColumnsPanel`. |
 | `rowNumberColumnLabel` | `Row number` | `meta.label` of the generated row-number lane. |
+| `views` | `Views` | Heading over a list of one kind of saved view, and the tooltip and `aria-label` of `TMDataGrid.ViewsMenu`. |
+| `viewsPresets` | `Presets` | Heading over the developer's presets when the user's own views are listed too. |
+| `viewsMine` | `My views` | Heading over the user's own views when presets are listed too. |
+| `viewsNone` | `No saved views` | Shown in place of the views list when there is no view. |
+| `viewsNoneSelected` | `No view selected` | Placeholder of the view picker in `TMDataGrid.ColumnsPanel`. |
+| `viewsPresetLocked` | `Preset, can't be changed` | `aria-label` of the lock on a preset. |
+| `viewsRestore` | `` `Restore “${name}”` `` | Applies the selected view again. |
+| `viewsOverwrite` | `` `Overwrite “${name}”` `` | Saves the current layout into the selected user view. |
+| `viewsSaveAs` | `Save as new view` | The menu item that opens the name field, and the panel's save button. |
+| `viewsName` | `View name` | Placeholder and `aria-label` of the name field. |
+| `viewsSave` | `Save` | The save button beside the name field in a menu. |
+| `viewsDelete` | `` `Delete “${name}”` `` | Deletes the selected user view. |
+| `viewsNameEmpty` | `Enter a name` | Under the name field, when a save is tried with no name. |
+| `viewsNameDuplicate` | `A view with that name already exists` | Under the name field, while the name is taken. |
+| `viewsSaveFailed` | `The view could not be saved` | Under the name field, when the store rejects the save. |
 | `noRows` | `No rows to show` | Body, when the view is empty, no column filter is active (`isFilterActive`) and the quick search is blank. |
 | `filterColumn` | `Column` | Label of the column field in `TMDataGrid.FilterPanel`. |
 | `filterOperator` | `Operator` | Label of the operator field in `TMDataGrid.FilterPanel`. |

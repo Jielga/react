@@ -22,6 +22,9 @@ const grid = useTMDataGrid({ data, columns, persist });
 Both keys are optional - pass only `settingsKey` to remember the layout but
 never the filters.
 
+To let the user keep several named layouts and switch between them, see
+[Saved views](/docs/saved-views).
+
 ```demo
 file: data/Persistence.tsx
 hint: Sort, filter and hide a column, then reload the page. It all comes back; the page index does not.

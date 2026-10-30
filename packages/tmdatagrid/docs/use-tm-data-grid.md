@@ -78,6 +78,7 @@ with TanStack's own default.
 | `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see [Export](/docs/export). |
 | `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see [Editing](/docs/editing). |
 | `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see [persist](#persist). |
+| `views` | `TMDataGridViewsOptions` | – | Saved views: named layouts from presets in code and from the user. Defined by the grid, see [Saved views](/docs/saved-views). |
 | `labels` | `TMDataGridLabelsOverride` | English | Overrides for the grid's strings and `aria-label`s. Defined by the grid, see [Localization](#localization). |
 
 ### Default initial state
@@ -279,6 +280,7 @@ identifier if several users can share a browser profile.
 | `renderDetailsEstHeight` | `number` | The estimate, resolved to its default when the option was not set. |
 | `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. See [persist](#persist). |
+| `views` | `TMDataGridViewsApi` | The saved views and their verbs. `enabled` is `false` until the `views` option is set. See [Saved views](/docs/saved-views#your-own-controls). |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view; see below. |
 
 ### scrollToRow

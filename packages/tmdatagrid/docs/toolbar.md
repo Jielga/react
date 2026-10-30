@@ -53,6 +53,7 @@ It defaults to `false`.
 | `TMDataGrid.Search` | The [quick search](/docs/quick-search) input |
 | `TMDataGrid.FilterButton` | Opens the [filter panel](/docs/filtering), with the active count |
 | `TMDataGrid.Menu` | The burger: a [menu](/docs/menu) you fill; `TMDataGrid.Menu.Columns` is the column chooser as items |
+| `TMDataGrid.ViewsMenu` | The [saved views](/docs/saved-views) behind a button of their own |
 | `TMDataGrid.SummaryCount` | Visible rows out of total, or the count alone where there is no total to compare it against |
 | `TMDataGrid.LoadingIndicator` | A spinner while `meta.loading` |
 | `TMDataGrid.Spacer` | Pushes what follows to the right |

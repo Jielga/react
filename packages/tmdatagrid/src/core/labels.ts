@@ -39,6 +39,31 @@ export type TMDataGridLabels = {
   columnsResetHint: string;
   /** Menu/panel name of the generated row-number gutter. */
   rowNumberColumnLabel: string;
+
+  // Saved views
+  /** "Views" - the views heading, and the tooltip of `TMDataGrid.ViewsMenu`. */
+  views: string;
+  /** Heading over the developer's presets, when user views are listed too. */
+  viewsPresets: string;
+  /** Heading over the user's own views, when presets are listed too. */
+  viewsMine: string;
+  /** Shown in place of the list when there is no view at all. */
+  viewsNone: string;
+  /** The panel's view picker with nothing selected. */
+  viewsNoneSelected: string;
+  /** `aria-label` of the lock on a preset. */
+  viewsPresetLocked: string;
+  viewsRestore: (name: string) => string;
+  viewsOverwrite: (name: string) => string;
+  viewsSaveAs: string;
+  /** Label of the name field. */
+  viewsName: string;
+  viewsSave: string;
+  viewsDelete: (name: string) => string;
+  viewsNameEmpty: string;
+  viewsNameDuplicate: string;
+  /** The store rejected the write. */
+  viewsSaveFailed: string;
   /**
    * The truly-empty message - no data and no filters. Filtered-empty says
    * {@link noResults} instead; only one of the two is the user's own doing.
@@ -218,6 +243,22 @@ export const TMDATAGRID_LABELS_EN: TMDataGridLabels = {
     "Resets column visibility, order, widths, pinning and grouping",
   rowNumberColumnLabel: "Row number",
   noRows: "No rows to show",
+
+  views: "Views",
+  viewsPresets: "Presets",
+  viewsMine: "My views",
+  viewsNone: "No saved views",
+  viewsNoneSelected: "No view selected",
+  viewsPresetLocked: "Preset, can't be changed",
+  viewsRestore: (name) => `Restore “${name}”`,
+  viewsOverwrite: (name) => `Overwrite “${name}”`,
+  viewsSaveAs: "Save as new view",
+  viewsName: "View name",
+  viewsSave: "Save",
+  viewsDelete: (name) => `Delete “${name}”`,
+  viewsNameEmpty: "Enter a name",
+  viewsNameDuplicate: "A view with that name already exists",
+  viewsSaveFailed: "The view could not be saved",
 
   filterColumn: "Column",
   filterOperator: "Operator",

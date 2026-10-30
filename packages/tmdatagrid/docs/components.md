@@ -152,7 +152,8 @@ Its children are the dropdown. See [Grid menu](/docs/menu).
 | Mantine `MenuProps` | | `position="bottom-end"`, `shadow="md"`, `width={260}`, `withinPortal` | Passed to the `Menu`. |
 
 `TMDataGrid.Menu.Columns`, `.ColumnToggles`, `.ShowHideAll` and `.ResetLayout` are the column chooser as menu items, for this menu or any Mantine `Menu` inside the grid.
-`Columns` takes `searchable` (default `"auto"`, a search box from six columns), `ColumnToggles` takes `search`; the other two take no props.
+`Columns` takes `searchable` (default `"auto"`, a search box from six columns) and `views` (default `true`, the saved views under Reset layout), `ColumnToggles` takes `search`; the other two take no props.
+`TMDataGrid.Menu.Views`, and `TMDataGrid.ViewsMenu`, the saved views behind a toolbar button of their own, are documented on [Saved views](/docs/saved-views#tmdatagridviewsmenu).
 
 ## TMDataGrid.ColumnsPanel
 
@@ -162,6 +163,7 @@ For a Popover, a Drawer or an inline layout; `TMDataGrid.Menu.Columns` is the sa
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `searchable` | `boolean \| "auto"` | `"auto"` | The search box over the list. `"auto"` shows it from six columns, `true` always, `false` never. |
+| `views` | `boolean` | `true` | Adds the [saved views](/docs/saved-views) under the footer when the grid has them: a picker, Restore, Overwrite, Delete and the name field. |
 | Mantine `BoxProps` | | – | Style props (`w`, `p`, …), `className` and `style`, set on the panel block. |
 
 ## TMDataGrid.LoadingIndicator
@@ -301,6 +303,7 @@ Every control takes the same argument object, `TMDataGridFilterControlArgs`:
 | `TMDataGridSearchProps` | Type | – | – | The props of `TMDataGrid.Search`. |
 | `TMDataGrid.FilterButton` · `.FilterPanel` | Components | – | – | The filter UI. Props on [Filtering](/docs/filtering). |
 | `TMDataGrid.Menu` · `.ColumnsPanel` | Components | – | – | The burger menu, and the column chooser as plain controls. |
+| `TMDataGrid.ViewsMenu` · `TMDataGrid.Menu.Views` · `useTMDataGridViews` | Components, hook | – | – | The saved views behind a button, as menu items, and as state. See [Saved views](/docs/saved-views). |
 | `TMDataGridColumnsPanelProps` · `TMDataGridColumnSearchable` | Types | – | – | The props of `TMDataGrid.ColumnsPanel`, and the type of the `searchable` prop it shares with `TMDataGrid.Menu.Columns`. |
 | `TMDataGrid.LoadingIndicator` · `.SummaryCount` | Components | – | – | Fetch spinner, and the row count. |
 | `TMDataGrid.DraftActions` | Component | – | – | Save and Discard. Also `TMDataGridDraftActions`. |

@@ -1,0 +1,40 @@
+.iconSpacer {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+
+.saveForm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-xs);
+}
+
+.saveForm > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.menuSaveForm {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+}
+
+.panelViews {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.panelViewsRow {
+  display: flex;
+  /* The picker carries its label above it; the buttons line up with its input. */
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs);
+}
+
+.panelViewsRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}

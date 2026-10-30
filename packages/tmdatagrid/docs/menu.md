@@ -46,15 +46,17 @@ const { canHideAny } = getGridCapabilities(table, features);
 ## The column chooser as menu items
 
 `TMDataGrid.Menu.Columns` is the whole chooser: one checkbox item per column that can be hidden, a search box once there are six of them, **Show/Hide All** and **Reset layout**.
+When the grid has [saved views](/docs/saved-views), they follow under Reset layout; `views={false}` leaves them out.
 It renders nothing when no column can be hidden.
 The pieces it is made of are exported for menus that want only some of them.
 
 | Component | Renders |
 | --- | --- |
-| `TMDataGrid.Menu.Columns` | `Menu.Search`, the toggles, a divider, show/hide all and reset layout. By default the search box shows from six columns; `searchable` shows it always and `searchable={false}` never. |
+| `TMDataGrid.Menu.Columns` | `Menu.Search`, the toggles, a divider, show/hide all and reset layout, then the saved views when the grid has them. By default the search box shows from six columns; `searchable` shows it always and `searchable={false}` never. |
 | `TMDataGrid.Menu.ColumnToggles` | One item per hideable column, with a checkbox that shows both states. `search` narrows the list to the labels containing it. |
 | `TMDataGrid.Menu.ShowHideAll` | One checkbox item over the same list. An indeterminate box marks a partial state, and a click then shows all. |
 | `TMDataGrid.Menu.ResetLayout` | One item calling `resetSettings()`: visibility, order, pinning, widths and grouping. |
+| `TMDataGrid.Menu.Views` | The saved views and their actions. See [Saved views](/docs/saved-views#tmdatagridmenuviews). |
 
 Each of them needs a Mantine `Menu` around it and reads the grid from context, so they work in any Mantine menu rendered inside `TMDataGrid`, not only in the burger:
 
@@ -133,7 +135,7 @@ See [Testing](/docs/testing).
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
 | `TMDataGrid.Menu` | Component | Mantine `MenuProps` without `children`, plus `children`, `icon`, `label` | `position="bottom-end"`, `shadow="md"`, `width={260}`, `withinPortal` | The burger and its dropdown. `icon` replaces the burger; `label` is the tooltip and `aria-label`, default `labels.menuButton`. |
-| `TMDataGrid.Menu.Columns` | Component | `searchable?: boolean \| "auto"` | `"auto"` | The whole column chooser as menu items. `"auto"` shows the search box from six columns. Renders nothing when no column can be hidden. |
+| `TMDataGrid.Menu.Columns` | Component | `searchable?: boolean \| "auto"`, `views?: boolean` | `"auto"`, `true` | The whole column chooser as menu items. `"auto"` shows the search box from six columns. `views` lists the [saved views](/docs/saved-views) under Reset layout. Renders nothing when no column can be hidden. |
 | `TMDataGrid.Menu.ColumnToggles` | Component | `search?: string` | – | One checkbox item per hideable column. |
 | `TMDataGrid.Menu.ShowHideAll` | Component | – | – | One checkbox item over every hideable column. |
 | `TMDataGrid.Menu.ResetLayout` | Component | – | – | Calls `resetSettings()`. |

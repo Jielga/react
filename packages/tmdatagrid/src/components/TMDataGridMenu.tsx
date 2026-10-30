@@ -25,6 +25,7 @@ import type {
 import { useTMDataGridExport } from "../useTMDataGridExport";
 import { useHideableColumns } from "./useHideableColumns";
 import { BurgerIcon, DownloadIcon, RestoreIcon } from "./icons";
+import { TMDataGridMenuViews } from "./TMDataGridViews";
 
 /**
  * The column toggles are `Menu.Item`s with a `Checkbox.Indicator` in front,
@@ -55,6 +56,12 @@ export type TMDataGridMenuColumnsProps = {
    * `Menu.Sub`.
    */
   searchable?: TMDataGridColumnSearchable;
+  /**
+   * Lists the saved views under Reset layout, when the grid's `views` option
+   * is set. Default `true`; `false` for a grid that shows them in a
+   * `TMDataGrid.ViewsMenu` or a menu of your own instead.
+   */
+  views?: boolean;
 };
 
 // Documented on the `TMDataGridMenu` export below.
@@ -98,8 +105,8 @@ function TMDataGridMenuRoot({
 
 /**
  * The whole column chooser as menu items: a search box, one checkbox item per
- * hideable column, show/hide all, and Reset layout. Renders nothing when no
- * column can be hidden.
+ * hideable column, show/hide all, Reset layout, and the saved views when the
+ * grid has them. Renders nothing when no column can be hidden.
  *
  * `searchable` is only for a block at the top level of a dropdown.
  * `Menu.Search` registers on the root menu context (`hasSearch`), which
@@ -109,8 +116,9 @@ function TMDataGridMenuRoot({
  */
 export function TMDataGridMenuColumns({
   searchable = "auto",
+  views = true,
 }: TMDataGridMenuColumnsProps) {
-  const { labels, controlSize } = useTMDataGridContext();
+  const { labels, controlSize, views: savedViews } = useTMDataGridContext();
   const { columns } = useHideableColumns();
   const [search, setSearch] = useState("");
 
@@ -151,6 +159,12 @@ export function TMDataGridMenuColumns({
       <Menu.Divider />
       <TMDataGridMenuShowHideAll />
       <TMDataGridMenuResetLayout />
+      {views && savedViews.enabled && (
+        <>
+          <Menu.Divider />
+          <TMDataGridMenuViews />
+        </>
+      )}
     </>
   );
 }
@@ -352,6 +366,7 @@ export const TMDataGridMenu = Object.assign(TMDataGridMenuRoot, {
   ColumnToggles: TMDataGridMenuColumnToggles,
   ShowHideAll: TMDataGridMenuShowHideAll,
   ResetLayout: TMDataGridMenuResetLayout,
+  Views: TMDataGridMenuViews,
   Export: TMDataGridMenuExport,
   ExportSelected: TMDataGridMenuExportSelected,
 });

@@ -6,15 +6,15 @@ description: >
   groupedColumnMode, autoResetExpanded, autoResetPageIndex,
   defaultColumn.minSize), the default initialState, the meta object (loading,
   noResultsLabel, rowHeight, totalRowCount), the grid's own options (persist,
-  labels, editing, filters, exportOptions, enableColumnOrdering,
+  views, labels, editing, filters, exportOptions, enableColumnOrdering,
   enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
   showSelectedBackground, cellSelection, renderDetails, overscan,
   quickSearchMode), persist with dataKey/settingsKey slices, storageMode and
-  urlKey and createTMDataGridUrlState deep links, the returned api (table, ui,
-  edit, features, labels, resetSettings, scrollToRow), ui actions, and reading
-  grid state with useSelector over table.store, since table.getState() does not
-  exist in v9. Load when configuring the hook, looking up an option's default,
-  persisting layout or filters, or reacting to grid state from a parent.
+  urlKey and createTMDataGridUrlState deep links, saved views, the returned
+  api, ui actions, and reading grid state with useSelector over table.store,
+  since table.getState() does not exist in v9. Load when configuring the hook,
+  looking up an option's default, persisting layout or filters, saving named
+  layouts, or reacting to grid state from a parent.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -23,9 +23,11 @@ sources:
   - 'Jielga/react:packages/tmdatagrid/docs/use-tm-data-grid.md'
   - 'Jielga/react:packages/tmdatagrid/docs/persistence.md'
   - 'Jielga/react:packages/tmdatagrid/docs/typed-deep-links.md'
+  - 'Jielga/react:packages/tmdatagrid/docs/saved-views.md'
   - 'Jielga/react:packages/tmdatagrid/src/useTMDataGrid.tsx'
   - 'Jielga/react:packages/tmdatagrid/src/core/persistence.ts'
   - 'Jielga/react:packages/tmdatagrid/src/core/urlState.ts'
+  - 'Jielga/react:packages/tmdatagrid/src/core/views.ts'
 ---
 
 # TMDataGrid - useTMDataGrid
@@ -322,6 +324,39 @@ const href = `/employees?${employeesUrl.searchParams({
 Every rule, every member and the TanStack Router setup are in
 [references/typed-links.md](references/typed-links.md).
 
+### Saved views
+
+The `views` option lets the user keep named column layouts and switch between
+them. A view holds settings slices only - `columnVisibility`, `columnSizing`,
+`columnOrder`, `columnPinning`, `grouping` - never sorting, filters or paging.
+
+```tsx
+const viewStore = createLocalStorageViewStore(`employees.views.${userId}`); // module scope or useMemo
+
+const grid = useTMDataGrid({
+  data,
+  columns,
+  persist: { settingsKey: "employees.settings" },
+  views: {
+    store: viewStore,
+    presets: [{ id: "contact", name: "Contact", state: { columnVisibility: { salary: false } } }],
+    defaultView: "contact",
+  },
+});
+```
+
+- Presets (`views.presets`) are read-only; the user's own views are saved,
+  overwritten and deleted through the store. `allowUserViews: false` leaves
+  only picking between presets.
+- `views.slices` narrows what every view saves and applies. A slice a view
+  does not hold is left as it is when the view is applied.
+- The views show in `TMDataGrid.Menu.Columns` and `TMDataGrid.ColumnsPanel`
+  (both take `views={false}`), behind `TMDataGrid.ViewsMenu`, as
+  `TMDataGrid.Menu.Views` items, and as `grid.views` / `useTMDataGridViews()`.
+
+Every option, member, export and rule is in
+[references/saved-views.md](references/saved-views.md).
+
 ## Return value
 
 | Field | Type | Description |
@@ -337,6 +372,7 @@ Every rule, every member and the TanStack Router setup are in
 | `renderDetailsEstHeight` | `number` | The estimate, resolved to its default when the option was not set. |
 | `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. |
+| `views` | `TMDataGridViewsApi` | The saved views and `select`, `restore`, `saveAs`, `overwrite`, `remove`. `enabled` is `false` without the `views` option. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view through the virtualizer. `false` when the row is not in the current view. |
 
 `table` is `TMDataGridTable<TData>`, TanStack's core `Table` type. It has no
@@ -434,6 +470,12 @@ const sorting = useSelector(grid.table.store, (state) => state.sorting);
 The object is a dependency of the write subscription. A fresh literal on every
 render tears down and re-establishes the subscription each time. Define it at
 module scope, or `useMemo` it if the keys depend on props.
+
+### A views store built during render
+
+`views.store` is a dependency of the load. `createLocalStorageViewStore(key)`
+called inline makes a new store every render and reloads the views each time.
+Create it at module scope, or `useMemo` it on the key.
 
 ### Unnamespaced storage keys
 

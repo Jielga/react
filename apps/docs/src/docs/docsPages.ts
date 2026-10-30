@@ -27,6 +27,7 @@ import rowInteractionDoc from "@jielga/tmdatagrid/docs/row-interaction.md?raw";
 import rowPinningDoc from "@jielga/tmdatagrid/docs/row-pinning.md?raw";
 import rowSelectionDoc from "@jielga/tmdatagrid/docs/row-selection.md?raw";
 import rowStylingDoc from "@jielga/tmdatagrid/docs/row-styling.md?raw";
+import savedViewsDoc from "@jielga/tmdatagrid/docs/saved-views.md?raw";
 import scrollingDoc from "@jielga/tmdatagrid/docs/scrolling.md?raw";
 import serverQueryDoc from "@jielga/tmdatagrid/docs/server-query.md?raw";
 import serverSideDoc from "@jielga/tmdatagrid/docs/server-side.md?raw";
@@ -292,6 +293,13 @@ export const DOCS_PAGES: DocsPageEntry[] = [
     label: "Persistence",
     description: "Column layout and filters kept across reloads",
     source: persistenceDoc,
+  },
+  {
+    id: "saved-views",
+    section: "Whole grid",
+    label: "Saved views",
+    description: "Named column layouts, from presets or saved by the user",
+    source: savedViewsDoc,
   },
   {
     id: "server-side",

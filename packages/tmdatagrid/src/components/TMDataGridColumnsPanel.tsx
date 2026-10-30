@@ -18,6 +18,7 @@ import {
 } from "../core/columnUtils";
 import { useHideableColumns } from "./useHideableColumns";
 import { SearchIcon } from "./icons";
+import { TMDataGridColumnsPanelViews } from "./TMDataGridViews";
 
 /**
  * The "Manage columns" surface as plain controls, for a host that is not a
@@ -31,11 +32,18 @@ export type TMDataGridColumnsPanelProps = BoxProps & {
    * columns, `true` always, `false` never.
    */
   searchable?: TMDataGridColumnSearchable;
+  /**
+   * Adds the saved views under the footer, when the grid's `views` option is
+   * set: a picker, Restore, Overwrite, Delete and Save as new view. Default
+   * `true`.
+   */
+  views?: boolean;
 };
 
 export function TMDataGridColumnsPanel({
   className,
   searchable = "auto",
+  views = true,
   ...others
 }: TMDataGridColumnsPanelProps = {}) {
   const { labels, controlSize, resetSettings } = useTMDataGridContext();
@@ -118,6 +126,7 @@ export function TMDataGridColumnsPanel({
           </Button>
         </Tooltip>
       </div>
+      {views && <TMDataGridColumnsPanelViews />}
     </Box>
   );
 }
