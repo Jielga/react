@@ -10,8 +10,8 @@ description: >
   enableHiding and the columns panel, pinning and why a pinned column becomes
   fixed-width, ordering with enableColumnOrdering, meta.enableOrdering,
   moveColumn, moveColumnByStep, getStepTargetColumn and the pinned regions,
-  resetSettings, sorting with multi-sort through isMultiSortEvent and a custom
-  sortFn, and the generated lanes. Load when adding or changing columns,
+  resetSettings, sorting with isMultiSortEvent, sortFn and a frozen sortMode,
+  and the generated lanes. Load when adding or changing columns,
   controlling widths, hiding, pinning, reordering or sorting them.
 metadata:
   type: core
@@ -24,6 +24,7 @@ sources:
   - 'Jielga/react:packages/tmdatagrid/src/core/columnUtils.ts'
   - 'Jielga/react:packages/tmdatagrid/src/core/columnOrdering.ts'
   - 'Jielga/react:packages/tmdatagrid/src/core/autosize.ts'
+  - 'Jielga/react:packages/tmdatagrid/src/core/frozenSort.ts'
 ---
 
 # TMDataGrid - Columns
@@ -264,12 +265,11 @@ const grid = useTMDataGrid({
 });
 ```
 
-`sortFn` on a column takes any registered name or a
-`(rowA, rowB, columnId) => number` function. `sortFn` is v9's name for v8's
-`sortingFn`. Sorting writes
-TanStack's `sorting` state, an array of `{ id, desc }` in priority order. It is
-a **data** slice, persisted under `dataKey`, while the column layout below is a
-settings slice under `settingsKey`.
+`sortFn` on a column takes any registered name or a `(rowA, rowB, columnId) => number` function.
+`sortFn` is v9's name for v8's `sortingFn`.
+Sorting writes TanStack's `sorting` state, an array of `{ id, desc }` in priority order.
+It is a **data** slice, persisted under `dataKey`, while the column layout below is a settings slice under `settingsKey`.
+To hold the order through edits until the user sorts again (`sortMode: "frozen"`), see [references/frozen-sort.md](references/frozen-sort.md).
 
 ## Column-level feature options
 
@@ -489,6 +489,7 @@ Source: `packages/tmdatagrid/docs/columns.md` (Columns derived from the other ro
 
 ## References
 
+- [Frozen sort](references/frozen-sort.md) - `sortMode: "frozen"`, `sortAgain`, `sortStale` and the `sort-again` button
 - [Columns API](references/columns-api.md) - every column option, column meta
   field, export and type belonging to defining, sizing, hiding, pinning,
   ordering and sorting columns.

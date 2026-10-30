@@ -164,6 +164,7 @@ so a part that repeats is addressed by adding the coordinate.
 | --- | --- |
 | `header` | A column header. A click sorts a sortable column; `aria-sort` holds the result |
 | `header-sort`, `header-menu`, `header-filter` | Its three action buttons. `header-sort` and `header-menu` are hidden until the header is hovered or holds focus: sort through `header`, and hover `header` before clicking `header-menu`. `header-filter` is absent under `filters.inHeader`, where the control below is the indicator |
+| `sort-again` | Under `sortMode: "frozen"`, the ↻ button on a sorted header; present only while the held order differs from a fresh sort |
 | `header-resize` | The resize handle at the column's edge; present only when the column can resize. Drag it to resize, double-click it to fit the column to its content |
 | `header-filter-cell`, `header-filter-operator` | One column's header filter control and its operator button |
 | `filter-row` | One row of the filter panel |

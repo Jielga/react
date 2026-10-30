@@ -1004,6 +1004,11 @@ export type TMDataGridEditEngine = TMDataGridEditApi & {
    * calls per row.
    */
   isRowDeleted: (rowId: string) => boolean;
+  /**
+   * Settles once every commit running now has, or `null` when none is - so a
+   * caller can act at once in the common case. Read by `sortAgain`.
+   */
+  commitsSettled: () => Promise<void> | null;
 };
 
 export function createEditEngine(
@@ -2625,6 +2630,14 @@ export function createEditEngine(
     },
     forgetMissingRows,
     isRowDeleted: (rowId) => working.deletedRowIds.has(rowId),
+    commitsSettled: () => {
+      const running = [...forms.values()]
+        .map((entry) => entry.pendingCommit)
+        .filter((commit) => commit !== null);
+      return running.length === 0
+        ? null
+        : Promise.allSettled(running).then(() => undefined);
+    },
     getForm: (rowId) => forms.get(rowId)?.form,
     getRowValues,
     getRows,

@@ -22,7 +22,7 @@ The grid defines these options itself: `persist`, `labels`, `editing`,
 `showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
 `cellSelection`, `onFocusedCellChange`, `renderDetails`,
 `renderDetailsEstHeight`, `detailsColumnPosition`, `overscan`,
-`quickSearchMode` and `enableMatchHighlighting`. The table below marks them
+`quickSearchMode`, `sortMode` and `enableMatchHighlighting`. The table below marks them
 "Defined by the grid"; every other row is a TanStack option, listed where the
 grid changes its default or where it decides something visible. A TanStack
 default the grid changes reads, for example, `"remove"` (grid default;
@@ -62,6 +62,7 @@ with TanStack's own default.
 | `enableRowNumbers` | `boolean` | `false` | The row-number gutter, outermost left. Defined by the grid, see [Row pinning and numbering](/docs/row-pinning). |
 | `enableRowPinning` | `boolean \| (row) => boolean` | `false` (grid default; TanStack: `true`) | Rows can be pinned to sticky edge blocks with `row.pin()`. See [Row pinning and numbering](/docs/row-pinning). |
 | `quickSearchMode` | `"fuzzy" \| "contains"` | `"fuzzy"` | How `Search` matches. Fuzzy forgives typos and orders unsorted results by match quality; `"contains"` is plain substring matching. Defined by the grid, see [Quick search](/docs/quick-search). |
+| `sortMode` | `"live" \| "frozen"` | `"live"` | Controls when the order follows the values. `"frozen"` sorts once, when the sort is applied, and holds that order through edits and refetches until the user sorts again. No effect under `manualSorting`. Defined by the grid, see [Sorting](/docs/sorting#hold-the-order-while-editing). |
 | `enableMatchHighlighting` | `boolean` | `false` | Cells mark the matched text while a contains-family filter or the quick search is active. Defined by the grid, see [Quick search](/docs/quick-search#match-highlighting). |
 | `renderDetails` | `({ row, table }) => ReactNode` | – | Panel rendered under an expanded row, spanning every column. Setting it turns row details on and adds the pinned chevron lane. Defined by the grid, see [Row details](/docs/row-details). |
 | `renderDetailsEstHeight` | `number` | `160` | What the virtualizer assumes for a panel it has not measured yet. Panels are measured once mounted, so an approximation is enough. Defined by the grid. |

@@ -72,6 +72,7 @@ export {
   fuzzyGlobalFilterFn,
   type TMDataGridQuickSearchMode,
 } from "./core/quickSearch";
+export type { TMDataGridSortMode } from "./core/frozenSort";
 export {
   optionsToComboboxData,
   resolveColumnOptions,

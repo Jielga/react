@@ -45,6 +45,7 @@ import {
   PinLeftIcon,
   PinOffIcon,
   PinRightIcon,
+  SortAgainIcon,
   UngroupIcon,
 } from "./icons";
 import { GROUP_COLUMN_ID } from "./TMDataGridGroupColumn";
@@ -126,6 +127,9 @@ export function TMDataGridHeaderCell({
   const align = getColumnAlign(column);
   const sortDirection = sorting.find((sort) => sort.id === column.id)?.desc;
   const isSorted = sortDirection !== undefined;
+  // Read off the api, which every render of the grid rebuilds - not computed
+  // here, where the React Compiler would cache it on `table`.
+  const isSortStale = isSorted && api.sortStale;
   // 1-based position in a multi-sort, shown only while more than one column
   // sorts - under a single sort the arrow already says everything.
   const sortIndex =
@@ -297,8 +301,19 @@ export function TMDataGridHeaderCell({
       >
         {labels.sortDesc}
       </Menu.Item>,
-      <Menu.Divider key="sort-divider" />,
     );
+    if (features.frozenSort && isSorted) {
+      menuItems.push(
+        <Menu.Item
+          key="sort-again"
+          leftSection={<SortAgainIcon size={16} stroke={1.6} />}
+          onClick={api.sortAgain}
+        >
+          {labels.sortAgain}
+        </Menu.Item>,
+      );
+    }
+    menuItems.push(<Menu.Divider key="sort-divider" />);
   }
   // Not under header filters: the item's only job is to reveal a control that
   // is already on screen, one row below this menu.
@@ -664,6 +679,30 @@ export function TMDataGridHeaderCell({
                 <ArrowUpIcon size={14} stroke={1.6} />
               )}
             </ActionIcon>
+          )}
+
+          {/* Under `sortMode: "frozen"`, once an edit or a refetch has moved
+              a sorted value: the order on screen is no longer the sorted
+              one. Always shown while it holds, like the filter indicator. */}
+          {isSortStale && (
+            <Tooltip label={labels.sortStale} openDelay={300} withinPortal>
+              <ActionIcon
+                className={classes.headerAction}
+                data-pinned-visible="true"
+                variant="subtle"
+                color="gray"
+                size="xs"
+                aria-label={labels.sortAgain}
+                data-dg-part="sort-again"
+                data-column-id={column.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  api.sortAgain();
+                }}
+              >
+                <SortAgainIcon size={14} stroke={1.6} />
+              </ActionIcon>
+            </Tooltip>
           )}
 
           {/* Shift+click adds a column to the sort (TanStack's own

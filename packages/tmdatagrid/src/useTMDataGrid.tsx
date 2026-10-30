@@ -55,6 +55,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -98,6 +99,12 @@ import {
   fuzzyGlobalFilterFn,
   type TMDataGridQuickSearchMode,
 } from "./core/quickSearch";
+import {
+  isFrozenSortStale,
+  requestSortAgain,
+  type TMDataGridSortMode,
+  withFrozenSort,
+} from "./core/frozenSort";
 import {
   mergeLabels,
   type TMDataGridLabels,
@@ -329,8 +336,10 @@ export const tmDataGridFeatures = tableFeatures({
   filteredRowModel: createFilteredRowModel(),
   groupedRowModel: createGroupedRowModel(),
   // The sorted model plus the fuzzy quick search's rank ordering - see
-  // core/quickSearch.ts for when the ordering applies.
-  sortedRowModel: createFuzzyRankedSortedRowModel(),
+  // core/quickSearch.ts for when the ordering applies - and the held order of
+  // `sortMode: "frozen"`, see core/frozenSort.ts. The two never meet: the
+  // ranking applies only without a sort, the held order only with one.
+  sortedRowModel: withFrozenSort(createFuzzyRankedSortedRowModel()),
   expandedRowModel: createExpandedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
   facetedRowModel: createFacetedRowModel(),
@@ -667,6 +676,21 @@ export type TMDataGridApi<TData extends RowData> = {
    */
   scrollToRow: (args: TMDataGridScrollToRowArgs) => boolean;
   /**
+   * Under `sortMode: "frozen"`, whether the held order differs from a fresh
+   * sort of the same rows - an edit or a refetch has changed a sorted value
+   * since the sort was applied. Always `false` under `"live"`.
+   */
+  sortStale: boolean;
+  /**
+   * Under `sortMode: "frozen"`, sorts again on the current values, with the
+   * same sort. What the header's sort-again button and the column menu's
+   * Sort again item call. Does nothing under `"live"`, where the order is
+   * always current.
+   *
+   * Identity is stable, so it is safe in a dependency array.
+   */
+  sortAgain: () => void;
+  /**
    * @internal Wiring for `TMDataGrid.Table`, which holds the virtualizer and
    * fills this in. Not part of the public API.
    */
@@ -963,6 +987,18 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    * An explicit `globalFilterFn` overrides both.
    */
   quickSearchMode?: TMDataGridQuickSearchMode;
+  /**
+   * When the sorted order follows the values. `"live"` - the default -
+   * re-sorts on every change, so an edited row moves to its new place as
+   * soon as the edit lands. `"frozen"` sorts once, when the sort is applied,
+   * and holds that order through edits, refetches and filter changes, until
+   * the user sorts again: a header click, a menu item, `setSorting`, a
+   * grouping change, or `sortAgain()`.
+   *
+   * Rows are held by id, so give the grid a stable `getRowId`. No effect
+   * under `manualSorting`, where the server owns the order.
+   */
+  sortMode?: TMDataGridSortMode;
   /**
    * Highlights the matched text in cells while a contains-family column
    * filter or the quick search is active. Default-rendered cells only - a
@@ -2181,6 +2217,28 @@ export function useTMDataGrid<TData extends RowData>({
     [],
   );
 
+  // The held order is not state TanStack knows about, so taking it again
+  // has to re-render the grid itself: bump the epoch the row model compares
+  // against, then render, and the next read of the sorted rows re-sorts.
+  //
+  // After any commit that is running: pressing the header's button blurs an
+  // open cell editor, which starts its commit, and a re-sort taken before
+  // that edit lands would be out of date again the moment it did.
+  const [, renderSortAgain] = useReducer((count: number) => count + 1, 0);
+  const sortAgain = useCallback(() => {
+    const run = () => {
+      requestSortAgain(tableRef.current);
+      renderSortAgain();
+    };
+    const settled = engine.commitsSettled();
+    if (settled === null) run();
+    else void settled.then(run);
+  }, [engine]);
+  // Derived on every render rather than subscribed to: everything that can
+  // make the held order stale - `data`, the draft store, the table state,
+  // `sortAgain` - already re-renders this hook.
+  const sortStale = features.frozenSort && isFrozenSortStale(table);
+
   return {
     table,
     ui,
@@ -2194,6 +2252,8 @@ export function useTMDataGrid<TData extends RowData>({
     overscan,
     resetSettings,
     scrollToRow,
+    sortStale,
+    sortAgain,
     scrollerRef,
   };
 }
