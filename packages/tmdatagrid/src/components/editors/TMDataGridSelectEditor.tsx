@@ -15,8 +15,8 @@ import {
 export type TMDataGridSelectEditorProps = TMDataGridEditorArgs & {
   /**
    * Props for the Mantine `Select`. The grid keeps `data`, the value,
-   * `onChange`, `error`, `size`, the accessible name and
-   * `comboboxProps.withinPortal`; `onBlur` runs after the grid's own.
+   * `onChange`, `error`, `size` and the accessible name; `onBlur` runs after
+   * the grid's own.
    */
   inputProps?: Omit<
     SelectProps,
@@ -27,13 +27,8 @@ export type TMDataGridSelectEditorProps = TMDataGridEditorArgs & {
     | "error"
     | "size"
     | "aria-label"
-    | "comboboxProps"
-  > & {
-    comboboxProps?: Omit<
-      NonNullable<SelectProps["comboboxProps"]>,
-      "withinPortal"
-    >;
-  } & EditorDataAttributes;
+  > &
+    EditorDataAttributes;
 };
 
 /**
@@ -58,10 +53,12 @@ export function TMDataGridSelectEditor({
       w="100%"
       searchable
       {...inputProps}
+      // The dropdown is Mantine's default, portalled: drawn inside the cell,
+      // the grid's scroll area clips it in a short grid or a low row. A pick
+      // is still not a click-away, because Mantine's options keep the focus
+      // in the input, and the host's handlers see the dropdown's events
+      // through the React tree.
       size={size}
-      // Inside the cell, so picking an option is not a click-away - the same
-      // reason the filter panel keeps its dropdowns unportalled.
-      comboboxProps={{ ...inputProps?.comboboxProps, withinPortal: false }}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
       data={optionsToComboboxData(
