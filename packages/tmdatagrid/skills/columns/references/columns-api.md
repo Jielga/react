@@ -72,4 +72,4 @@ Standard TanStack column options. Each also removes the corresponding interface.
 | `isGeneratedColumn` | Export | `(columnId) => boolean` | – | Whether the grid generated the column - the four control lanes plus the tree column. |
 | `SELECT_COLUMN_ID` · `GROUP_COLUMN_ID` · `DETAILS_COLUMN_ID` · `EDIT_COLUMN_ID` · `ROW_NUMBER_COLUMN_ID` | Exports | ids | – | The generated lanes. |
 | `TMDataGrid.Menu.Columns` · `TMDataGrid.ColumnsPanel` | Components | `searchable` · Mantine `BoxProps` | – | The column chooser, as menu items and as plain controls. Style props set on the panel. |
-| `TMDataGridColumnSearchable` | Type | `boolean \| "auto"` | `"auto"` | The `searchable` prop of both: a search box from six hideable columns under `"auto"`, `true` always, `false` never. |
+| `TMDataGridColumnSearchable` | Type | `boolean \| "auto" \| number` | `"auto"` | The `searchable` prop of both: a search box from six hideable columns under `"auto"`, from that many under a number, `true` always, `false` never. |

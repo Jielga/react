@@ -170,8 +170,11 @@ export const DEFAULT_COLUMN_MIN_SIZE = 80;
 /** The list length from which a column chooser shows its search box. */
 export const COLUMN_SEARCH_MIN = 6;
 
-/** `"auto"` shows the search box from `COLUMN_SEARCH_MIN` columns. */
-export type TMDataGridColumnSearchable = boolean | "auto";
+/**
+ * `"auto"` shows the search box from `COLUMN_SEARCH_MIN` columns, a number
+ * from that many columns.
+ */
+export type TMDataGridColumnSearchable = boolean | "auto" | number;
 
 /**
  * Whether a column list shows a search box. A handful of columns is read at
@@ -183,5 +186,6 @@ export function showColumnSearch(
   count: number,
 ): boolean {
   if (searchable === "auto") return count >= COLUMN_SEARCH_MIN;
+  if (typeof searchable === "number") return count >= searchable;
   return searchable;
 }
