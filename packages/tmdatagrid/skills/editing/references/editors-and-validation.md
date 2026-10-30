@@ -130,7 +130,7 @@ const PriceEditor: TMDataGridEditorComponent = (args) => (
   />
 );
 
-// comboboxProps is merged with the grid's; withinPortal is not accepted.
+// The dropdown renders in a portal, as Mantine's default.
 const CategoryEditor: TMDataGridEditorComponent = (args) => (
   <TMDataGridSelectEditor {...args} inputProps={{ comboboxProps: { shadow: "md" } }} />
 );
@@ -142,8 +142,8 @@ const CategoryEditor: TMDataGridEditorComponent = (args) => (
 | `TMDataGridNumberEditor` | `NumberInput` | `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
 | `TMDataGridBooleanEditor` | `Checkbox` | `checked`, `defaultChecked`, `onChange`, `error`, `size`, `aria-label` |
 | `TMDataGridDateEditor` | `TextInput` | `type`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
-| `TMDataGridSelectEditor` | `Select` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
-| `TMDataGridMultiSelectEditor` | `MultiSelect` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
+| `TMDataGridSelectEditor` | `Select` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridMultiSelectEditor` | `MultiSelect` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
 
 - `inputProps` also takes `data-*` attributes; `data-dg-part` stays
   `"editor-input"`, because the grid sets it after the spread.
@@ -155,8 +155,10 @@ const CategoryEditor: TMDataGridEditorComponent = (args) => (
   focus moves, so it does not run. Code for "the edit ended" belongs in
   `editing.onCommit` or `meta.edit.mapCommitValue`.
 - `ref` receives the input element; the grid's own ref stays attached.
-- `comboboxProps` is merged with the grid's and `withinPortal` is always
-  `false`, because an option picked from a portal is a click outside the cell.
+- The select editors' dropdowns render in a portal (Mantine's default), so
+  the grid's scroll area does not clip them, and a pick is not a click
+  outside the editor. `comboboxProps={{ withinPortal: false }}` puts the
+  dropdown back inside the cell, where a short grid or a low row clips it.
 - A consumer `onKeyDown` must not stop the propagation of Enter, Tab or Escape:
   the grid handles them on an ancestor.
 - `label` and `description` make the editor taller than the cell;

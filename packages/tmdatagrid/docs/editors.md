@@ -72,8 +72,8 @@ Do not spread or rebuild `field` itself, because it is a live TanStack Form `Fie
 | `TMDataGridNumberEditor` | `NumberInput` | `TMDataGridNumberEditorProps["inputProps"]` | `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
 | `TMDataGridBooleanEditor` | `Checkbox` | `TMDataGridBooleanEditorProps["inputProps"]` | `checked`, `defaultChecked`, `onChange`, `error`, `size`, `aria-label` |
 | `TMDataGridDateEditor` | `TextInput` | `TMDataGridDateEditorProps["inputProps"]` | `type`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
-| `TMDataGridSelectEditor` | `Select` | `TMDataGridSelectEditorProps["inputProps"]` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
-| `TMDataGridMultiSelectEditor` | `MultiSelect` | `TMDataGridMultiSelectEditorProps["inputProps"]` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label`, `comboboxProps.withinPortal` |
+| `TMDataGridSelectEditor` | `Select` | `TMDataGridSelectEditorProps["inputProps"]` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
+| `TMDataGridMultiSelectEditor` | `MultiSelect` | `TMDataGridMultiSelectEditorProps["inputProps"]` | `data`, `value`, `defaultValue`, `onChange`, `error`, `size`, `aria-label` |
 
 The props the grid sets are left out of each type, so passing one is a type error.
 `data-dg-part` is set after `inputProps`, so the input keeps `data-dg-part="editor-input"`.
@@ -84,7 +84,8 @@ The props the grid sets are left out of each type, so passing one is a type erro
   It does not run when Enter, Tab or Escape closes the editor, or when a pick in the select editor commits under `"cell"`, because the editor closes before the focus moves.
   To run code when an edit ends, use `editing.onCommit`, or `meta.edit.mapCommitValue` to change the committed value.
 - `ref` receives the control's input element; the grid keeps its own ref on it too.
-- `comboboxProps` on the select editors is merged with the grid's, and `withinPortal` is always `false`, because an option picked from a portal is a click outside the cell.
+- By default, the select editors render their dropdown in a portal, so the grid's scroll area does not clip it, and a pick in it does not count as a click outside the editor.
+  With `comboboxProps={{ withinPortal: false }}` the dropdown renders inside the cell, where a short grid or a low row clips it.
 - The defaults the grid sets on the control can be overridden: `w="100%"` on every editor except the checkbox, `hideControls` on the number editor, and `searchable` on the select editors.
 - The select editors read their options from `meta.options` only, so `data` is not accepted.
 - To change the value as it is typed, use [`meta.edit.mapValue`](#mapping-the-value-as-it-is-typed); `onChange` is the grid's.
