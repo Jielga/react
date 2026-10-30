@@ -14,7 +14,7 @@ description: >
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
-  library_version: '2.6.0'
+  library_version: '2.7.0'
 sources:
   - 'Jielga/react:packages/tmdatagrid/docs/grouping.md'
   - 'Jielga/react:packages/tmdatagrid/docs/summary-row.md'
