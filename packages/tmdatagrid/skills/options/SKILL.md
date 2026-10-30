@@ -9,12 +9,13 @@ description: >
   labels, editing, filters, exportOptions, enableColumnOrdering,
   enablePagination, resetPageOnQueryChange, enableRowNumbers, selectionMode,
   showSelectedBackground, cellSelection, renderDetails, overscan,
-  quickSearchMode), persist with dataKey/settingsKey slices, storageMode and
-  urlKey and createTMDataGridUrlState deep links, the returned api (table, ui,
-  edit, features, labels, resetSettings, scrollToRow), ui actions, and reading
-  grid state with useSelector over table.store, since table.getState() does not
-  exist in v9. Load when configuring the hook, looking up an option's default,
-  persisting layout or filters, or reacting to grid state from a parent.
+  quickSearchMode, sortMode), persist with dataKey/settingsKey slices,
+  storageMode, urlKey and createTMDataGridUrlState deep links, the returned api
+  (table, ui, edit, features, labels, resetSettings, scrollToRow), ui actions,
+  and reading grid state with useSelector over table.store, as table.getState()
+  does not exist in v9. Load when configuring the hook, looking up an option's
+  default, persisting layout or filters, or reacting to grid state from a
+  parent.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -35,7 +36,8 @@ Creates the table instance and the state used by the grid interface.
 ```tsx
 const grid = useTMDataGrid<TData>(options);
 // { table, ui, edit, features, labels, filters, exportOptions, renderDetails,
-//   renderDetailsEstHeight, overscan, resetSettings, scrollToRow }
+//   renderDetailsEstHeight, overscan, resetSettings, scrollToRow, sortStale,
+//   sortAgain }
 ```
 
 The signature is
@@ -55,7 +57,7 @@ The grid defines these options itself: `persist`, `labels`, `editing`,
 `showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
 `cellSelection`, `onFocusedCellChange`, `renderDetails`,
 `renderDetailsEstHeight`, `detailsColumnPosition`, `overscan`,
-`quickSearchMode` and `enableMatchHighlighting`. The table below marks them
+`quickSearchMode`, `sortMode` and `enableMatchHighlighting`. The table below marks them
 "Defined by the grid"; every other row is a TanStack option, listed where the
 grid changes its default or where it decides something visible. A TanStack
 default the grid changes reads, for example, `"remove"` (grid default;
@@ -95,6 +97,7 @@ with TanStack's own default.
 | `enableRowNumbers` | `boolean` | `false` | The row-number gutter, outermost left. Defined by the grid, see the `rows` skill. |
 | `enableRowPinning` | `boolean \| (row) => boolean` | `false` (grid default; TanStack: `true`) | Rows can be pinned to sticky edge blocks with `row.pin()`. See the `rows` skill. |
 | `quickSearchMode` | `"fuzzy" \| "contains"` | `"fuzzy"` | How `Search` matches. Fuzzy forgives typos and orders unsorted results by match quality; `"contains"` is plain substring matching. Defined by the grid, see the `filtering` skill. |
+| `sortMode` | `"live" \| "frozen"` | `"live"` | Controls when the order follows the values. `"frozen"` sorts once, when the sort is applied, and holds that order through edits and refetches until the user sorts again. No effect under `manualSorting`. Defined by the grid, see the `columns` skill. |
 | `enableMatchHighlighting` | `boolean` | `false` | Cells mark the matched text while a contains-family filter or the quick search is active. Defined by the grid, see the `filtering` skill. |
 | `renderDetails` | `({ row, table }) => ReactNode` | – | Panel rendered under an expanded row, spanning every column. Setting it turns row details on and adds the pinned chevron lane. Defined by the grid, see the `rows` skill. |
 | `renderDetailsEstHeight` | `number` | `160` | What the virtualizer assumes for a panel it has not measured yet. Panels are measured once mounted, so an approximation is enough. Defined by the grid. |
@@ -338,6 +341,8 @@ Every rule, every member and the TanStack Router setup are in
 | `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view through the virtualizer. `false` when the row is not in the current view. |
+| `sortStale` | `boolean` | Under `sortMode: "frozen"`, whether the held order differs from a fresh sort. Always `false` under `"live"`. |
+| `sortAgain` | `() => void` | Under `sortMode: "frozen"`, sorts again on the current values, with the same sort. Does nothing under `"live"`. |
 
 `table` is `TMDataGridTable<TData>`, TanStack's core `Table` type. It has no
 `getState()` (that method does not exist in TanStack Table v9) and `table.state`

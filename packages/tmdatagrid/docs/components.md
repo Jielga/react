@@ -38,6 +38,8 @@ const grid = useTMDataGrid({ data, columns });
 | `overscan` | `number` | The option, or `6`. |
 | `resetSettings` | `() => void` | Puts visibility, order, widths, pinning and grouping back to a first visit. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view. Returns `false` when the row is not in the current view. |
+| `sortStale` | `boolean` | Under `sortMode: "frozen"`, whether the held order differs from a fresh sort. See [Sorting](/docs/sorting#hold-the-order-while-editing). |
+| `sortAgain` | `() => void` | Under `sortMode: "frozen"`, sorts again on the current values, with the same sort. |
 
 ## useTMDataGridContext
 

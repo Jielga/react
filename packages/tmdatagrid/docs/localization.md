@@ -122,6 +122,8 @@ shows it; a function label shows its template:
 | `clearFilter` | `` `Clear ${column} filter` `` | `aria-label` of the remove button on a filter pill. |
 | `sortAsc` | `Sort ascending` | Column menu item. |
 | `sortDesc` | `Sort descending` | Column menu item. |
+| `sortAgain` | `Sort again` | Column menu item and the header button's name, under `sortMode: "frozen"`. |
+| `sortStale` | `Values have changed since this sort. Click to sort again.` | Tooltip of the header button, while the held order is out of date. |
 | `filterMenuItem` | `Filter` | Column menu item. |
 | `groupBy` | `` `Group by ${column}` `` | Column menu item. |
 | `ungroup` | `` `Ungroup ${column}` `` | Column menu item. |

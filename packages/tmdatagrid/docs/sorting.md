@@ -82,6 +82,44 @@ columnHelper.accessor("priority", {
 });
 ```
 
+## Hold the order while editing
+
+By default, the grid sorts on every change, so an edited row moves to its new place as soon as the edit lands, and can leave the view.
+Set `sortMode: "frozen"` to sort once, when the sort is applied, and keep that order through edits, refetches and filter changes:
+
+```tsx
+const grid = useTMDataGrid({ data, columns, getRowId, sortMode: "frozen" });
+```
+
+```demo
+file: columns/FrozenSort.tsx
+hint: Sorted by Salary. Edit a salary so the row should move, then click ↻ beside the sort arrow.
+```
+
+Once a sorted value has changed, each sorted header shows a ↻ button.
+The following sort again on the current values:
+
+- the ↻ button on a sorted header
+- Sort again in a sorted column's menu
+- `sortAgain()` from the hook
+- a new sort: a header click, a Sort item in the menu, or `setSorting` with a different sort
+- a grouping change
+
+`setSorting` with the sort that is already set keeps the held order; call `sortAgain()` instead.
+`sortStale` is `true` while the held order differs from a fresh sort, for a control of your own:
+
+```tsx
+<Button disabled={!grid.sortStale} onClick={grid.sortAgain}>
+  Sort again
+</Button>
+```
+
+Rows are held by id, so set `getRowId` to the record's id.
+A row the held order has not seen yet, added or new in `data`, goes after the row it follows in a fresh sort and is then held there.
+A row hidden by a filter keeps its place and returns to it.
+Under grouping, the groups keep their order as well as the rows inside them.
+`sortMode` has no effect under `manualSorting`.
+
 ## The header menu
 
 The menu opens from the ⋮ button on the header, or from a right-click anywhere
@@ -99,3 +137,7 @@ pointer.
 | `sortFn` | Column option | name \| `(rowA, rowB, columnId) => number` | `"auto"` | The comparator for one column. v9's name for v8's `sortingFn`. |
 | `initialState.sorting` | Table option | `Array<{ id, desc }>` | `[]` | Sort at mount. A settings slice, so it persists. |
 | `manualSorting` | Table option | `boolean` | `false` | The server sorts; the grid stops. |
+| `sortMode` | Table option | `"live" \| "frozen"` | `"live"` | Controls when the order follows the values. `"frozen"` holds the order until the user sorts again. No effect under `manualSorting`. |
+| `TMDataGridSortMode` | Type | `"live" \| "frozen"` | – | The type of `sortMode`. |
+| `sortStale` | Hook return | `boolean` | `false` | Whether the held order differs from a fresh sort. Always `false` under `"live"`. |
+| `sortAgain` | Hook return | `() => void` | – | Sorts again on the current values, with the same sort. Does nothing under `"live"`. |
