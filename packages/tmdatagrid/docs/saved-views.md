@@ -20,7 +20,7 @@ const grid = useTMDataGrid({
 
 ```demo
 file: data/SavedViews.tsx
-hint: Hide a column, then open the menu and save the layout as a new view. Switch between views, and reload the page.
+hint: Open Views in the menu and save the layout as a new view. Hide a column to mark the view modified, then save the change or pick the view again to discard it.
 ```
 
 Without the `views` option nothing changes: the menus show no views and `grid.views.enabled` is `false`.
@@ -29,8 +29,8 @@ Without the `views` option nothing changes: the menus show no views and `grid.vi
 
 | Kind | Defined by | What the user can do |
 | --- | --- | --- |
-| Preset | `views.presets`, in code | Pick it and restore it. Never overwrite, rename or delete it. |
-| User view | The user, with **Save as new view** | Pick, restore, overwrite and delete it. |
+| Preset | `views.presets`, in code | Pick it. Never save changes to it, rename it or delete it. |
+| User view | The user, with **Save current layout as new view** | Pick it, save changes to it and delete it. |
 
 `allowUserViews` decides whether the user can save views of their own. It defaults to `true`.
 Set it to `false` for a grid that offers a fixed set of presets:
@@ -45,7 +45,7 @@ views: {
 
 ```demo
 file: data/LockedViews.tsx
-hint: The list holds the presets only. There is no Save as new view.
+hint: Open Views in the menu. The list holds the presets only, and there is no Save current layout as new view.
 ```
 
 A preset holds only the slices you give it.
@@ -61,7 +61,7 @@ The default is all five: `columnVisibility`, `columnSizing`, `columnOrder`, `col
 views: { store, slices: ["columnVisibility"] }
 ```
 
-A slice left out of `slices` is never captured by **Save as new view** or **Overwrite**, and never applied, even when a preset or a stored view holds it.
+A slice left out of `slices` is never captured by **Save current layout as new view** or **Save changes to view**, and never applied, even when a preset or a stored view holds it.
 A slice a view does not hold is left as it is when the view is applied.
 
 The generated lanes, such as the checkbox and the row numbers, are never part of a view.
@@ -70,15 +70,24 @@ Their visibility follows their features and the grid pins them itself.
 Applying a view drops the ids of columns that no longer exist, the same way a restored layout is cleaned up under `persist`.
 A column added since the view was saved is shown, at the end of the order.
 
-## Selecting and restoring
+## Selecting and saving
 
 Picking a view applies it and marks it as selected.
-After that, changing the layout changes nothing in the list: the view stays selected, and **Restore** applies it again.
+Changing the layout after that leaves the view selected and marks it modified: the view shows the `modified` marker, and the Views item of the column menu shows a dot next to its name.
+`grid.views.modified` is the same flag.
+A view is modified while one of the slices it holds no longer has the same effect, so hiding a column and showing it again leaves it unmodified.
+
+Picking the selected view again applies it again, which discards the changes.
 **Reset layout** still goes back to the grid's original layout, whatever view is selected.
 
-**Overwrite** saves the current layout into the selected view, and **Delete** removes it.
-Both show only while one of the user's own views is selected.
-Delete takes effect at once, without a confirm.
+The actions sit on the selected view's row, as icons with a tooltip:
+
+| Action | Shows | What it does |
+| --- | --- | --- |
+| **Save changes to view** | On one of the user's own views, while it is modified | Saves the current layout into the view. |
+| **Delete view** | On one of the user's own views | Deletes the view at once, without a confirm. |
+
+**Save current layout as new view** sits under the list and opens the name field in place.
 
 ### Names
 
@@ -141,8 +150,8 @@ Without `settingsKey`, a reload applies the selected view again.
 
 | Where | What it is |
 | --- | --- |
-| `TMDataGrid.Menu.Columns` | The views under **Reset layout**, when `views` is set. `views={false}` leaves them out. |
-| `TMDataGrid.ColumnsPanel` | A view picker, Restore, Overwrite, Delete and the name field, under the footer. `views={false}` leaves them out. |
+| `TMDataGrid.Menu.Columns` | A **Views** item under **Reset layout**, when `views` is set, with the selected view's name beside it. The views open in its submenu. `views={false}` leaves it out. |
+| `TMDataGrid.ColumnsPanel` | A view picker, **Discard changes**, **Save changes to view**, **Delete view** and the name field, under the footer. `views={false}` leaves them out. |
 | `TMDataGrid.ViewsMenu` | A toolbar button with the views in its own dropdown. |
 | `TMDataGrid.Menu.Views` | The views as menu items, for any Mantine `Menu` inside the grid. |
 | `grid.views` · `useTMDataGridViews` | The state and the verbs, for a control of your own. |
@@ -177,12 +186,11 @@ Pass `views={false}` to `TMDataGrid.Menu.Columns` beside it, so the views are no
 | `icon` | `ReactNode` | A layout icon | The trigger's icon. |
 | `label` | `string` | `labels.views` | The trigger's tooltip and `aria-label`. |
 | `withResetLayout` | `boolean` | `true` | Adds **Reset layout** at the bottom of the dropdown. |
-| Mantine `MenuProps` | | `position="bottom-end"`, `shadow="md"`, `width={260}`, `withinPortal` | Passed to the `Menu`. |
+| Mantine `MenuProps` | | `position="bottom-end"`, `shadow="md"`, `width={280}`, `withinPortal` | Passed to the `Menu`. |
 
 ## TMDataGrid.Menu.Views
 
-The views as menu items: the list, then **Restore**, **Overwrite**, **Save as new view** and **Delete** for the selected view.
-**Save as new view** turns into the name field in place.
+The views as menu items: the list, with **Save changes to view** and **Delete view** on the selected view's row, then **Save current layout as new view**, which turns into the name field in place.
 It needs a Mantine `Menu` around it and reads the grid from context:
 
 ```tsx
@@ -221,15 +229,15 @@ function ViewTabs() {
 | `status` | `"loading" \| "ready" \| "error"` | Whether the store has answered. |
 | `list` | `ReadonlyArray<TMDataGridViewEntry>` | Presets first, then the user's views, each `{ id, name, source, state }` with `source` `"preset"` or `"user"`. |
 | `activeId` · `active` | `string \| null` · `TMDataGridViewEntry \| null` | The selected view. |
+| `modified` | `boolean` | Whether the layout has moved away from the selected view. `false` with no view selected. |
 | `allowUserViews` | `boolean` | The option. |
-| `select(id)` | `(id: string) => void` | Applies a view and selects it. |
-| `restore()` | `() => void` | Applies the selected view again. |
+| `select(id)` | `(id: string) => void` | Applies a view and selects it. Selecting the selected view again discards its changes. |
 | `validateName(name)` | `(name: string) => TMDataGridViewNameError \| null` | `"empty"`, `"duplicate"` or `null`. |
 | `saveAs(name)` | `(name: string) => Promise<TMDataGridSaveViewResult>` | Saves the current layout as a new user view and selects it. Resolves to `{ ok: true, view }` or `{ ok: false, error }`, where `error` is `"empty"`, `"duplicate"`, `"notAllowed"` or `"store"`. Never rejects. |
 | `overwrite()` | `() => Promise<boolean>` | Saves the current layout into the selected user view. `false` when a preset or nothing is selected, or the store rejected. |
 | `remove(id)` | `(id: string) => Promise<boolean>` | Deletes a user view, and clears the selection if it was selected. `false` for a preset. |
 
-`captureViewState(state, slices?)` is the capture behind **Save as new view**: the listed settings slices of a table state, with the generated lanes left out.
+`captureViewState(state, slices?)` is the capture behind **Save current layout as new view**: the listed settings slices of a table state, with the generated lanes left out.
 `validateViewName(name, views, exceptId?)` is the name check, for a name field of your own.
 
 ## Labels
@@ -240,8 +248,9 @@ function ViewTabs() {
 | `viewsPresets` · `viewsMine` | The two headings when both kinds are listed |
 | `viewsNone` · `viewsNoneSelected` | No views at all, and the panel's picker with nothing selected |
 | `viewsPresetLocked` | The lock icon's `aria-label` |
-| `viewsRestore` · `viewsOverwrite` · `viewsDelete` | The actions, given the view's name |
-| `viewsSaveAs` · `viewsName` · `viewsSave` | Save as new view, the name field and its button |
+| `viewsModified` · `viewsDiscardChanges` | The marker on a modified view, and the tooltip that says picking it again discards the changes |
+| `viewsOverwrite` · `viewsDelete` | The actions on the selected view |
+| `viewsSaveAs` · `viewsName` · `viewsSave` | Save current layout as new view, the name field and its submit |
 | `viewsNameEmpty` · `viewsNameDuplicate` · `viewsSaveFailed` | The messages under the name field |
 
 `TMDATAGRID_LABELS_SV` carries all of them in Swedish. See [Localization](/docs/localization).
@@ -251,9 +260,11 @@ function ViewTabs() {
 | `data-dg-part` | What it is |
 | --- | --- |
 | `views-button` | The `ViewsMenu` trigger |
-| `views-item` | One view in a menu, with `data-view-id` and `aria-checked` |
+| `views-submenu` | The Views item of `TMDataGrid.Menu.Columns` |
+| `views-item` | One view in a menu, with `data-view-id` and `aria-checked`, and `data-modified="true"` on a modified selected view |
 | `views-none` | The text shown when there is no view |
-| `views-restore` · `views-overwrite` · `views-delete` | The actions, in a menu or in the panel |
+| `views-overwrite` · `views-delete` | The actions on the selected view, in a menu or in the panel |
+| `views-discard` | The panel's **Discard changes** |
 | `views-save-as` | The menu item that opens the name field |
 | `views-save-form` · `views-name` · `views-save` | The name form, its field and its button |
 | `views-panel` · `views-select` | The panel's views row and its picker |

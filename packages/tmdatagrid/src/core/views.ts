@@ -3,6 +3,7 @@ import type { TMDataGridFeatures } from "../useTMDataGrid";
 import { isGeneratedColumn } from "./columnUtils";
 import {
   readSettingsSlices,
+  realignToColumns,
   resolveStorageArea,
   SETTINGS_STATE_SLICES,
   type TMDataGridSettingsSlice,
@@ -119,12 +120,19 @@ export type TMDataGridViewsApi = {
   /** The selected view, or `null`. */
   activeId: string | null;
   active: TMDataGridViewEntry | null;
+  /**
+   * Whether the layout has changed since the selected view was applied: one
+   * of the slices the view holds no longer matches it. `false` with no view
+   * selected. Selecting the view again discards the changes.
+   */
+  modified: boolean;
   /** The `allowUserViews` option. */
   allowUserViews: boolean;
-  /** Applies a view and makes it the selected one. */
+  /**
+   * Applies a view and makes it the selected one. Selecting the view that is
+   * already selected applies it again, which discards the changes made since.
+   */
   select(id: string): void;
-  /** Applies the selected view again. */
-  restore(): void;
   /** Checks a name against the other views: trimmed, case-insensitive. */
   validateName(name: string): TMDataGridViewNameError | null;
   /** Saves the current layout as a new user view and selects it. */
@@ -192,6 +200,82 @@ export function pickViewSlices(
     if (state[slice] !== undefined) picked[slice] = state[slice];
   }
   return picked as TMDataGridViewState;
+}
+
+const sameIds = (a: ReadonlyArray<string>, b: ReadonlyArray<string>) =>
+  a.length === b.length && a.every((id, index) => id === b[index]);
+
+/**
+ * Whether `state` has moved away from `view`, on the slices the view holds
+ * that `slices` lets through - what `grid.views.modified` reports.
+ *
+ * Compared by effect rather than by shape, against the view as applying it
+ * would lay it on (realigned against `columnIds`, the leaf ids in definition
+ * order): a column with no visibility entry is shown, and an order that
+ * leaves columns out puts them after the listed ones in definition order.
+ * So hiding a column and showing it again, or dragging one away and back,
+ * leaves the view unmodified. The generated lanes never count.
+ */
+export function isViewModified(
+  view: TMDataGridViewState,
+  state: Partial<GridState>,
+  columnIds: ReadonlyArray<string>,
+  slices: ReadonlyArray<TMDataGridSettingsSlice> = SETTINGS_STATE_SLICES,
+): boolean {
+  const expected = realignToColumns(
+    pickViewSlices(view, slices),
+    new Set(columnIds),
+  ) as TMDataGridViewState;
+  const own = columnIds.filter((id) => !isGeneratedColumn(id));
+  const effectiveOrder = (order: ReadonlyArray<string> | undefined) => {
+    const listed = ownIds(order).filter((id) => own.includes(id));
+    return [...listed, ...own.filter((id) => !listed.includes(id))];
+  };
+
+  if (
+    expected.columnVisibility &&
+    own.some(
+      (id) =>
+        (expected.columnVisibility?.[id] !== false) !==
+        (state.columnVisibility?.[id] !== false),
+    )
+  ) {
+    return true;
+  }
+  if (
+    expected.columnSizing &&
+    own.some(
+      (id) => expected.columnSizing?.[id] !== state.columnSizing?.[id],
+    )
+  ) {
+    return true;
+  }
+  if (
+    expected.columnOrder &&
+    !sameIds(
+      effectiveOrder(expected.columnOrder),
+      effectiveOrder(state.columnOrder),
+    )
+  ) {
+    return true;
+  }
+  if (
+    expected.columnPinning &&
+    (!sameIds(
+      ownIds(expected.columnPinning.start),
+      ownIds(state.columnPinning?.start),
+    ) ||
+      !sameIds(
+        ownIds(expected.columnPinning.end),
+        ownIds(state.columnPinning?.end),
+      ))
+  ) {
+    return true;
+  }
+  return (
+    expected.grouping !== undefined &&
+    !sameIds(expected.grouping, state.grouping ?? [])
+  );
 }
 
 /**

@@ -34,8 +34,8 @@ export type TMDataGridColumnsPanelProps = BoxProps & {
   searchable?: TMDataGridColumnSearchable;
   /**
    * Adds the saved views under the footer, when the grid's `views` option is
-   * set: a picker, Restore, Overwrite, Delete and Save as new view. Default
-   * `true`.
+   * set: a picker, Discard changes, Save changes to view, Delete view and the
+   * name field. Default `true`.
    */
   views?: boolean;
 };

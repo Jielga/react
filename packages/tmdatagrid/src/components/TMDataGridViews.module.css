@@ -16,7 +16,46 @@
 }
 
 .menuSaveForm {
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  padding: 4px 6px 6px;
+}
+
+/* The selected view and its icon actions, on one row. */
+.selectedRow {
+  display: flex;
+  align-items: center;
+}
+
+.modified {
+  margin-inline-start: var(--mantine-spacing-xs);
+  padding: 0 6px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xl);
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
+}
+
+/* The Views item of the column menu: the selected name, the dot, the chevron. */
+.subValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.subValueName {
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modifiedDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mantine-primary-color-filled);
 }
 
 .panelViews {

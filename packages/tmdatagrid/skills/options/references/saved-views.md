@@ -11,7 +11,7 @@ store, the components and every export.
 | `presets` | `TMDataGridViewPreset[]` | `[]` | Read-only views defined in code, `{ id, name, state }`, listed first. |
 | `slices` | `TMDataGridSettingsSlice[]` | All five settings slices | What every view saves and applies. A slice left out is never captured or applied, even when a preset holds it. |
 | `defaultView` | `string` | – | A preset id. Applied before the first paint on a first visit: no view selected before and nothing restored by `persist.settingsKey`. |
-| `allowUserViews` | `boolean` | `true` | `false` leaves only picking and restoring presets. |
+| `allowUserViews` | `boolean` | `true` | `false` leaves only picking presets. |
 
 `TMDataGridViewsOptions` is the type. `TMDataGridViewState` is what a view
 holds: `Partial<Pick<TableState, TMDataGridSettingsSlice>>`.
@@ -25,12 +25,16 @@ holds: `Partial<Pick<TableState, TMDataGridSettingsSlice>>`.
   since the view was saved is shown, at the end of the order.
 - The generated lanes (checkbox, details, edit, row number, tree) are never
   captured; the grid pins them and sets their visibility itself.
-- Picking a view selects it. Later layout changes leave it selected; `restore`
-  applies it again. `resetSettings()` / Reset layout still goes back to the
-  grid's original layout.
+- Picking a view selects it. Later layout changes leave it selected and
+  set `modified`: one of the slices the view holds no longer has the same
+  effect (hiding a column and showing it again does not count). Selecting
+  the selected view again applies it again and discards the changes.
+  `resetSettings()` / Reset layout still goes back to the grid's original
+  layout.
 - Presets are never overwritten or deleted. `overwrite` and `remove` act on the
-  user's own views only, and the menus show Overwrite and Delete only while one
-  of them is selected. Delete has no confirm.
+  user's own views only. The menus show the actions as icons on the selected
+  view's row: Save changes to view while it is modified, Delete view always.
+  Delete has no confirm.
 - A name is compared trimmed and case-insensitively against every view,
   presets included. An empty or taken name cannot be saved; the reason shows
   under the field and the button is disabled.
@@ -49,9 +53,9 @@ holds: `Partial<Pick<TableState, TMDataGridSettingsSlice>>`.
 | `status` | `"loading" \| "ready" \| "error"` | Whether the store answered. |
 | `list` | `ReadonlyArray<TMDataGridViewEntry>` | Presets, then user views: `{ id, name, source: "preset" \| "user", state }`. |
 | `activeId` · `active` | `string \| null` · `TMDataGridViewEntry \| null` | The selected view. |
+| `modified` | `boolean` | Whether the layout has moved away from the selected view. `false` with none selected. |
 | `allowUserViews` | `boolean` | The option. |
-| `select(id)` | `void` | Applies and selects. |
-| `restore()` | `void` | Applies the selected view again. |
+| `select(id)` | `void` | Applies and selects. On the selected view, discards its changes. |
 | `validateName(name)` | `TMDataGridViewNameError \| null` | `"empty"`, `"duplicate"` or `null`. |
 | `saveAs(name)` | `Promise<TMDataGridSaveViewResult>` | `{ ok: true, view }` or `{ ok: false, error }` with `"empty"`, `"duplicate"`, `"notAllowed"` or `"store"`. Never rejects. |
 | `overwrite()` | `Promise<boolean>` | Saves the current layout into the selected user view. |
@@ -75,8 +79,8 @@ Put a user or tenant id in the key.
 
 | Component | What it renders |
 | --- | --- |
-| `TMDataGrid.Menu.Columns` | The views under Reset layout. `views={false}` leaves them out. |
-| `TMDataGrid.ColumnsPanel` | A picker, Restore / Overwrite / Delete icon buttons and the name field. `views={false}` leaves them out. |
+| `TMDataGrid.Menu.Columns` | A Views item under Reset layout (`data-dg-part="views-submenu"`) with the selected view's name and a dot while it is modified; the views open in its submenu. `views={false}` leaves it out. |
+| `TMDataGrid.ColumnsPanel` | A picker, Discard changes / Save changes to view / Delete view icon buttons and the name field. `views={false}` leaves them out. |
 | `TMDataGrid.ViewsMenu` | A toolbar button (`data-dg-part="views-button"`) and its dropdown. Props `TMDataGridViewsMenuProps`: `icon`, `label` (default `labels.views`), `withResetLayout` (default `true`) and Mantine `MenuProps`. |
 | `TMDataGrid.Menu.Views` | The views as items, for any Mantine `Menu` inside the grid. No props. |
 
@@ -86,21 +90,23 @@ so the views are not listed twice.
 ## Helpers
 
 - `captureViewState(state, slices?)` - the listed settings slices of a table
-  state, generated lanes left out. What Save as new view stores.
+  state, generated lanes left out. What Save current layout as new view stores.
 - `validateViewName(name, views, exceptId?)` - the name check.
 - `VIEW_PAYLOAD_VERSION` - the version stamped into every saved view.
 
 ## Labels and parts
 
 Labels: `views`, `viewsPresets`, `viewsMine`, `viewsNone`,
-`viewsNoneSelected`, `viewsPresetLocked`, `viewsRestore(name)`,
-`viewsOverwrite(name)`, `viewsSaveAs`, `viewsName`, `viewsSave`,
-`viewsDelete(name)`, `viewsNameEmpty`, `viewsNameDuplicate`,
-`viewsSaveFailed`. `TMDATAGRID_LABELS_SV` translates all of them.
+`viewsNoneSelected`, `viewsPresetLocked`, `viewsModified`,
+`viewsDiscardChanges`, `viewsOverwrite`, `viewsSaveAs`, `viewsName`,
+`viewsSave`, `viewsDelete`, `viewsNameEmpty`, `viewsNameDuplicate`,
+`viewsSaveFailed`. All are strings. `TMDATAGRID_LABELS_SV` translates all of
+them.
 
-Parts: `views-button`, `views-item` (with `data-view-id`, selected one
-`aria-checked="true"`), `views-none`, `views-restore`, `views-overwrite`,
-`views-delete`, `views-save-as`, `views-save-form`, `views-name`,
-`views-save`, `views-panel`, `views-select`.
+Parts: `views-button`, `views-submenu`, `views-item` (with `data-view-id`,
+selected one `aria-checked="true"`, a modified one `data-modified="true"`),
+`views-none`, `views-overwrite`, `views-delete`, `views-discard` (panel),
+`views-save-as`, `views-save-form`, `views-name`, `views-save`,
+`views-panel`, `views-select`.
 
 Source: `packages/tmdatagrid/docs/saved-views.md`.

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import type { DataGrid } from "../support/DataGrid";
 import { openDemoGrid } from "../support/docsSite";
 import { expect, test } from "../support/test";
 
@@ -16,14 +17,29 @@ const selectedView = (page: Page) =>
     .getByRole("menu")
     .locator('[data-dg-part="views-item"][aria-checked="true"]');
 
-test("a preset applies its layout and Restore brings it back", async ({
+/** Opens the burger if it is closed, then the Views submenu beside it. */
+async function openViews(grid: DataGrid) {
+  const views = grid.menuPart("views-submenu");
+  if (!(await views.isVisible())) await grid.part("menu-button").click();
+  await views.hover();
+}
+
+/** Saves the current layout under `name` from the Views submenu. */
+async function saveView(grid: DataGrid, name: string) {
+  await openViews(grid);
+  await grid.menuPart("views-save-as").click();
+  await grid.menuPart("views-name").fill(name);
+  await grid.menuPart("views-save").click();
+}
+
+test("a preset applies its layout, and picking it again discards changes", async ({
   page,
 }) => {
   const grid = await openDemoGrid(page, DEMO);
   const salary = grid.part("header", { columnId: "salary" });
   await expect(salary).toBeVisible();
 
-  await grid.part("menu-button").click();
+  await openViews(grid);
   await viewItem(page, "contact").click();
   await expect(salary).toHaveCount(0);
   // Picking a view closes the menu; let it finish before opening it again.
@@ -32,7 +48,9 @@ test("a preset applies its layout and Restore brings it back", async ({
   await grid.toggleColumn("salary");
   await expect(salary).toBeVisible();
 
-  await grid.menuPart("views-restore").click();
+  await openViews(grid);
+  await expect(selectedView(page)).toHaveAttribute("data-modified", "true");
+  await selectedView(page).click();
   await expect(salary).toHaveCount(0);
 });
 
@@ -42,23 +60,38 @@ test("a saved view comes back selected after a reload", async ({ page }) => {
 
   await grid.toggleColumn("location");
   await expect(location).toHaveCount(0);
-
-  await grid.menuPart("views-save-as").click();
-  await grid.menuPart("views-name").fill("No location");
-  await grid.menuPart("views-save").click();
+  await saveView(grid, "No location");
   // The name is the user's own text, not a translated label.
   await expect(selectedView(page)).toHaveText("No location");
 
   await page.reload();
   const again = await openDemoGrid(page, DEMO);
   await expect(again.part("header", { columnId: "location" })).toHaveCount(0);
-  await again.part("menu-button").click();
+  await openViews(again);
   await expect(selectedView(page)).toHaveText("No location");
+});
+
+test("Save changes to view shows only while the layout has changed", async ({
+  page,
+}) => {
+  const grid = await openDemoGrid(page, DEMO);
+  await saveView(grid, "Mine");
+  await expect(grid.menuPart("views-delete")).toBeVisible();
+  await expect(grid.menuPart("views-overwrite")).toHaveCount(0);
+
+  await grid.toggleColumn("status");
+  await openViews(grid);
+  await grid.menuPart("views-overwrite").click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+
+  await openViews(grid);
+  await expect(selectedView(page)).not.toHaveAttribute("data-modified");
+  await expect(grid.part("header", { columnId: "status" })).toHaveCount(0);
 });
 
 test("a taken name cannot be saved", async ({ page }) => {
   const grid = await openDemoGrid(page, DEMO);
-  await grid.part("menu-button").click();
+  await openViews(grid);
   await grid.menuPart("views-save-as").click();
   await grid.menuPart("views-name").fill("contact");
   await expect(grid.menuPart("views-save")).toBeDisabled();

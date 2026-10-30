@@ -53,13 +53,19 @@ export type TMDataGridLabels = {
   viewsNoneSelected: string;
   /** `aria-label` of the lock on a preset. */
   viewsPresetLocked: string;
-  viewsRestore: (name: string) => string;
-  viewsOverwrite: (name: string) => string;
+  /** Marker on the selected view once the layout has moved away from it. */
+  viewsModified: string;
+  /** Tooltip of a modified selected view, which applies it again on click. */
+  viewsDiscardChanges: string;
+  /** Saves the current layout into the selected user view. */
+  viewsOverwrite: string;
+  /** The menu item that opens the name field, and the panel's save button. */
   viewsSaveAs: string;
   /** Label of the name field. */
   viewsName: string;
   viewsSave: string;
-  viewsDelete: (name: string) => string;
+  /** Deletes the selected user view. */
+  viewsDelete: string;
   viewsNameEmpty: string;
   viewsNameDuplicate: string;
   /** The store rejected the write. */
@@ -250,12 +256,13 @@ export const TMDATAGRID_LABELS_EN: TMDataGridLabels = {
   viewsNone: "No saved views",
   viewsNoneSelected: "No view selected",
   viewsPresetLocked: "Preset, can't be changed",
-  viewsRestore: (name) => `Restore “${name}”`,
-  viewsOverwrite: (name) => `Overwrite “${name}”`,
-  viewsSaveAs: "Save as new view",
+  viewsModified: "modified",
+  viewsDiscardChanges: "Discard changes",
+  viewsOverwrite: "Save changes to view",
+  viewsSaveAs: "Save current layout as new view",
   viewsName: "View name",
   viewsSave: "Save",
-  viewsDelete: (name) => `Delete “${name}”`,
+  viewsDelete: "Delete view",
   viewsNameEmpty: "Enter a name",
   viewsNameDuplicate: "A view with that name already exists",
   viewsSaveFailed: "The view could not be saved",

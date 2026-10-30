@@ -167,8 +167,8 @@ import { Menu } from "@mantine/core";
 ```
 
 `TMDataGrid.Menu.Columns` is the column chooser as menu items: `Menu.Search`,
-one checkbox item per hideable column, show/hide all and reset layout, then the
-saved views when the grid has the `views` option (`views={false}` leaves them
+one checkbox item per hideable column, show/hide all and reset layout, then a
+Views submenu when the grid has the `views` option (`views={false}` leaves it
 out); it renders nothing when no column can be hidden.
 `TMDataGrid.Menu.Views` is the saved views alone as menu items, and
 `TMDataGrid.ViewsMenu` puts them behind a toolbar button of their own - see

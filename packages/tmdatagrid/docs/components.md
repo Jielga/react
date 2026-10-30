@@ -152,7 +152,7 @@ Its children are the dropdown. See [Grid menu](/docs/menu).
 | Mantine `MenuProps` | | `position="bottom-end"`, `shadow="md"`, `width={260}`, `withinPortal` | Passed to the `Menu`. |
 
 `TMDataGrid.Menu.Columns`, `.ColumnToggles`, `.ShowHideAll` and `.ResetLayout` are the column chooser as menu items, for this menu or any Mantine `Menu` inside the grid.
-`Columns` takes `searchable` (default `"auto"`, a search box from six columns) and `views` (default `true`, the saved views under Reset layout), `ColumnToggles` takes `search`; the other two take no props.
+`Columns` takes `searchable` (default `"auto"`, a search box from six columns) and `views` (default `true`, a Views submenu with the saved views under Reset layout), `ColumnToggles` takes `search`; the other two take no props.
 `TMDataGrid.Menu.Views`, and `TMDataGrid.ViewsMenu`, the saved views behind a toolbar button of their own, are documented on [Saved views](/docs/saved-views#tmdatagridviewsmenu).
 
 ## TMDataGrid.ColumnsPanel
@@ -163,7 +163,7 @@ For a Popover, a Drawer or an inline layout; `TMDataGrid.Menu.Columns` is the sa
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `searchable` | `boolean \| "auto"` | `"auto"` | The search box over the list. `"auto"` shows it from six columns, `true` always, `false` never. |
-| `views` | `boolean` | `true` | Adds the [saved views](/docs/saved-views) under the footer when the grid has them: a picker, Restore, Overwrite, Delete and the name field. |
+| `views` | `boolean` | `true` | Adds the [saved views](/docs/saved-views) under the footer when the grid has them: a picker, Discard changes, Save changes to view, Delete view and the name field. |
 | Mantine `BoxProps` | | – | Style props (`w`, `p`, …), `className` and `style`, set on the panel block. |
 
 ## TMDataGrid.LoadingIndicator

@@ -660,9 +660,10 @@ export type TMDataGridApi<TData extends RowData> = {
    */
   resetSettings: () => void;
   /**
-   * The saved views: the list, the selected one, and `select`, `restore`,
-   * `saveAs`, `overwrite` and `remove`. `enabled` is `false` until the `views`
-   * option is set. See {@link TMDataGridViewsApi}.
+   * The saved views: the list, the selected one and whether the layout has
+   * moved away from it, and `select`, `saveAs`, `overwrite` and `remove`.
+   * `enabled` is `false` until the `views` option is set. See
+   * {@link TMDataGridViewsApi}.
    */
   views: TMDataGridViewsApi;
   /**
@@ -2255,6 +2256,8 @@ export function useTMDataGrid<TData extends RowData>({
     restoredSettings,
     applyState: applyViewState,
     readState: () => captureViewState(table.store.state),
+    tableStore: table.store,
+    columnIds: collectLeafColumnIds(columns),
   });
 
   // Filled in by `TMDataGrid.Table` on every render, because only the body

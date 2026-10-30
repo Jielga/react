@@ -25,7 +25,7 @@ import type {
 import { useTMDataGridExport } from "../useTMDataGridExport";
 import { useHideableColumns } from "./useHideableColumns";
 import { BurgerIcon, DownloadIcon, RestoreIcon } from "./icons";
-import { TMDataGridMenuViews } from "./TMDataGridViews";
+import { TMDataGridMenuViews, TMDataGridMenuViewsSub } from "./TMDataGridViews";
 
 /**
  * The column toggles are `Menu.Item`s with a `Checkbox.Indicator` in front,
@@ -57,9 +57,10 @@ export type TMDataGridMenuColumnsProps = {
    */
   searchable?: TMDataGridColumnSearchable;
   /**
-   * Lists the saved views under Reset layout, when the grid's `views` option
-   * is set. Default `true`; `false` for a grid that shows them in a
-   * `TMDataGrid.ViewsMenu` or a menu of your own instead.
+   * Adds a Views item under Reset layout that opens the saved views in a
+   * submenu, when the grid's `views` option is set. Default `true`; `false`
+   * for a grid that shows them in a `TMDataGrid.ViewsMenu` or a menu of your
+   * own instead.
    */
   views?: boolean;
 };
@@ -105,8 +106,8 @@ function TMDataGridMenuRoot({
 
 /**
  * The whole column chooser as menu items: a search box, one checkbox item per
- * hideable column, show/hide all, Reset layout, and the saved views when the
- * grid has them. Renders nothing when no column can be hidden.
+ * hideable column, show/hide all, Reset layout, and a Views submenu when the
+ * grid has saved views. Renders nothing when no column can be hidden.
  *
  * `searchable` is only for a block at the top level of a dropdown.
  * `Menu.Search` registers on the root menu context (`hasSearch`), which
@@ -162,7 +163,7 @@ export function TMDataGridMenuColumns({
       {views && savedViews.enabled && (
         <>
           <Menu.Divider />
-          <TMDataGridMenuViews />
+          <TMDataGridMenuViewsSub />
         </>
       )}
     </>

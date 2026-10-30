@@ -350,9 +350,13 @@ const grid = useTMDataGrid({
   only picking between presets.
 - `views.slices` narrows what every view saves and applies. A slice a view
   does not hold is left as it is when the view is applied.
-- The views show in `TMDataGrid.Menu.Columns` and `TMDataGrid.ColumnsPanel`
-  (both take `views={false}`), behind `TMDataGrid.ViewsMenu`, as
-  `TMDataGrid.Menu.Views` items, and as `grid.views` / `useTMDataGridViews()`.
+- Changing the layout after picking a view marks it modified
+  (`grid.views.modified`). Picking it again discards the changes; Save changes
+  to view and Delete view sit on the selected view's row.
+- The views show in a Views submenu of `TMDataGrid.Menu.Columns` and in
+  `TMDataGrid.ColumnsPanel` (both take `views={false}`), behind
+  `TMDataGrid.ViewsMenu`, as `TMDataGrid.Menu.Views` items, and as
+  `grid.views` / `useTMDataGridViews()`.
 
 Every option, member, export and rule is in
 [references/saved-views.md](references/saved-views.md).
@@ -372,7 +376,7 @@ Every option, member, export and rule is in
 | `renderDetailsEstHeight` | `number` | The estimate, resolved to its default when the option was not set. |
 | `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. |
-| `views` | `TMDataGridViewsApi` | The saved views and `select`, `restore`, `saveAs`, `overwrite`, `remove`. `enabled` is `false` without the `views` option. |
+| `views` | `TMDataGridViewsApi` | The saved views, `modified`, and `select`, `saveAs`, `overwrite`, `remove`. `enabled` is `false` without the `views` option. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view through the virtualizer. `false` when the row is not in the current view. |
 
 `table` is `TMDataGridTable<TData>`, TanStack's core `Table` type. It has no

@@ -1,9 +1,14 @@
+import type { TableState } from "@tanstack/react-table";
+import { useSelector } from "@tanstack/react-store";
+import { shallow } from "@tanstack/store";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { TMDataGridFeatures } from "../useTMDataGrid";
 import { sameStateValue } from "./controlledState";
 import { SETTINGS_STATE_SLICES, type TMDataGridSettingsSlice } from "./persistence";
 import {
   captureViewState,
   createViewId,
+  isViewModified,
   normalizeView,
   pickViewSlices,
   validateViewName,
@@ -45,8 +50,9 @@ export function resolveStartingView(
 /**
  * The views state behind `grid.views`.
  *
- * @internal `applyState` and `readState` come from `useTMDataGrid`, which owns
- * the table and knows how the generated lanes have to be laid back on.
+ * @internal `applyState`, `readState`, `tableStore` and `columnIds` come from
+ * `useTMDataGrid`, which owns the table and knows how the generated lanes
+ * have to be laid back on.
  */
 export function useGridViews({
   options,
@@ -54,12 +60,19 @@ export function useGridViews({
   restoredSettings,
   applyState,
   readState,
+  tableStore,
+  columnIds,
 }: {
   options: TMDataGridViewsOptions | undefined;
   startingViewId: string | null;
   restoredSettings: boolean;
   applyState: (state: TMDataGridViewState) => void;
   readState: () => TMDataGridViewState;
+  tableStore: Parameters<
+    typeof useSelector<TableState<TMDataGridFeatures>>
+  >[0];
+  /** The leaf column ids in definition order, generated lanes included. */
+  columnIds: ReadonlyArray<string>;
 }): TMDataGridViewsApi {
   const enabled = options !== undefined;
   const store = options?.store;
@@ -184,11 +197,6 @@ export function useGridViews({
         applyRef.current(pickViewSlices(entry.state, latest.current.slices));
         remember(id);
       },
-      restore: () => {
-        const entry = find(latest.current.activeId);
-        if (entry === undefined) return;
-        applyRef.current(pickViewSlices(entry.state, latest.current.slices));
-      },
       validateName: (name: string) =>
         validateViewName(name, latest.current.list),
       saveAs: async (name: string) => {
@@ -250,16 +258,35 @@ export function useGridViews({
     };
   }, []);
 
-  return useMemo<TMDataGridViewsApi>(() => {
-    const active = list.find((entry) => entry.id === activeId) ?? null;
-    return {
+  // Only the settings slices: a sort, a filter or a scroll never re-renders
+  // the views, and never makes one modified.
+  const layout = useSelector(
+    tableStore,
+    (state) => ({
+      columnVisibility: state.columnVisibility,
+      columnSizing: state.columnSizing,
+      columnOrder: state.columnOrder,
+      columnPinning: state.columnPinning,
+      grouping: state.grouping,
+    }),
+    { compare: shallow },
+  );
+  const active = list.find((entry) => entry.id === activeId) ?? null;
+  const modified =
+    active !== null &&
+    isViewModified(active.state, layout, columnIds, slices);
+
+  return useMemo<TMDataGridViewsApi>(
+    () => ({
       enabled,
       status,
       list,
       activeId: active === null ? null : activeId,
       active,
+      modified,
       allowUserViews,
       ...verbs,
-    };
-  }, [enabled, status, list, activeId, allowUserViews, verbs]);
+    }),
+    [enabled, status, list, activeId, active, modified, allowUserViews, verbs],
+  );
 }

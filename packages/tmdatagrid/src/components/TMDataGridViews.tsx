@@ -20,6 +20,7 @@ import { useTMDataGridContext } from "../TMDataGridContext";
 import type { TMDataGridViewEntry, TMDataGridViewsApi } from "../core/views";
 import {
   CheckIcon,
+  ChevronRightIcon,
   LockIcon,
   PlusIcon,
   RestoreIcon,
@@ -28,6 +29,9 @@ import {
   ViewsIcon,
 } from "./icons";
 import { TMDataGridMenuResetLayout } from "./TMDataGridMenu";
+
+/** The width of every dropdown that lists the views. */
+const VIEWS_DROPDOWN_WIDTH = 280;
 
 /** `Menu.Item` writes `role="menuitem"` after its props; see `asCheckboxItem`. */
 const asRadioItem = (props: ComponentPropsWithoutRef<"button">) => (
@@ -53,19 +57,19 @@ function ownActiveView(views: TMDataGridViewsApi): TMDataGridViewEntry | null {
 }
 
 /**
- * The name field and its button. The button is disabled while the name is
+ * The name field and its submit. The submit is disabled while the name is
  * empty or taken, and the reason shows under the field as the user types.
+ *
+ * In a menu the submit is an icon inside the field, so the form takes one
+ * row; in the panel it is a button beside it.
  */
 function SaveViewForm({
-  buttonLabel,
+  variant,
   className,
-  autoFocus = false,
   onSaved,
 }: {
-  buttonLabel: string;
+  variant: "menu" | "panel";
   className?: string;
-  /** In the menu, where the field replaces the item that was clicked. */
-  autoFocus?: boolean;
   onSaved?: () => void;
 }) {
   const { views, labels, controlSize } = useTMDataGridContext();
@@ -96,6 +100,7 @@ function SaveViewForm({
     }
   };
 
+  const inMenu = variant === "menu";
   return (
     <form
       className={[classes.saveForm, className].filter(Boolean).join(" ")}
@@ -103,7 +108,7 @@ function SaveViewForm({
       data-dg-part="views-save-form"
     >
       <TextInput
-        size={controlSize}
+        size={inMenu ? "xs" : controlSize}
         aria-label={labels.viewsName}
         placeholder={labels.viewsName}
         value={name}
@@ -114,46 +119,59 @@ function SaveViewForm({
         onKeyDown={keepKeysInField}
         error={error}
         data-dg-part="views-name"
-        autoFocus={autoFocus}
+        // In the menu the field replaces the item that was clicked.
+        autoFocus={inMenu}
+        rightSectionPointerEvents="all"
+        rightSection={
+          inMenu ? (
+            <ActionIcon
+              type="submit"
+              size="sm"
+              aria-label={labels.viewsSave}
+              disabled={nameError !== null}
+              data-dg-part="views-save"
+            >
+              <CheckIcon size={14} stroke={2.2} />
+            </ActionIcon>
+          ) : undefined
+        }
       />
-      <Button
-        type="submit"
-        size={controlSize}
-        disabled={nameError !== null}
-        data-dg-part="views-save"
-      >
-        {buttonLabel}
-      </Button>
+      {!inMenu && (
+        <Button
+          type="submit"
+          size={controlSize}
+          disabled={nameError !== null}
+          data-dg-part="views-save"
+        >
+          {labels.viewsSaveAs}
+        </Button>
+      )}
     </form>
   );
 }
 
 /**
- * The saved views as menu items, for any `Menu.Dropdown` under the grid: the
- * list, then Restore, Overwrite, Save as new view and Delete for the selected
- * view. Overwrite and Delete only show for the user's own views. Renders
- * nothing when the `views` option is not set.
- *
- * `TMDataGrid.Menu.Columns` includes it under Reset layout;
- * `TMDataGrid.ViewsMenu` is it behind a button of its own.
+ * The view list and Save current layout as new view, shared by
+ * `TMDataGrid.Menu.Views` and the Views submenu of `TMDataGrid.Menu.Columns`.
+ * `naming` is lifted so the submenu can stay open while the user types.
  */
-export function TMDataGridMenuViews() {
+function ViewsMenuItems({
+  naming,
+  setNaming,
+}: {
+  naming: boolean;
+  setNaming: (naming: boolean) => void;
+}) {
   const { views, labels } = useTMDataGridContext();
-  // Save as new view turns into the name field in place, rather than opening
-  // a submenu: a hover submenu closes when the pointer drifts off it, which a
-  // field being typed into cannot afford.
-  const [naming, setNaming] = useState(false);
-
   if (!views.enabled) return null;
 
   const presets = views.list.filter((entry) => entry.source === "preset");
   const mine = views.list.filter((entry) => entry.source === "user");
-  const active = views.active;
-  const own = ownActiveView(views);
 
   const item = (entry: TMDataGridViewEntry) => {
     const checked = entry.id === views.activeId;
-    return (
+    const modified = checked && views.modified;
+    const radio = (
       <Menu.Item
         key={entry.id}
         renderRoot={asRadioItem}
@@ -177,12 +195,55 @@ export function TMDataGridMenuViews() {
             />
           ) : undefined
         }
+        // Selecting the selected view applies it again, which is how its
+        // changes are discarded.
         onClick={() => views.select(entry.id)}
         data-dg-part="views-item"
         data-view-id={entry.id}
+        data-modified={modified || undefined}
+        flex={checked ? 1 : undefined}
+        miw={0}
       >
         {entry.name}
+        {modified && (
+          <span className={classes.modified}>{labels.viewsModified}</span>
+        )}
       </Menu.Item>
+    );
+    if (!checked) return radio;
+
+    // The actions sit on the selected view, so which view they act on is
+    // never in doubt. Overwrite only shows when there is a change to save.
+    const own = views.allowUserViews && entry.source === "user";
+    return (
+      <div key={entry.id} className={classes.selectedRow}>
+        {modified ? (
+          <Tooltip label={labels.viewsDiscardChanges} openDelay={400}>
+            {radio}
+          </Tooltip>
+        ) : (
+          radio
+        )}
+        {own && modified && (
+          <RowAction
+            label={labels.viewsOverwrite}
+            onClick={() => void views.overwrite()}
+            part="views-overwrite"
+          >
+            <SaveIcon size={16} stroke={1.6} />
+          </RowAction>
+        )}
+        {own && (
+          <RowAction
+            label={labels.viewsDelete}
+            color="red"
+            onClick={() => void views.remove(entry.id)}
+            part="views-delete"
+          >
+            <TrashIcon size={16} stroke={1.6} />
+          </RowAction>
+        )}
+      </div>
     );
   };
 
@@ -205,54 +266,137 @@ export function TMDataGridMenuViews() {
           )}
         </>
       )}
-      {(active !== null || views.allowUserViews) && <Menu.Divider />}
-      {active !== null && (
-        <Menu.Item
-          leftSection={<RestoreIcon size={16} stroke={1.6} />}
-          onClick={() => views.restore()}
-          data-dg-part="views-restore"
-        >
-          {labels.viewsRestore(active.name)}
-        </Menu.Item>
-      )}
-      {own !== null && (
-        <Menu.Item
-          leftSection={<SaveIcon size={16} stroke={1.6} />}
-          onClick={() => void views.overwrite()}
-          data-dg-part="views-overwrite"
-        >
-          {labels.viewsOverwrite(own.name)}
-        </Menu.Item>
-      )}
-      {views.allowUserViews &&
-        (naming ? (
-          <SaveViewForm
-            buttonLabel={labels.viewsSave}
-            className={classes.menuSaveForm}
-            autoFocus
-            onSaved={() => setNaming(false)}
-          />
-        ) : (
-          <Menu.Item
-            leftSection={<PlusIcon size={16} stroke={1.6} />}
-            closeMenuOnClick={false}
-            onClick={() => setNaming(true)}
-            data-dg-part="views-save-as"
-          >
-            {labels.viewsSaveAs}
-          </Menu.Item>
-        ))}
-      {own !== null && (
-        <Menu.Item
-          color="red"
-          leftSection={<TrashIcon size={16} stroke={1.6} />}
-          onClick={() => void views.remove(own.id)}
-          data-dg-part="views-delete"
-        >
-          {labels.viewsDelete(own.name)}
-        </Menu.Item>
+      {views.allowUserViews && (
+        <>
+          <Menu.Divider />
+          {naming ? (
+            <SaveViewForm
+              variant="menu"
+              className={classes.menuSaveForm}
+              onSaved={() => setNaming(false)}
+            />
+          ) : (
+            // The field opens in place rather than in a submenu: a hover
+            // submenu closes when the pointer drifts off it, which a field
+            // being typed into cannot afford.
+            <Menu.Item
+              leftSection={<PlusIcon size={16} stroke={1.6} />}
+              closeMenuOnClick={false}
+              onClick={() => setNaming(true)}
+              data-dg-part="views-save-as"
+            >
+              {labels.viewsSaveAs}
+            </Menu.Item>
+          )}
+        </>
       )}
     </>
+  );
+}
+
+/**
+ * An icon action on the selected view's row. A `Menu.Item`, so the arrow
+ * keys reach it like any other item; the tooltip and `aria-label` carry the
+ * text.
+ */
+function RowAction({
+  label,
+  color,
+  onClick,
+  part,
+  children,
+}: {
+  label: string;
+  color?: string;
+  onClick: () => void;
+  part: string;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip label={label} openDelay={300} withArrow>
+      <Menu.Item
+        aria-label={label}
+        color={color}
+        onClick={onClick}
+        data-dg-part={part}
+        // Style props, not a class: an inline style wins over Mantine's item
+        // width whichever stylesheet layer each comes from.
+        w="auto"
+        flex="none"
+        px={6}
+      >
+        {children}
+      </Menu.Item>
+    </Tooltip>
+  );
+}
+
+/**
+ * The saved views as menu items, for any `Menu.Dropdown` under the grid: the
+ * list, with Save changes to view and Delete view on the selected view's row,
+ * then Save current layout as new view. Renders nothing when the `views`
+ * option is not set.
+ *
+ * `TMDataGrid.Menu.Columns` shows it in a Views submenu;
+ * `TMDataGrid.ViewsMenu` is it behind a button of its own.
+ */
+export function TMDataGridMenuViews() {
+  const [naming, setNaming] = useState(false);
+  return <ViewsMenuItems naming={naming} setNaming={setNaming} />;
+}
+
+/**
+ * The Views item of `TMDataGrid.Menu.Columns`: the selected view's name, a
+ * dot while the layout has moved away from it, and the views in a submenu.
+ *
+ * @internal Rendered by `TMDataGrid.Menu.Columns`; not exported on its own.
+ */
+export function TMDataGridMenuViewsSub() {
+  const { views, labels } = useTMDataGridContext();
+  const [opened, setOpened] = useState(false);
+  const [naming, setNaming] = useState(false);
+  if (!views.enabled) return null;
+
+  // Held open while the name field is in use, wherever the pointer goes, and
+  // still open once it is done, so the new view shows selected.
+  const endNaming = (next: boolean) => {
+    setNaming(next);
+    if (!next) setOpened(true);
+  };
+
+  return (
+    <Menu.Sub
+      opened={opened || naming}
+      onChange={setOpened}
+      width={VIEWS_DROPDOWN_WIDTH}
+    >
+      <Menu.Sub.Target>
+        <Menu.Sub.Item
+          leftSection={<ViewsIcon size={16} stroke={1.6} />}
+          rightSection={
+            <span className={classes.subValue}>
+              {views.active && (
+                <span className={classes.subValueName}>{views.active.name}</span>
+              )}
+              {views.modified && (
+                <span
+                  className={classes.modifiedDot}
+                  role="img"
+                  aria-label={labels.viewsModified}
+                />
+              )}
+              <ChevronRightIcon size={14} stroke={1.6} />
+            </span>
+          }
+          data-dg-part="views-submenu"
+        >
+          {labels.views}
+        </Menu.Sub.Item>
+      </Menu.Sub.Target>
+      <Menu.Sub.Dropdown>
+        <ViewsMenuItems naming={naming} setNaming={endNaming} />
+      </Menu.Sub.Dropdown>
+    </Menu.Sub>
   );
 }
 
@@ -288,7 +432,7 @@ export function TMDataGridViewsMenu({
     <Menu
       position="bottom-end"
       shadow="md"
-      width={260}
+      width={VIEWS_DROPDOWN_WIDTH}
       withinPortal
       {...menuProps}
     >
@@ -321,7 +465,10 @@ export function TMDataGridViewsMenu({
 
 /**
  * The views row of `TMDataGrid.ColumnsPanel`: a picker, icon buttons for
- * Restore, Overwrite and Delete, and the name field.
+ * Discard changes, Save changes to view and Delete view, and the name field.
+ *
+ * A `Select` does not report picking the value it already holds, so the
+ * panel has its own Discard changes where the menu re-selects the view.
  *
  * @internal Rendered by the panel; not exported on its own.
  */
@@ -351,6 +498,7 @@ export function TMDataGridColumnsPanelViews() {
         <Select
           size={controlSize}
           label={labels.views}
+          description={views.modified ? labels.viewsModified : undefined}
           placeholder={
             views.list.length === 0 ? labels.viewsNone : labels.viewsNoneSelected
           }
@@ -366,25 +514,25 @@ export function TMDataGridColumnsPanelViews() {
           comboboxProps={{ withinPortal: false }}
           data-dg-part="views-select"
         />
-        {active !== null && (
-          <Tooltip label={labels.viewsRestore(active.name)} withArrow>
+        {active !== null && views.modified && (
+          <Tooltip label={labels.viewsDiscardChanges} withArrow>
             <ActionIcon
               variant="default"
               size={controlSize}
-              aria-label={labels.viewsRestore(active.name)}
-              onClick={() => views.restore()}
-              data-dg-part="views-restore"
+              aria-label={labels.viewsDiscardChanges}
+              onClick={() => views.select(active.id)}
+              data-dg-part="views-discard"
             >
               <RestoreIcon size={16} stroke={1.6} />
             </ActionIcon>
           </Tooltip>
         )}
-        {own !== null && (
-          <Tooltip label={labels.viewsOverwrite(own.name)} withArrow>
+        {own !== null && views.modified && (
+          <Tooltip label={labels.viewsOverwrite} withArrow>
             <ActionIcon
               variant="default"
               size={controlSize}
-              aria-label={labels.viewsOverwrite(own.name)}
+              aria-label={labels.viewsOverwrite}
               onClick={() => void views.overwrite()}
               data-dg-part="views-overwrite"
             >
@@ -393,12 +541,12 @@ export function TMDataGridColumnsPanelViews() {
           </Tooltip>
         )}
         {own !== null && (
-          <Tooltip label={labels.viewsDelete(own.name)} withArrow>
+          <Tooltip label={labels.viewsDelete} withArrow>
             <ActionIcon
               variant="default"
               color="red"
               size={controlSize}
-              aria-label={labels.viewsDelete(own.name)}
+              aria-label={labels.viewsDelete}
               onClick={() => void views.remove(own.id)}
               data-dg-part="views-delete"
             >
@@ -407,7 +555,7 @@ export function TMDataGridColumnsPanelViews() {
           </Tooltip>
         )}
       </div>
-      {views.allowUserViews && <SaveViewForm buttonLabel={labels.viewsSaveAs} />}
+      {views.allowUserViews && <SaveViewForm variant="panel" />}
     </div>
   );
 }
