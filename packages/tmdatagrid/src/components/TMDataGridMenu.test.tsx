@@ -140,6 +140,31 @@ describe("TMDataGrid.Menu", () => {
     expect(part("columns-search")).toBeInTheDocument();
   });
 
+  it("shows the search box from the number of columns `searchable` names", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderWithMantine(
+      <MenuGrid options={{ columns: wideColumns }}>
+        <TMDataGrid.Menu>
+          <TMDataGrid.Menu.Columns searchable={7} />
+        </TMDataGrid.Menu>
+      </MenuGrid>,
+    );
+
+    await user.click(part("menu-button"));
+    expect(queryPart("columns-search")).not.toBeInTheDocument();
+    unmount();
+
+    renderWithMantine(
+      <MenuGrid>
+        <TMDataGrid.Menu>
+          <TMDataGrid.Menu.Columns searchable={4} />
+        </TMDataGrid.Menu>
+      </MenuGrid>,
+    );
+    await user.click(part("menu-button"));
+    expect(part("columns-search")).toBeInTheDocument();
+  });
+
   it("narrows the list from the search box", async () => {
     const user = userEvent.setup();
     renderWithMantine(

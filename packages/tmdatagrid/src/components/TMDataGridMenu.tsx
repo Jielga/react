@@ -51,8 +51,8 @@ export type TMDataGridMenuProps = Omit<MenuProps, "children"> & {
 export type TMDataGridMenuColumnsProps = {
   /**
    * Renders a `Menu.Search` above the toggles: `"auto"` (the default) from
-   * six hideable columns, `true` always, `false` never. Use `false` inside a
-   * `Menu.Sub`.
+   * six hideable columns, a number from that many, `true` always, `false`
+   * never. Use `false` inside a `Menu.Sub`.
    */
   searchable?: TMDataGridColumnSearchable;
 };
