@@ -1,5 +1,11 @@
 # @jielga/tmdatagrid
 
+## 2.7.0
+
+### Minor Changes
+
+- [#182](https://github.com/Jielga/react/pull/182) [`3d0f1e8`](https://github.com/Jielga/react/commit/3d0f1e8d228350b2b626ad233e8d812e0cde52a3) Thanks [@Psvensso](https://github.com/Psvensso)! - `searchable` on `TMDataGrid.Menu.Columns` and `TMDataGrid.ColumnsPanel` takes a number: the search box shows from that many hideable columns.
+
 ## 2.6.0
 
 ### Minor Changes
