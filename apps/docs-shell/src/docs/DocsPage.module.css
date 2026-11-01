@@ -1,6 +1,59 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* `height` for a page that uses the scroller on its own; inside `.page` the
+   flex basis decides, and the breadcrumb takes its share. */
 .scroller {
   height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  /* A short page has no scrollbar and a long one does, so without a reserved
+     gutter the centred article moves sideways between them. */
+  scrollbar-gutter: stable;
+}
+
+/* The bar above the scroll area. It reserves the same scrollbar gutter as the
+   scroller under it, so its text lines up with the article's left edge. */
+.breadcrumb {
+  flex-shrink: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
+.breadcrumbTrail {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mantine-spacing-xs);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbTrail [data-current-page] {
+  color: var(--mantine-color-text);
+}
+
+.breadcrumbTrail a {
+  color: var(--mantine-color-text);
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbTrail a:hover {
+  color: var(--mantine-color-anchor);
 }
 
 /* Article and table-of-contents rail, centred as a pair - so the prose does
@@ -22,6 +75,9 @@
   padding: var(--mantine-spacing-xl) var(--mantine-spacing-xl)
     calc(var(--mantine-spacing-xl) * 3);
   text-align: left;
+  /* The stacked table layout below follows the article's width, not the
+     viewport's: an open navigation narrows the article on a wide screen too. */
+  container-type: inline-size;
 }
 
 .article h1 {
@@ -45,6 +101,66 @@
 .article h3,
 .article h4 {
   scroll-margin-top: var(--mantine-spacing-md);
+}
+
+/* The `#` link at the end of every heading. It shows while the heading is
+   hovered or the link has focus, so it does not sit beside every heading on
+   the page; where nothing hovers, it stays visible but faint. */
+.headingAnchor {
+  margin-left: 0.3em;
+  color: var(--mantine-color-dimmed);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.article h2:hover .headingAnchor,
+.article h3:hover .headingAnchor,
+.article h4:hover .headingAnchor,
+.headingAnchor:focus-visible {
+  opacity: 1;
+}
+
+.headingAnchor:hover {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+/* The `#` link after the name in a reference row, which carries the row's
+   `ref-` anchor. Shown the same way as a heading's. */
+.rowAnchor {
+  margin-left: 0.3em;
+  color: var(--mantine-color-dimmed);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.article tr:hover .rowAnchor,
+.rowAnchor:focus-visible {
+  opacity: 1;
+}
+
+.rowAnchor:hover {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+@media (hover: none) {
+  .headingAnchor,
+  .rowAnchor {
+    opacity: 0.5;
+  }
+}
+
+.article tr[id] {
+  scroll-margin-top: var(--mantine-spacing-md);
+}
+
+/* The row a link or a search result landed on. */
+.article tr:target > td {
+  background: var(--mantine-primary-color-light);
 }
 
 /* No rules for `pre` here: every fence in the article renders as a `CodeBlock`,
@@ -99,6 +215,57 @@
    its own, so the paragraph after a table sat against its bottom border. */
 .tableBlock {
   margin-block: var(--mantine-spacing-lg);
+}
+
+/* On a narrow page every row becomes a block: the first cell, the name, on
+   its own line, and each other cell under its column's header, which the
+   renderer copies into `data-label`. A table with four columns otherwise
+   scrolls sideways and shows one column at a time. */
+@container (max-width: 36em) {
+  .article .tableBlock > div {
+    min-width: 0;
+  }
+
+  .article table,
+  .article tbody,
+  .article tr,
+  .article td {
+    display: block;
+  }
+
+  .article table {
+    border-bottom: none;
+  }
+
+  .article thead {
+    display: none;
+  }
+
+  .article tr {
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    border-bottom: 1px solid var(--mantine-color-default-border);
+  }
+
+  .article tr > td {
+    border: none;
+    padding: 2px 0;
+    background: none;
+  }
+
+  .article tr > td:first-child {
+    font-weight: 600;
+  }
+
+  .article tr > td:not(:first-child)[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--mantine-color-dimmed);
+    font-size: var(--mantine-font-size-xs);
+  }
+
+  .article tr:target {
+    background: var(--mantine-primary-color-light);
+  }
 }
 
 /* The `code` rule above is for an inline chip, and highlighted code is a `code`

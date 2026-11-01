@@ -126,10 +126,41 @@ describe("docs search", () => {
       expect(excerpt(body, "clipboard", 60).length).toBeLessThan(70);
     });
 
+    it("finds the section that explains a symbol, not only its Reference row", () => {
+      // The tokenizer splits the name into words no passage holds on its own,
+      // so the passage under "The column helper" that defines it went unfound.
+      const results = searchDocs("createTMDataGridColumnHelper");
+      expect(results[0].kind).toBe("symbol");
+      expect(results[1]).toMatchObject({ kind: "text", hash: "the-column-helper" });
+    });
+
+    it("finds a symbol's passages while the name is still being typed", () => {
+      const hashes = searchDocs("createTMDataGridCol").map((entry) => entry.hash);
+      expect(hashes).toContain("the-column-helper");
+    });
+
     it("returns one row per destination", () => {
       const results = searchDocs("draft");
       const keys = results.map((entry) => `${entry.to}#${entry.hash ?? ""}${entry.kind === "symbol" ? entry.title : ""}`);
       expect(new Set(keys).size).toBe(keys.length);
+    });
+
+    it("links a symbol to its own reference row", () => {
+      const [first] = searchDocs("resolveRowSelectionClick");
+      expect(first).toMatchObject({
+        kind: "symbol",
+        to: "/docs/row-selection",
+        hash: "ref-resolveRowSelectionClick",
+      });
+    });
+
+    it("drops a passage that points where a symbol already does", () => {
+      // The Reference row that holds a symbol is also a passage; both land on
+      // the row's anchor.
+      const destinations = searchDocs("createTMDataGridColumnHelper")
+        .filter((entry) => entry.context === "Defining columns")
+        .map((entry) => entry.hash);
+      expect(new Set(destinations).size).toBe(destinations.length);
     });
   });
 
