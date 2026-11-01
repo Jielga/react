@@ -6,6 +6,7 @@ import {
   getColumnDefaultOperator,
   getColumnOperators,
   isColumnReorderable,
+  showColumnSearch,
 } from "./columnUtils";
 
 /**
@@ -119,5 +120,23 @@ describe("getColumnOperators", () => {
         columnWith({ operators: ["greaterThan", "lessThan"], defaultOperator: "lessThan" }),
       ),
     ).toBe("lessThan");
+  });
+});
+
+describe("showColumnSearch", () => {
+  it("reads `\"auto\"` as from six columns", () => {
+    expect(showColumnSearch("auto", 5)).toBe(false);
+    expect(showColumnSearch("auto", 6)).toBe(true);
+  });
+
+  it("reads a number as from that many columns", () => {
+    expect(showColumnSearch(10, 9)).toBe(false);
+    expect(showColumnSearch(10, 10)).toBe(true);
+    expect(showColumnSearch(1, 1)).toBe(true);
+  });
+
+  it("reads a boolean as always or never", () => {
+    expect(showColumnSearch(true, 1)).toBe(true);
+    expect(showColumnSearch(false, 50)).toBe(false);
   });
 });

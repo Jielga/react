@@ -29,7 +29,7 @@ import { TMDataGridColumnsPanelViews } from "./TMDataGridViews";
 export type TMDataGridColumnsPanelProps = BoxProps & {
   /**
    * The search box over the list: `"auto"` (the default) from six hideable
-   * columns, `true` always, `false` never.
+   * columns, a number from that many, `true` always, `false` never.
    */
   searchable?: TMDataGridColumnSearchable;
   /**
