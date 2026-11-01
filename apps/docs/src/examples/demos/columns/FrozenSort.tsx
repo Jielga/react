@@ -45,7 +45,9 @@ export function FrozenSort() {
     getRowId: (row) => String(row.id),
     editing: { mode: "cell", onCommit },
     sortMode,
-    initialState: { sorting: [{ id: "salary", desc: false }] },
+    // A number column sorts descending first, so the next header click
+    // reverses the sort rather than clearing it.
+    initialState: { sorting: [{ id: "salary", desc: true }] },
   });
 
   return (

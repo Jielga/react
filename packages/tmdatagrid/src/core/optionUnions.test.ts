@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { UseTMDataGridOptions } from "../useTMDataGrid";
 import { useTMDataGrid } from "../useTMDataGrid";
+import type { TMDataGridSortMode } from "./frozenSort";
 
 /**
  * Compile-time contracts for the option unions. Nothing here runs: the hook
@@ -13,6 +14,7 @@ type Person = { id: number; name: string };
 declare const data: Person[];
 declare const columns: UseTMDataGridOptions<Person>["columns"];
 declare const getRowId: (row: Person) => string;
+declare const sortMode: TMDataGridSortMode;
 
 export function useCompileTimeContracts() {
   // Legal: a draft store with its bulk save.
@@ -113,6 +115,18 @@ export function useCompileTimeContracts() {
     // an editing object without one is a compile error, not a dead option.
     editing: { onCommit: () => {} },
   });
+
+  // Legal: a frozen sort with ids, and the mode from a variable.
+  useTMDataGrid<Person>({ data, columns, getRowId, sortMode: "frozen" });
+  useTMDataGrid<Person>({ data, columns, getRowId, sortMode });
+  // Legal: the default needs no ids.
+  useTMDataGrid<Person>({ data, columns, sortMode: "live" });
+
+  // @ts-expect-error -- a frozen sort requires getRowId: the held order is
+  // keyed by row id, and the index fallback moves it to another record.
+  useTMDataGrid<Person>({ data, columns, sortMode: "frozen" });
+  // @ts-expect-error -- the same for a mode that may be "frozen".
+  useTMDataGrid<Person>({ data, columns, sortMode });
 }
 
 describe("option unions", () => {

@@ -1,8 +1,8 @@
 ---
 name: options
 description: >
-  useTMDataGrid options, return value and state persistence. Covers passthrough
-  of TanStack TableOptions, every default the grid changes (globalFilterFn,
+  useTMDataGrid options, return value and state persistence. Covers TanStack
+  TableOptions passthrough, the defaults the grid changes (globalFilterFn,
   groupedColumnMode, autoResetExpanded, autoResetPageIndex,
   defaultColumn.minSize), the default initialState, the meta object (loading,
   noResultsLabel, rowHeight, totalRowCount), the grid's own options (persist,
@@ -11,11 +11,11 @@ description: >
   showSelectedBackground, cellSelection, renderDetails, overscan,
   quickSearchMode, sortMode), persist with dataKey/settingsKey slices,
   storageMode, urlKey and createTMDataGridUrlState deep links, the returned api
-  (table, ui, edit, features, labels, resetSettings, scrollToRow), ui actions,
-  and reading grid state with useSelector over table.store, as table.getState()
-  does not exist in v9. Load when configuring the hook, looking up an option's
-  default, persisting layout or filters, or reacting to grid state from a
-  parent.
+  (table, ui, edit, features, labels, resetSettings, scrollToRow, sortStale,
+  sortAgain), ui actions, and reading grid state with useSelector over
+  table.store (no table.getState() in v9). Load when configuring the hook,
+  looking up an option's default, persisting layout/filters, or reacting to grid
+  state in a parent.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -68,7 +68,7 @@ with TanStack's own default.
 | --- | --- | --- | --- |
 | `data` | `TData[]` | – | Row data. When the reference changes the table reprocesses the row models, so keep it stable with `useMemo`; a fresh `[]` for the empty case belongs in a module-scope constant. |
 | `columns` | `ColumnDef[]` | – | Created with `createTMDataGridColumnHelper`. Define them outside the component. |
-| `getRowId` | `(row, index, parent?) => string` | Row index | The id that row selection, expansion, row pinning and editing are keyed by. The index points at another record after a sort or a refetch, so return the entity id. Required once `editing` is set. |
+| `getRowId` | `(row, index, parent?) => string` | Row index | The id that row selection, expansion, row pinning, editing and a frozen sort are keyed by. The index points at another record after a sort or a refetch, so return the entity id. Required once `editing` is set or `sortMode` is `"frozen"`. |
 | `defaultColumn` | `Partial<ColumnDef>` | `{ minSize: 80 }` (grid default; TanStack: `{}`) | Defaults merged under every column. The grid sets `filterFn: "tmDataGrid"` and clears `aggregationFn` and `aggregatedCell` on every column, so those three keys have no effect here; a value on the column wins. |
 | `enableRowSelection` | `boolean \| (row) => boolean` | `true` | `false` removes row selection and its checkbox column. |
 | `enableMultiRowSelection` | `boolean \| (row) => boolean` | `true` | `false` removes the select-all checkbox and limits the selection to one row. |
@@ -97,7 +97,7 @@ with TanStack's own default.
 | `enableRowNumbers` | `boolean` | `false` | The row-number gutter, outermost left. Defined by the grid, see the `rows` skill. |
 | `enableRowPinning` | `boolean \| (row) => boolean` | `false` (grid default; TanStack: `true`) | Rows can be pinned to sticky edge blocks with `row.pin()`. See the `rows` skill. |
 | `quickSearchMode` | `"fuzzy" \| "contains"` | `"fuzzy"` | How `Search` matches. Fuzzy forgives typos and orders unsorted results by match quality; `"contains"` is plain substring matching. Defined by the grid, see the `filtering` skill. |
-| `sortMode` | `"live" \| "frozen"` | `"live"` | Controls when the order follows the values. `"frozen"` sorts once, when the sort is applied, and holds that order through edits and refetches until the user sorts again. No effect under `manualSorting`. Defined by the grid, see the `columns` skill. |
+| `sortMode` | `"live" \| "frozen"` | `"live"` | Controls when the order follows the values. `"frozen"` sorts once, when the sort is applied, and holds that order through edits, refetches and filter changes until the user sorts again, and requires `getRowId`. No effect under `manualSorting`. Defined by the grid, see the `columns` skill. |
 | `enableMatchHighlighting` | `boolean` | `false` | Cells mark the matched text while a contains-family filter or the quick search is active. Defined by the grid, see the `filtering` skill. |
 | `renderDetails` | `({ row, table }) => ReactNode` | – | Panel rendered under an expanded row, spanning every column. Setting it turns row details on and adds the pinned chevron lane. Defined by the grid, see the `rows` skill. |
 | `renderDetailsEstHeight` | `number` | `160` | What the virtualizer assumes for a panel it has not measured yet. Panels are measured once mounted, so an approximation is enough. Defined by the grid. |
@@ -341,8 +341,8 @@ Every rule, every member and the TanStack Router setup are in
 | `overscan` | `number` | The overscan, resolved to its default when the option was not set. |
 | `resetSettings` | `() => void` | Puts the settings state back to a clean first visit. |
 | `scrollToRow` | `({ rowId, align? }) => boolean` | Scrolls a row into view through the virtualizer. `false` when the row is not in the current view. |
-| `sortStale` | `boolean` | Under `sortMode: "frozen"`, whether the held order differs from a fresh sort. Always `false` under `"live"`. |
-| `sortAgain` | `() => void` | Under `sortMode: "frozen"`, sorts again on the current values, with the same sort. Does nothing under `"live"`. |
+| `sortStale` | `boolean` | Whether the held order differs from a fresh sort of every row. Always `false` under `"live"` and under `manualSorting`. See the `columns` skill. |
+| `sortAgain` | `() => void` | Sorts again on the current values, with the same sort. Waits for running commits and keeps the page index. Does nothing under `"live"`. |
 
 `table` is `TMDataGridTable<TData>`, TanStack's core `Table` type. It has no
 `getState()` (that method does not exist in TanStack Table v9) and `table.state`

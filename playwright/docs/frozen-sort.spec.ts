@@ -13,9 +13,9 @@ test("a frozen sort holds an edited row until Sort again", async ({ page }) => {
   const sortAgain = grid.part("sort-again", { columnId: "salary" });
   await expect(sortAgain).toHaveCount(0);
 
-  // Sorted by salary, ascending: the highest salary belongs last.
+  // Sorted by salary, descending: the lowest salary belongs last.
   await grid.cell({ rowId: firstId, columnId: "salary" }).dblclick();
-  await grid.fillRow(firstId, { salary: "99999999" });
+  await grid.fillRow(firstId, { salary: "1" });
   await page.keyboard.press("Enter");
 
   await expect(firstRow).toHaveAttribute("data-row-id", firstId);
@@ -24,7 +24,7 @@ test("a frozen sort holds an edited row until Sort again", async ({ page }) => {
   // An edit still open when the button is pressed commits first, and the
   // press still lands.
   await grid.cell({ rowId: secondId, columnId: "salary" }).dblclick();
-  await grid.fillRow(secondId, { salary: "99999998" });
+  await grid.fillRow(secondId, { salary: "2" });
   await sortAgain.click();
 
   await expect(grid.part("editor")).toHaveCount(0);
@@ -33,7 +33,7 @@ test("a frozen sort holds an edited row until Sort again", async ({ page }) => {
   await expect(firstRow).not.toHaveAttribute("data-row-id", secondId);
   await expect(grid.part("header", { columnId: "salary" })).toHaveAttribute(
     "aria-sort",
-    "ascending",
+    "descending",
   );
 });
 
@@ -49,7 +49,7 @@ test("Sort again in the column menu re-sorts a frozen sort", async ({
   if (firstId === null) throw new Error("No rows");
 
   await grid.cell({ rowId: firstId, columnId: "salary" }).dblclick();
-  await grid.fillRow(firstId, { salary: "99999999" });
+  await grid.fillRow(firstId, { salary: "1" });
   await page.keyboard.press("Enter");
   await expect(firstRow).toHaveAttribute("data-row-id", firstId);
 

@@ -55,6 +55,9 @@ Both are compile errors, not options that silently do nothing.
 The `editing` object can be written inline.
 Its callbacks are read through a ref on every render, so its identity does not matter.
 
+In a sorted grid, an edited row moves to its new place as soon as the edit lands.
+To keep it in place until the user sorts again, set `sortMode: "frozen"`; see [Sorting](/docs/sorting#hold-the-order-while-editing).
+
 Editing turns on cell selection: `cellSelection` defaults to `"single"` while `editing` is set.
 
 ## Modes

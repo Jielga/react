@@ -80,8 +80,10 @@ function ClearFiltersButton() {
 }
 ```
 
-Anything rendered inside `TMDataGrid` can call it. It returns
-`{ table, ui, features, filters, exportOptions, labels, controlSize, resetSettings }`.
+Anything rendered inside `TMDataGrid` can call it. It returns every field
+`useTMDataGrid` returns (`table`, `ui`, `edit`, `features`, `filters`,
+`exportOptions`, `labels`, `resetSettings`, `scrollToRow`, `sortStale`,
+`sortAgain`, …), plus `size`, `rowHeight` and `controlSize`.
 
 An export button uses `useTMDataGridExport`, which hands back the export as click handlers:
 
@@ -155,7 +157,7 @@ object.
 | `TMDataGrid.Spacer` | Component | Mantine `BoxProps` | – | Pushes what follows to the right. |
 | `TMDataGrid.FilterButton` | Component | – | – | Opens the filter panel, with an active count. |
 | `TMDataGrid.Menu` | Component | `children` | – | The burger and its dropdown. See [Grid menu](/docs/menu). |
-| `useTMDataGridContext` | Hook | `() => TMDataGridContextValue` | – | `{ table, ui, features, labels, controlSize, resetSettings }`. |
+| `useTMDataGridContext` | Hook | `() => TMDataGridContextValue` | – | Every field `useTMDataGrid` returns (`table`, `ui`, `edit`, `features`, `labels`, `resetSettings`, `scrollToRow`, `sortStale`, `sortAgain`, …), plus `size`, `rowHeight` and `controlSize`. |
 | `getGridCapabilities` | Export | `(table, features) => TMDataGridCapabilities` | – | What this grid can do. Reactive to option changes. |
 | `getColumnCapabilities` | Export | `(column, features) => TMDataGridColumnCapabilities` | – | The same for one column. |
 | `readFeatureFlags` | Export | `(options) => TMDataGridFeatureFlags` | – | Derives the flags from an options object. |

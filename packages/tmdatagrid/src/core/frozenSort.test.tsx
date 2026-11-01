@@ -1,6 +1,6 @@
 import { act, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   Grid,
   type GridProps,
@@ -56,9 +56,14 @@ function renderFrozen(options: Options = {}, data: Array<TestRow> = ROWS) {
       } as UseTMDataGridOptions<TestRow>),
     { initialProps: { data, options }, wrapper: MantineWrapper },
   );
-  const setData = (next: Array<TestRow>) =>
-    rendered.rerender({ data: next, options });
-  return { ...rendered, setData };
+  let current = { data, options };
+  const rerenderWith = (next: Partial<typeof current>) => {
+    current = { ...current, ...next };
+    rendered.rerender(current);
+  };
+  const setData = (next: Array<TestRow>) => rerenderWith({ data: next });
+  const setOptions = (next: Options) => rerenderWith({ options: next });
+  return { ...rendered, setData, setOptions };
 }
 
 const withAge = (rows: Array<TestRow>, id: number, age: number) =>
@@ -257,6 +262,31 @@ describe("sortMode: frozen", () => {
       ]);
     });
 
+    it("holds the order of a group a filter hid when it comes back", () => {
+      const { result, setData } = renderFrozen({
+        initialState: {
+          sorting: [{ id: "age", desc: false }],
+          grouping: ["city"],
+        },
+      });
+      const start = withAge(ROWS, 1, 25);
+      setData(start);
+      act(() => result.current.sortAgain());
+      const held = groupOrder(result.current);
+      setData(withAge(start, 3, 90));
+
+      act(() =>
+        result.current.table.setColumnFilters([
+          { id: "city", value: { operator: "notEquals", value: "Stockholm" } },
+        ]),
+      );
+      expect(groupOrder(result.current)).toEqual([held[1]]);
+      act(() => result.current.table.setColumnFilters([]));
+
+      expect(groupOrder(result.current)).toEqual(held);
+      expect(result.current.sortStale).toBe(true);
+    });
+
     it("takes the order again when the grouping changes", () => {
       const { result, setData } = renderFrozen();
       setData(withAge(ROWS, 2, 50));
@@ -280,6 +310,42 @@ describe("sortMode: frozen", () => {
 
     expect(order(result.current)).toEqual(["2", "3", "1", "4"]);
     expect(result.current.sortStale).toBe(true);
+  });
+
+  it("lets go of the held order while manualSorting is on", () => {
+    const { result, setData, setOptions } = renderFrozen();
+    const edited = withAge(ROWS, 2, 50);
+    setData(edited);
+    expect(result.current.sortStale).toBe(true);
+
+    setOptions({ manualSorting: true });
+    setOptions({ manualSorting: false });
+
+    // A fresh sort, not the order held before the server owned it.
+    expect(order(result.current)).toEqual(["3", "1", "4", "2"]);
+    expect(result.current.sortStale).toBe(false);
+  });
+
+  it("reports a frozen sort without getRowId, once", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { rerender } = renderHook(
+      () =>
+        useTMDataGrid<TestRow>({
+          data: ROWS,
+          columns,
+          sortMode: "frozen",
+          // Without the ids the types require, as JavaScript would call it.
+        } as unknown as UseTMDataGridOptions<TestRow>),
+      { wrapper: MantineWrapper },
+    );
+    rerender();
+
+    expect(
+      error.mock.calls.filter(([message]) =>
+        String(message).includes('sortMode "frozen" requires getRowId'),
+      ),
+    ).toHaveLength(1);
+    error.mockRestore();
   });
 
   it("has no effect under manualSorting", () => {
@@ -339,6 +405,33 @@ describe("the sort-again controls", () => {
     await user.click(screen.getByRole("menuitem", { name: "Sort again" }));
 
     expect(renderedRowIds()).toEqual(["3", "1", "4", "2"]);
+  });
+
+  it("sorts again when the menu picks the sort that is already set", async () => {
+    const user = userEvent.setup();
+    const { setData } = renderFrozenUi();
+    setData(withAge(ROWS, 2, 50));
+
+    await openColumnMenu(user, "Age");
+    await user.click(screen.getByRole("menuitem", { name: "Sort ascending" }));
+
+    expect(renderedRowIds()).toEqual(["3", "1", "4", "2"]);
+    expect(part("header", { columnId: "age" })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+  });
+
+  it("keeps keyboard focus in the header when the button goes away", async () => {
+    const user = userEvent.setup();
+    const { setData } = renderFrozenUi();
+    setData(withAge(ROWS, 2, 50));
+
+    part("sort-again", { columnId: "age" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(queryPart("sort-again")).not.toBeInTheDocument();
+    expect(part("header-sort", { columnId: "age" })).toHaveFocus();
   });
 
   it("leaves Sort again out of an unsorted column's menu", async () => {

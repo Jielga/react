@@ -181,8 +181,10 @@ holding only `Menu.Columns` should be hidden with `canHideAny` under
 `enableHiding: false`. `TMDataGrid.ColumnsPanel` is the same chooser as plain
 controls, for a Popover, a Drawer or an inline layout.
 
-A button of your own reads the grid from context, which returns
-`{ table, ui, features, labels, controlSize, resetSettings }`:
+A button of your own reads the grid from context, which returns every field
+`useTMDataGrid` returns (`table`, `ui`, `edit`, `features`, `labels`,
+`resetSettings`, `scrollToRow`, `sortStale`, `sortAgain`, …), plus `size`,
+`rowHeight` and `controlSize`:
 
 ```tsx
 import {
@@ -364,7 +366,7 @@ Source: `packages/tmdatagrid/docs/toolbar.md` (The built-in parts).
 | `SIZE_CONTROL_SIZE` | Export | `Record<MantineSize, MantineSize>` | – | Which control size each grid size uses. |
 | `DEFAULT_TMDATAGRID_SIZE` | Export | `"md"` | – | The default size. |
 | `TMDataGrid.Toolbar` · `Spacer` | Components | `children`, `withBottomBorder`, Mantine `BoxProps` | `withBottomBorder: false` | The flex row, and the push-right. Style props set on the element. |
-| `useTMDataGridContext` | Hook | `() => TMDataGridContextValue` | – | `{ table, ui, features, labels, controlSize, resetSettings }`. |
+| `useTMDataGridContext` | Hook | `() => TMDataGridContextValue` | – | Every field `useTMDataGrid` returns (`table`, `ui`, `edit`, `features`, `labels`, `resetSettings`, `scrollToRow`, `sortStale`, `sortAgain`, …), plus `size`, `rowHeight` and `controlSize`. |
 | `getGridCapabilities` | Export | `(table, features) => TMDataGridCapabilities` | – | What this grid can do, reactively. |
 | `getColumnCapabilities` | Export | `(column, features) => TMDataGridColumnCapabilities` | – | The same for one column. |
 | `readFeatureFlags` | Export | `(options) => TMDataGridFeatureFlags` | – | Derives the flags from an options object. |

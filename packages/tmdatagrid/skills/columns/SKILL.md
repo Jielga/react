@@ -3,16 +3,16 @@ name: columns
 description: >
   Define and arrange TMDataGrid columns. Covers createTMDataGridColumnHelper,
   every column meta field (label, type, options, flex, align, colSpan, autoSize,
-  enableOrdering, and the meta.filter and meta.edit namespaces holding
-  operators, defaultOperator, control, url, enabled, field, editor, validate and
-  mapValue), the six column types, fluid minmax sizing versus fixed width with
-  minSize / maxSize / size, autosizing and autosizeColumn, hiding through
-  enableHiding and the columns panel, pinning and why a pinned column becomes
-  fixed-width, ordering with enableColumnOrdering, meta.enableOrdering,
-  moveColumn, moveColumnByStep, getStepTargetColumn and the pinned regions,
-  resetSettings, sorting with isMultiSortEvent, sortFn and a frozen sortMode,
-  and the generated lanes. Load when adding or changing columns,
-  controlling widths, hiding, pinning, reordering or sorting them.
+  enableOrdering, and the meta.filter and meta.edit namespaces holding operators,
+  defaultOperator, control, url, enabled, field, editor, validate and mapValue),
+  the six column types, fluid minmax sizing versus fixed width with minSize /
+  maxSize / size, autosizing and autosizeColumn, hiding through enableHiding and
+  the columns panel, pinning and why a pinned column becomes fixed-width,
+  ordering with enableColumnOrdering, meta.enableOrdering, moveColumn,
+  moveColumnByStep, getStepTargetColumn and the pinned regions, resetSettings,
+  sorting with isMultiSortEvent, sortFn and a frozen sortMode, and the generated
+  lanes. Load when adding or changing columns, controlling widths, hiding,
+  pinning, reordering or sorting them, or when an edited row jumps after a sort.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -489,7 +489,7 @@ Source: `packages/tmdatagrid/docs/columns.md` (Columns derived from the other ro
 
 ## References
 
-- [Frozen sort](references/frozen-sort.md) - `sortMode: "frozen"`, `sortAgain`, `sortStale` and the `sort-again` button
+- [Frozen sort](references/frozen-sort.md) - `sortMode: "frozen"`, `sortAgain`, `sortStale`, the `sort-again` button, and keeping an edited row in place
 - [Columns API](references/columns-api.md) - every column option, column meta
   field, export and type belonging to defining, sizing, hiding, pinning,
   ordering and sorting columns.

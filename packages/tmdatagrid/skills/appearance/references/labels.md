@@ -56,7 +56,7 @@ The `labels` option takes a partial override, `TMDataGridLabelsOverride`, merged
 | `sortAsc` | `Sort ascending` | Column menu item. |
 | `sortDesc` | `Sort descending` | Column menu item. |
 | `sortAgain` | `Sort again` | Column menu item and the header button's name, under `sortMode: "frozen"`. |
-| `sortStale` | `Values have changed since this sort. Click to sort again.` | Tooltip of the header button, while the held order is out of date. |
+| `sortAgainHint` | `The rows are no longer in sorted order. Click to sort again.` | Tooltip of the header's Sort again button. |
 | `filterMenuItem` | `Filter` | Column menu item. |
 | `groupBy` | `` `Group by ${column}` `` | Column menu item. |
 | `ungroup` | `` `Ungroup ${column}` `` | Column menu item. |

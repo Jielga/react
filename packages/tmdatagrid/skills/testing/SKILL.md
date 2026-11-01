@@ -98,7 +98,7 @@ match the same rows, and the negative is `:not([data-new])` in CSS and
 
 **Keyed by `data-column-id`**: `header`, `header-sort`, `header-menu`,
 `sort-again` (under `sortMode: "frozen"`, present only while the held order is
-stale), `header-resize` (the resize handle; present only when the column can
+stale, and visible without a hover), `header-resize` (the resize handle; present only when the column can
 resize),
 `header-filter` (absent under `filters.inHeader`), `header-filter-cell`,
 `header-filter-operator`, `filter-row`, `filter-pill`, `columns-toggle`,

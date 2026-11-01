@@ -102,6 +102,8 @@ export function TMDataGridHeaderCell({
   // A resize drag ends with a click that bubbles to the header - without this
   // every resize would also toggle the column's sort order.
   const suppressSortRef = useRef(false);
+  // Where focus goes when the sort-again button unmounts under it.
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
 
   // Subscribing to the slices this cell renders from keeps it live even when the
   // surrounding tree is memoized (React Compiler) or the table lives elsewhere.
@@ -284,20 +286,31 @@ export function TMDataGridHeaderCell({
     table.setColumnPinning(keepGeneratedColumnsOutermost);
   }
 
+  // Under a frozen sort, choosing the sort that is already set writes
+  // nothing new, so it would do nothing; the user asked for a sort, so it
+  // sorts again.
+  function sortBy(desc: boolean) {
+    if (features.frozenSort && sorting.length === 1 && sortDirection === desc) {
+      api.sortAgain();
+    } else {
+      column.toggleSorting(desc);
+    }
+  }
+
   const menuItems: ReactNode[] = [];
   if (canSort) {
     menuItems.push(
       <Menu.Item
         key="sort-asc"
         leftSection={<ArrowUpIcon size={16} stroke={1.6} />}
-        onClick={() => column.toggleSorting(false)}
+        onClick={() => sortBy(false)}
       >
         {labels.sortAsc}
       </Menu.Item>,
       <Menu.Item
         key="sort-desc"
         leftSection={<ArrowDownIcon size={16} stroke={1.6} />}
-        onClick={() => column.toggleSorting(true)}
+        onClick={() => sortBy(true)}
       >
         {labels.sortDesc}
       </Menu.Item>,
@@ -653,6 +666,7 @@ export function TMDataGridHeaderCell({
 
           {canSort && (
             <ActionIcon
+              ref={sortButtonRef}
               className={`${classes.headerAction} ${classes.sortAction}`}
               data-pinned-visible={isSorted || undefined}
               // The arrow is the only sort indicator now that the title no
@@ -681,11 +695,11 @@ export function TMDataGridHeaderCell({
             </ActionIcon>
           )}
 
-          {/* Under `sortMode: "frozen"`, once an edit or a refetch has moved
-              a sorted value: the order on screen is no longer the sorted
-              one. Always shown while it holds, like the filter indicator. */}
+          {/* Under `sortMode: "frozen"`, once an edit or a refetch has left
+              the held order out of sorted order. Always shown while it
+              holds, like the filter indicator. */}
           {isSortStale && (
-            <Tooltip label={labels.sortStale} openDelay={300} withinPortal>
+            <Tooltip label={labels.sortAgainHint} openDelay={300} withinPortal>
               <ActionIcon
                 className={classes.headerAction}
                 data-pinned-visible="true"
@@ -697,6 +711,11 @@ export function TMDataGridHeaderCell({
                 data-column-id={column.id}
                 onClick={(event) => {
                   event.stopPropagation();
+                  // The button unmounts once the order is fresh; a keyboard
+                  // user would be left on the page body.
+                  if (event.currentTarget === document.activeElement) {
+                    sortButtonRef.current?.focus();
+                  }
                   api.sortAgain();
                 }}
               >

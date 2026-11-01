@@ -30,6 +30,12 @@ type FrozenSortState = {
    * there, rather than compared against ranks from a sibling list it left.
    */
   ranks: Map<string, Map<string, number>>;
+  /**
+   * Ids of the group rows seen since the take. A group row exists only in
+   * the grouped model, so a filter that empties a group would otherwise read
+   * as the group leaving the data, and drop the order held inside it.
+   */
+  groups: Set<string>;
   /** The live model last reordered, and what it was reordered into. */
   input: object | null;
   output: object | null;
@@ -52,6 +58,7 @@ function stateOf(table: { store: object }): FrozenSortState {
       epoch: 0,
       takenEpoch: 0,
       ranks: new Map(),
+      groups: new Set(),
       input: null,
       output: null,
       stale: false,
@@ -65,6 +72,7 @@ function release(state: FrozenSortState) {
   if (state.takenKey === null) return;
   state.takenKey = null;
   state.ranks = new Map();
+  state.groups = new Set();
   state.input = null;
   state.output = null;
   state.stale = false;
@@ -100,12 +108,21 @@ function frozenKey<TFeatures extends TableFeatures, TData extends RowData>(
 
 type AnyRow = Row<TableFeatures, RowData>;
 
-function record(rows: ReadonlyArray<AnyRow>, parentId: string, ranks: FrozenSortState["ranks"]) {
+/** A row TanStack's grouped model made, rather than one from the data. */
+const isGroupRow = (row: AnyRow) =>
+  (row as { groupingColumnId?: string }).groupingColumnId !== undefined;
+
+function record(
+  rows: ReadonlyArray<AnyRow>,
+  parentId: string,
+  state: FrozenSortState,
+) {
   const level = new Map<string, number>();
-  ranks.set(parentId, level);
+  state.ranks.set(parentId, level);
   rows.forEach((row, index) => {
     level.set(row.id, index);
-    if (row.subRows.length) record(row.subRows, row.id, ranks);
+    if (isGroupRow(row)) state.groups.add(row.id);
+    if (row.subRows.length) record(row.subRows, row.id, state);
   });
 }
 
@@ -118,9 +135,10 @@ function record(rows: ReadonlyArray<AnyRow>, parentId: string, ranks: FrozenSort
 function reorder(
   rows: ReadonlyArray<AnyRow>,
   parentId: string,
-  ranks: FrozenSortState["ranks"],
+  state: FrozenSortState,
   flatRows: Array<AnyRow>,
 ): { rows: Array<AnyRow>; changed: boolean } {
+  const { ranks } = state;
   let level = ranks.get(parentId);
   if (level === undefined) {
     level = new Map();
@@ -172,8 +190,9 @@ function reorder(
     if (row !== rows[index]) changed = true;
     const flatIndex = flatRows.length;
     flatRows.push(row);
+    if (isGroupRow(row)) state.groups.add(row.id);
     if (!row.subRows.length) continue;
-    const sub = reorder(row.subRows, row.id, ranks, flatRows);
+    const sub = reorder(row.subRows, row.id, state, flatRows);
     if (!sub.changed) continue;
     // A row whose children moved is cloned rather than mutated, the way
     // TanStack's own sorted model does it: the live model still holds it.
@@ -191,7 +210,9 @@ function reorder(
 /**
  * Drops the ranks of rows that are gone from the data altogether, so a grid
  * whose rows come and go does not hold every id it has ever seen. A row only
- * filtered out keeps its rank, and comes back to its place.
+ * filtered out keeps its rank, and comes back to its place; so does a group,
+ * which is kept until the next take - there are only as many as the grouped
+ * values the hold has seen.
  */
 function prune(
   ranks: FrozenSortState["ranks"],
@@ -238,7 +259,8 @@ export function withFrozenSort<
       const rows = model.rows as unknown as ReadonlyArray<AnyRow>;
       if (key !== state.takenKey || state.epoch !== state.takenEpoch) {
         state.ranks = new Map();
-        record(rows, "", state.ranks);
+        state.groups = new Set();
+        record(rows, "", state);
         state.takenKey = key;
         state.takenEpoch = state.epoch;
         state.input = model;
@@ -250,14 +272,15 @@ export function withFrozenSort<
         return state.output as RowModel<TFeatures, TData>;
       }
       const flatRows: Array<AnyRow> = [];
-      const result = reorder(rows, "", state.ranks, flatRows);
+      const result = reorder(rows, "", state, flatRows);
       // The core model, not this one: a row filtered out is still in the data.
       const core = (
         table as unknown as { getCoreRowModel: () => RowModel<TFeatures, TData> }
       ).getCoreRowModel().rowsById;
       prune(
         state.ranks,
-        (rowId) => rowId in core || rowId in model.rowsById,
+        (rowId) =>
+          rowId in core || rowId in model.rowsById || state.groups.has(rowId),
       );
       const output = result.changed
         ? ({
@@ -278,12 +301,21 @@ export function withFrozenSort<
  * Whether the held order differs from a fresh sort of the same rows - what
  * the header's "sort again" button shows for. Always `false` outside a
  * frozen sort.
+ *
+ * Called on every render, so it also lets go of a hold once frozen sorting
+ * stops applying. Under `manualSorting` TanStack never runs the sorted model,
+ * so the wrapper cannot do that itself, and turning it off again would bring
+ * back the order held before it.
  */
 export function isFrozenSortStale<
   TFeatures extends TableFeatures,
   TData extends RowData,
 >(table: Table<TFeatures, TData>): boolean {
-  if (frozenKey(table) === null) return false;
+  if (frozenKey(table) === null) {
+    const state = states.get(table.store);
+    if (state !== undefined) release(state);
+    return false;
+  }
   // Brings the held order up to date with the current rows first.
   (table as unknown as { getSortedRowModel: () => unknown }).getSortedRowModel();
   return stateOf(table).stale;

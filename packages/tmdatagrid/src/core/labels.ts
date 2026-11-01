@@ -75,8 +75,8 @@ export type TMDataGridLabels = {
   sortDesc: string;
   /** The column menu item and the header button under `sortMode: "frozen"`. */
   sortAgain: string;
-  /** The header button's tooltip, while the held order is out of date. */
-  sortStale: string;
+  /** The header button's tooltip, while the held order is out of sorted order. */
+  sortAgainHint: string;
   filterMenuItem: string;
   groupBy: (column: string) => string;
   ungroup: (column: string) => string;
@@ -244,7 +244,7 @@ export const TMDATAGRID_LABELS_EN: TMDataGridLabels = {
   sortAsc: "Sort ascending",
   sortDesc: "Sort descending",
   sortAgain: "Sort again",
-  sortStale: "Values have changed since this sort. Click to sort again.",
+  sortAgainHint: "The rows are no longer in sorted order. Click to sort again.",
   filterMenuItem: "Filter",
   groupBy: (column) => `Group by ${column}`,
   ungroup: (column) => `Ungroup ${column}`,

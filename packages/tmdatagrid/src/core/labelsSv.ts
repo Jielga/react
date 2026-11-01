@@ -70,7 +70,8 @@ export const TMDATAGRID_LABELS_SV: TMDataGridLabels = {
   sortAsc: "Sortera stigande",
   sortDesc: "Sortera fallande",
   sortAgain: "Sortera igen",
-  sortStale: "Värden har ändrats sedan sorteringen. Klicka för att sortera igen.",
+  sortAgainHint:
+    "Raderna är inte längre i sorterad ordning. Klicka för att sortera igen.",
   filterMenuItem: "Filtrera",
   groupBy: (column) => `Gruppera efter ${column}`,
   ungroup: (column) => `Sluta gruppera efter ${column}`,
