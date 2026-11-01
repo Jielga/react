@@ -15,8 +15,8 @@ import {
 export type TMDataGridMultiSelectEditorProps = TMDataGridEditorArgs & {
   /**
    * Props for the Mantine `MultiSelect`. The grid keeps `data`, the value,
-   * `onChange`, `error`, `size`, the accessible name and
-   * `comboboxProps.withinPortal`; `onBlur` runs after the grid's own.
+   * `onChange`, `error`, `size` and the accessible name; `onBlur` runs after
+   * the grid's own.
    */
   inputProps?: Omit<
     MultiSelectProps,
@@ -27,13 +27,8 @@ export type TMDataGridMultiSelectEditorProps = TMDataGridEditorArgs & {
     | "error"
     | "size"
     | "aria-label"
-    | "comboboxProps"
-  > & {
-    comboboxProps?: Omit<
-      NonNullable<MultiSelectProps["comboboxProps"]>,
-      "withinPortal"
-    >;
-  } & EditorDataAttributes;
+  > &
+    EditorDataAttributes;
 };
 
 /**
@@ -57,8 +52,8 @@ export function TMDataGridMultiSelectEditor({
       w="100%"
       searchable
       {...inputProps}
+      // Portalled, as in the select editor: inside the cell it is clipped.
       size={size}
-      comboboxProps={{ ...inputProps?.comboboxProps, withinPortal: false }}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
       data={optionsToComboboxData(
