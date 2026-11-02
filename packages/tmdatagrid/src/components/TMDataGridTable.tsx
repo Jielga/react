@@ -70,11 +70,13 @@ import {
   resolveRangeBounds,
 } from "../core/cellRange";
 import {
+  applyExportDataMapper,
   buildExportData,
   resolveExportOptions,
   toClipboardText,
   writeClipboardText,
   writeExportFile,
+  type TMDataGridExportTarget,
 } from "../core/export";
 import { autosizeColumn, hasMountedCells } from "../core/autosize";
 import {
@@ -1852,11 +1854,15 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
   const [exportIncludesHeaders, setExportIncludesHeaders] = useState(
     exportOptions.includeHeaders,
   );
-  // The rectangle's values, over the displayed rows the bounds index into.
-  const buildSelectionData = () =>
-    selectionBounds === null
-      ? null
-      : buildExportData({ table, rows, bounds: selectionBounds });
+  // The rectangle's values, over the displayed rows the bounds index into,
+  // through `mapExportData`. `null` when there is nothing to write or the
+  // mapper cancelled.
+  const buildSelectionData = (target: TMDataGridExportTarget) => {
+    if (selectionBounds === null) return null;
+    const data = buildExportData({ table, rows, bounds: selectionBounds });
+    if (data.columnIds.length === 0) return null;
+    return applyExportDataMapper(table, data, { target, rows: "range" });
+  };
 
   /**
    * Ctrl+C. Values only, no header row - Excel's own copy does not include one
@@ -1865,8 +1871,8 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
    * because a file is a document and a clipboard is a fragment.
    */
   const copySelection = async () => {
-    const data = buildSelectionData();
-    if (data === null || data.columnIds.length === 0) return;
+    const data = buildSelectionData("clipboard");
+    if (data === null) return;
     await writeClipboardText(
       toClipboardText(data, {
         decimalComma: exportOptions.format.decimalComma,
@@ -1909,8 +1915,8 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
 
   /** The export item: the rectangle, in the grid's export format. */
   const exportSelection = () => {
-    const data = buildSelectionData();
-    if (data === null || data.columnIds.length === 0) return;
+    const data = buildSelectionData("file");
+    if (data === null) return;
     void writeExportFile(data, {
       ...exportOptions,
       includeHeaders: exportIncludesHeaders,
@@ -2562,28 +2568,34 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
         >
           {labels.copy}
         </Menu.Item>
-        <Menu.Item
-          disabled={selectedDataColumnCount === 0}
-          onClick={exportSelection}
-        >
-          {labels.exportCells}
-        </Menu.Item>
-        {/* Stays open on click: it is the setting the item above reads, and
-            reopening the menu to change your mind about headers is a worse
-            answer than one that lets you see the box tick. */}
-        <Menu.Item
-          closeMenuOnClick={false}
-          onClick={() => setExportIncludesHeaders((previous) => !previous)}
-        >
-          <Checkbox
-            size="xs"
-            checked={exportIncludesHeaders}
-            label={labels.includeHeaders}
-            // The item owns the click; the box only shows what it did.
-            readOnly
-            styles={{ input: { cursor: "pointer" } }}
-          />
-        </Menu.Item>
+        {features.download && (
+          <>
+            <Menu.Item
+              disabled={selectedDataColumnCount === 0}
+              onClick={exportSelection}
+            >
+              {typeof labels.exportCells === "function"
+                ? labels.exportCells(exportOptions.format.extension.toUpperCase())
+                : labels.exportCells}
+            </Menu.Item>
+            {/* Stays open on click: it is the setting the item above reads, and
+                reopening the menu to change your mind about headers is a worse
+                answer than one that lets you see the box tick. */}
+            <Menu.Item
+              closeMenuOnClick={false}
+              onClick={() => setExportIncludesHeaders((previous) => !previous)}
+            >
+              <Checkbox
+                size="xs"
+                checked={exportIncludesHeaders}
+                label={labels.includeHeaders}
+                // The item owns the click; the box only shows what it did.
+                readOnly
+                styles={{ input: { cursor: "pointer" } }}
+              />
+            </Menu.Item>
+          </>
+        )}
       </>
     ) : null;
 

@@ -13,6 +13,8 @@ import {
   testRows,
   type TestRow,
 } from "../../test/gridHarness";
+import { captureDownloads } from "../../test/downloadStub";
+import { tsvFormat, type TMDataGridExportContext } from "../core/export";
 import { createTMDataGridColumnHelper } from "../useTMDataGrid";
 import { SELECT_COLUMN_ID } from "./TMDataGridSelectColumn";
 
@@ -651,7 +653,7 @@ describe("cell selection - ranges", () => {
       await screen.findByRole("menuitem", { name: "Copy" }),
     ).toBeDisabled();
     expect(
-      screen.getByRole("menuitem", { name: "Export cells" }),
+      screen.getByRole("menuitem", { name: "Download as CSV" }),
     ).toBeDisabled();
   });
 
@@ -668,11 +670,133 @@ describe("cell selection - ranges", () => {
 
     expect(await screen.findByText("6 cells")).toBeInTheDocument();
     expect(
-      screen.getByRole("menuitem", { name: "Export cells" }),
+      screen.getByRole("menuitem", { name: "Download as CSV" }),
     ).toBeInTheDocument();
     // The block is the one that was dragged: a right-click inside it is about
     // it, not about the cell under the pointer.
     expect(selectedCells()).toHaveLength(6);
+  });
+
+  it("names the download item after the grid's format", async () => {
+    const user = userEvent.setup();
+    renderGridUi({
+      cellSelection: "range",
+      exportOptions: { format: tsvFormat() },
+    });
+
+    await user.click(cellAt(0, 2));
+    fireEvent.contextMenu(cellAt(0, 2));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "Download as TSV" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a string label for the download item as it is", async () => {
+    const user = userEvent.setup();
+    renderGridUi({
+      cellSelection: "range",
+      labels: { exportCells: "Save cells" },
+    });
+
+    await user.click(cellAt(0, 2));
+    fireEvent.contextMenu(cellAt(0, 2));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "Save cells" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps only Copy under enableDownload: false", async () => {
+    const user = userEvent.setup();
+    renderGridUi({ cellSelection: "range", enableDownload: false });
+
+    await user.click(cellAt(0, 2));
+    fireEvent.contextMenu(cellAt(0, 2));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "Copy" }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("menuitem", { name: "Download as CSV" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Include headers")).not.toBeInTheDocument();
+  });
+
+  it("copies what mapExportData returns", async () => {
+    const user = userEvent.setup();
+    const contexts: Array<TMDataGridExportContext> = [];
+    renderGridUi({
+      cellSelection: "range",
+      mapExportData: (data, context) => {
+        contexts.push(context);
+        return { ...data, rows: data.rows.slice(0, 1) };
+      },
+    });
+
+    await user.pointer([
+      { target: cellAt(0, 2), keys: "[MouseLeft>]" },
+      { target: cellAt(2, 2) },
+      { keys: "[/MouseLeft]" },
+    ]);
+    await user.keyboard("{Control>}c{/Control}");
+
+    await waitFor(async () =>
+      expect(await navigator.clipboard.readText()).toBe(testRows[0]!.name),
+    );
+    expect(contexts).toEqual([{ target: "clipboard", rows: "range" }]);
+  });
+
+  it("copies nothing when mapExportData returns null", async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    renderGridUi({
+      cellSelection: "range",
+      mapExportData: () => {
+        calls += 1;
+        return null;
+      },
+    });
+    await navigator.clipboard.writeText("before");
+
+    await user.click(cellAt(0, 2));
+    await user.keyboard("{Control>}c{/Control}");
+
+    await waitFor(() => expect(calls).toBe(1));
+    expect(await navigator.clipboard.readText()).toBe("before");
+  });
+
+  it("downloads what mapExportData returns from the menu", async () => {
+    const downloads = captureDownloads();
+    const user = userEvent.setup();
+    const contexts: Array<TMDataGridExportContext> = [];
+    renderGridUi({
+      cellSelection: "range",
+      mapExportData: (data, context) => {
+        contexts.push(context);
+        return { ...data, rows: data.rows.slice(0, 1) };
+      },
+    });
+
+    await user.pointer([
+      { target: cellAt(0, 2), keys: "[MouseLeft>]" },
+      { target: cellAt(2, 2) },
+      { keys: "[/MouseLeft]" },
+    ]);
+    fireEvent.contextMenu(cellAt(1, 2));
+    await user.click(
+      await screen.findByRole("menuitem", { name: "Download as CSV" }),
+    );
+
+    await waitFor(() => expect(downloads).toHaveLength(1));
+    const text = (await downloads[0]?.text()) ?? "";
+    // `trim` takes the BOM with it.
+    expect(text.trim().split("\r\n")).toEqual([
+      "sep=;",
+      "Name",
+      testRows[0]!.name,
+    ]);
+    expect(contexts).toEqual([{ target: "file", rows: "range" }]);
   });
 
   it("moves the block to a right-click outside it", async () => {

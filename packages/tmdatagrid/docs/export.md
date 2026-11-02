@@ -3,6 +3,9 @@
 Downloads the grid as a file: every filtered and sorted row across every page, or the selected rows, in the format the grid is configured with.
 `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected` are the built-in entry points; `useTMDataGridExport` is the same export as click handlers for a control of your own.
 
+An export is any write of the grid's values out of the grid: to a file, or to the clipboard through Ctrl+C and Copy under [cell selection](/docs/cell-selection#copy-and-export).
+`meta.enableExport`, `meta.exportValue` and `mapExportData` apply to both.
+
 ```tsx
 <TMDataGrid.Toolbar>
   <TMDataGrid.SummaryCount />
@@ -129,10 +132,51 @@ exportOptions: { format: csvExcelFormat({ escapeFormulas: false }) }
 
 `guardFormula(text)` is the rule as a function, for a format of your own.
 
+## Turn off downloads
+
+Set `enableDownload` to `false` to remove every download the user can start from the grid:
+
+```tsx
+const grid = useTMDataGrid({ data, columns, enableDownload: false });
+```
+
+- `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected` render nothing.
+- The cell-range menu keeps Copy and drops its download item and the Include headers toggle.
+- The column picker does not open.
+- `useTMDataGridExport` reports `canDownload: false`, and its `exportAll` and `exportSelected` do nothing.
+
+Copy and Ctrl+C are not affected; use `mapExportData` to limit or cancel them.
+`exportGrid` still downloads, since only your own code calls it.
+
+## Change the exported data
+
+`mapExportData` receives the data an export would write and returns the data to write instead, or `null` to cancel the export:
+
+```tsx
+const grid = useTMDataGrid({
+  data,
+  columns,
+  // At most 100 rows on the clipboard; files are written in full.
+  mapExportData: (data, { target }) =>
+    target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+});
+```
+
+It runs after `meta.exportValue` and before the format or the clipboard writes the data, for every export of the grid: Ctrl+C, the cell-range menu, the menu items, `useTMDataGridExport` and `exportGrid`.
+The second argument names the export:
+
+- `target` - `"file"` or `"clipboard"`
+- `rows` - `"range"` for the cell-range selection, `"all"`, `"selected"`, or `"list"` for a list of rows passed to `exportGrid`
+
+`columnIds`, `headers` and each row are parallel arrays, so a mapper that removes a column removes it from all three.
+A result without columns cancels the export, as `null` does.
+`mapExportData` is synchronous, because the clipboard write has to happen within the user's key press or click.
+
 ## TMDataGrid.Menu.Export
 
 A menu item that downloads every filtered and sorted row, all pages, in the grid's format.
 It needs a Mantine `Menu` around it and reads the grid from context, so it works in `TMDataGrid.Menu` and in any Mantine menu rendered inside `TMDataGrid`.
+It renders nothing under `enableDownload: false`.
 Its props override `exportOptions` for this item alone, which is how one menu offers two formats:
 
 ```tsx
@@ -175,7 +219,7 @@ The picker is rendered by the `TMDataGrid` root and driven by `ui.state.exportPi
 A menu item that downloads the selected rows of the current view, in grid order, with the same props as `TMDataGrid.Menu.Export`.
 By default its text carries the count (`Export 3 selected rows`); `label` replaces it.
 It is disabled while nothing is selected.
-It renders nothing when row selection is off (`selectionMode: "highlight"` or `enableRowSelection: false`).
+It renders nothing when row selection is off (`selectionMode: "highlight"` or `enableRowSelection: false`) and under `enableDownload: false`.
 
 A selected row the filters have since hidden is not written and not counted.
 
@@ -187,8 +231,10 @@ The export as click handlers, for a button or an item of your own anywhere insid
 import { useTMDataGridExport } from "@jielga/tmdatagrid";
 
 function ExportButtons() {
-  const { exportAll, exportSelected, selectedCount, canExportSelected } =
+  const { exportAll, exportSelected, selectedCount, canExportSelected, canDownload } =
     useTMDataGridExport();
+
+  if (!canDownload) return null;
 
   return (
     <>
@@ -214,6 +260,7 @@ It takes a `TMDataGridExportOptions` argument, folded over the grid's `exportOpt
 | `exportSelected` | `(overrides?) => Promise<void>` | Downloads the selected rows of the current view. Resolves without a download when none is selected. |
 | `selectedCount` | `number` | How many rows `exportSelected` would write. Subscribes to the selection. |
 | `canExportSelected` | `boolean` | `true` while row selection is on. |
+| `canDownload` | `boolean` | `false` under `enableDownload: false`, where `exportAll` and `exportSelected` do nothing. |
 
 ## Exporting from outside the grid
 
@@ -226,8 +273,10 @@ await exportGrid({ table: grid.table, rows: "selected", options: { format: jsonF
 ```
 
 `rows` is `"all"` (the default), `"selected"`, or an array of TanStack rows of your own; `options.columns` picks the columns.
+`exportGrid` runs the grid's `mapExportData`, and downloads under `enableDownload: false` too.
 `buildExportData({ table, rows, columns })` is the step before the file: the columns, their labels and the raw values as a `TMDataGridExportData`, for a format or a post-processing step of your own.
 `writeExportFile(data, settings)` writes and downloads it.
+Neither of the two runs `mapExportData`.
 
 ## Writing your own format
 
@@ -258,7 +307,7 @@ Set `decimalComma` on the format when it writes text with a decimal mark, so Ctr
 
 ## Copy and the cell-range menu
 
-Under `cellSelection: "range"`, Ctrl+C and the **Export cells** item of the right-click menu write the selected rectangle through the same `exportOptions`, column meta and format.
+Under `cellSelection: "range"`, Ctrl+C and the **Download as CSV** item of the right-click menu write the selected rectangle through the same `exportOptions`, column meta, `mapExportData` and format.
 See [Copy and export](/docs/cell-selection#copy-and-export).
 
 ## Labels
@@ -267,7 +316,7 @@ See [Copy and export](/docs/cell-selection#copy-and-export).
 | --- | --- | --- |
 | `exportAll` | `"Export all rows"` | `TMDataGrid.Menu.Export` |
 | `exportSelected` | `(count) => "Export 3 selected rows"` | `TMDataGrid.Menu.ExportSelected` |
-| `exportCells` | `"Export cells"` | The cell-range menu |
+| `exportCells` | `` (format) => `Download as ${format}` `` | The cell-range menu; `format` is the extension in upper case. A string is shown as it is. |
 | `exportPickerTitle` | `` (format) => `Export as ${format}` `` | The column picker; `format` is the extension in upper case |
 | `exportPickerHint` | `(selected) => "Select the columns to export"`, or `… for the ${selected} selected rows` | The line under the picker's title |
 | `exportPickerConfirm` | `"Export"` | The column picker |
@@ -291,6 +340,10 @@ See [Testing](/docs/testing).
 | Name | Kind | Type | Default | What it does |
 | --- | --- | --- | --- | --- |
 | `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row for every export of the grid. |
+| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. |
+| `mapExportData` | Option | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. |
+| `TMDataGridExportDataMapper` | Type | `(data, { target, rows }) => TMDataGridExportData \| null` | – | The type of `mapExportData`. |
+| `TMDataGridExportContext` · `TMDataGridExportTarget` | Types | `{ target, rows }` · `"file" \| "clipboard"` | – | The second argument of `mapExportData`, and its `target`. |
 | `meta.enableExport` | Column meta | `boolean` | `true` | `false` leaves the column out of every export and of Ctrl+C. |
 | `meta.exportValue` | Column meta | `({ value, row, column }) => unknown` | – | The value written in place of `row.getValue`. |
 | `TMDataGridExportValueGetter` | Type | – | – | The type of `meta.exportValue`. |
@@ -300,7 +353,7 @@ See [Testing](/docs/testing).
 | `TMDataGridExportPickerRequest` | Type | `{ rows, options }` | – | The value of `ui.state.exportPicker` while the picker is open. |
 | `ui.actions.openExportPicker` · `closeExportPicker` | UI actions | – | – | Open the picker from your own code. |
 | `getExportableColumns` | Function | `(table) => Array<Column>` | – | Every column an export could take, hidden ones included. |
-| `useTMDataGridExport` | Hook | `(overrides?) => TMDataGridExportApi` | – | `exportAll`, `exportSelected`, `selectedCount`, `canExportSelected`. |
+| `useTMDataGridExport` | Hook | `(overrides?) => TMDataGridExportApi` | – | `exportAll`, `exportSelected`, `selectedCount`, `canExportSelected`, `canDownload`. |
 | `exportGrid` | Function | `({ table, rows?, options? }) => Promise<void>` | – | Downloads the grid from outside a component. |
 | `ExportGridArgs` | Type | `{ table, rows?, options? }` | – | What `exportGrid` takes. |
 | `buildExportData` | Function | `({ table, rows?, columns?, bounds? }) => TMDataGridExportData` | – | The columns, labels and values a format writes. |

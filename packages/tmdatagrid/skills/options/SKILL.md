@@ -52,17 +52,17 @@ flags and `rowCount`. The `features` option is supplied internally and cannot be
 overridden.
 
 The grid defines these options itself: `persist`, `labels`, `editing`,
-`filters`, `exportOptions`, `enableColumnOrdering`, `enablePagination`,
-`resetPageOnQueryChange`, `enableRowNumbers`, `selectionMode`,
-`showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
-`cellSelection`, `onFocusedCellChange`, `renderDetails`,
-`renderDetailsEstHeight`, `detailsColumnPosition`, `overscan`,
-`quickSearchMode` and `enableMatchHighlighting`. The table below marks them
-"Defined by the grid"; every other row is a TanStack option, listed where the
-grid changes its default or where it decides something visible. A TanStack
-default the grid changes reads, for example, `"remove"` (grid default;
-TanStack: `"reorder"`). A TanStack option that is not listed passes through
-with TanStack's own default.
+`filters`, `exportOptions`, `enableDownload`, `mapExportData`,
+`enableColumnOrdering`, `enablePagination`, `resetPageOnQueryChange`,
+`enableRowNumbers`, `selectionMode`, `showSelectedBackground`,
+`defaultHighlightedRowId`, `onHighlightedRowChange`, `cellSelection`,
+`onFocusedCellChange`, `renderDetails`, `renderDetailsEstHeight`,
+`detailsColumnPosition`, `overscan`, `quickSearchMode` and
+`enableMatchHighlighting`. The table below marks them "Defined by the grid";
+every other row is a TanStack option, listed where the grid changes its default
+or where it decides something visible. A TanStack default the grid changes
+reads, for example, `"remove"` (grid default; TanStack: `"reorder"`). A TanStack
+option that is not listed passes through with TanStack's own default.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -111,6 +111,8 @@ with TanStack's own default.
 | `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration. See below. |
 | `filters` | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Where the filter controls go - a popup, a sidebar, the column headers, or nowhere. Defined by the grid, see the `filtering` skill. |
 | `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see the `data` skill. |
+| `enableDownload` | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. Defined by the grid, see the `data` skill. |
+| `mapExportData` | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. Defined by the grid, see the `data` skill. |
 | `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see the `editing` skill. |
 | `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see below. |
 | `labels` | `TMDataGridLabelsOverride` | English | Overrides for the grid's strings and `aria-label`s. Defined by the grid, see the `appearance` skill. |

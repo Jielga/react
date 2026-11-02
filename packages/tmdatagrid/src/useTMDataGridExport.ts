@@ -1,6 +1,7 @@
 import { useSelector } from "@tanstack/react-store";
 import { useTMDataGridContext } from "./TMDataGridContext";
 import {
+  applyExportDataMapper,
   buildExportData,
   countSelectedExportRows,
   resolveExportOptions,
@@ -29,6 +30,12 @@ export type TMDataGridExportApi = {
    * "selected rows" control has nothing to offer.
    */
   canExportSelected: boolean;
+  /**
+   * Whether the grid offers downloads - `false` under `enableDownload: false`,
+   * where `exportAll` and `exportSelected` do nothing. A control of your own
+   * reads it to hide itself, as the `TMDataGrid.Menu.Export*` items do.
+   */
+  canDownload: boolean;
 };
 
 /**
@@ -58,6 +65,7 @@ export function useTMDataGridExport(
     rows: "all" | "selected",
     callOverrides?: TMDataGridExportOptions,
   ) => {
+    if (!features.download) return;
     const resolved = resolveExportOptions(
       exportOptions,
       overrides,
@@ -66,7 +74,9 @@ export function useTMDataGridExport(
     const data = buildExportData({ table, rows, columns: resolved.columns });
     if (data.columnIds.length === 0) return;
     if (rows === "selected" && data.rows.length === 0) return;
-    await writeExportFile(data, resolved);
+    const mapped = applyExportDataMapper(table, data, { target: "file", rows });
+    if (mapped === null) return;
+    await writeExportFile(mapped, resolved);
   };
 
   return {
@@ -74,5 +84,6 @@ export function useTMDataGridExport(
     exportSelected: (callOverrides) => run("selected", callOverrides),
     selectedCount,
     canExportSelected: features.rowSelection,
+    canDownload: features.download,
   };
 }

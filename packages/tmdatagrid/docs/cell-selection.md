@@ -98,7 +98,7 @@ supported.
 The generated lanes (checkbox, tree, details) are part of the selection. They
 take the tint and the outline, so the block stays a rectangle and the arrow keys
 still reach the checkbox. They are never exported. A block covering nothing else
-has nothing to copy, and the Copy and Export items are disabled.
+has nothing to copy, and the Copy and download items are disabled.
 
 ## Copy and export
 
@@ -112,7 +112,7 @@ file: cells/CopyAndExport.tsx
 hint: Select a block and press Ctrl+C. It pastes into Excel as cells, not as one string.
 ```
 
-Right-clicking inside the selection opens a menu with **Copy**, **Export cells**
+Right-clicking inside the selection opens a menu with **Copy**, **Download as CSV**
 and an **Include headers** toggle. A right-click outside it moves the
 selection there first, as a spreadsheet does. Your own
 [`renderRowContextMenu`](/docs/row-interaction#context-menus) items are appended
@@ -120,7 +120,8 @@ below a divider, so turning cell selection on removes nothing. Those three items
 
 ### The file
 
-**Export cells** writes the rectangle in the grid's export format, by default a CSV for a Nordic Excel: a `sep=;` first line, a UTF-8 BOM, CRLF endings, semicolons between fields and a comma as the decimal mark.
+**Download as CSV** writes the rectangle in the grid's export format, by default a CSV for a Nordic Excel: a `sep=;` first line, a UTF-8 BOM, CRLF endings, semicolons between fields and a comma as the decimal mark.
+The item names the format's extension, so under `tsvFormat()` it reads **Download as TSV**.
 The format, the file name and the header row are the grid's `exportOptions`; the formats, `meta.exportValue` and `meta.enableExport` are on [Export](/docs/export).
 
 ```tsx
@@ -136,6 +137,10 @@ What is written is the cell's **value**, not what it renders, for the file and f
 Ctrl+C writes numbers with the format's decimal mark, so what is pasted matches what is exported.
 
 Exporting every filtered row rather than the rectangle is `TMDataGrid.Menu.Export` and `useTMDataGridExport`, on [Export](/docs/export).
+
+Set `enableDownload` to `false` to keep Copy and remove the download item and the Include headers toggle.
+To limit or cancel what Copy, Ctrl+C and the download item write, set `mapExportData`; it receives `target: "clipboard"` or `target: "file"` and `rows: "range"`.
+See [Turn off downloads](/docs/export#turn-off-downloads) and [Change the exported data](/docs/export#change-the-exported-data).
 
 ### Export the range from your own code
 
@@ -170,8 +175,9 @@ const exportRange = async () => {
 };
 ```
 
-`buildExportData` leaves out the generated lanes and every column with `meta.enableExport: false`, as the Export cells item does.
-Unlike the Export cells item, `resolveRangeBounds` does not fall back to the focused cell when there is no range.
+`buildExportData` leaves out the generated lanes and every column with `meta.enableExport: false`, as the download item does.
+It does not run `mapExportData`.
+Unlike the download item, `resolveRangeBounds` does not fall back to the focused cell when there is no range.
 
 ## Reference
 
@@ -180,7 +186,9 @@ Unlike the Export cells item, `resolveRangeBounds` does not fall back to the foc
 | `cellSelection` | Option | `"none" \| "single" \| "range"` | `"none"` | Turns the cell cursor, and the rectangle, on. |
 | `TMDataGridCellSelectionMode` | Type | – | – | The type of `cellSelection`. |
 | `onFocusedCellChange` | Callback | `(cell \| null) => void` | – | Follows the cursor. |
-| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row of the Export cells item. See [Export](/docs/export). |
+| `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row of the download item. See [Export](/docs/export). |
+| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. |
+| `mapExportData` | Option | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. |
 | `ui.state.focusedCell` | UI state | `{ rowId, columnId } \| null` | `null` | The cursor. |
 | `ui.state.cellRange` | UI state | `{ anchor, focus } \| null` | `null` | The rectangle's two corners. |
 | `ui.actions.setFocusedCell` · `setCellRange` | UI actions | – | – | Move either from your own code. |

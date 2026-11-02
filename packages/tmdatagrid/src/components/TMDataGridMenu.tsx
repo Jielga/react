@@ -303,12 +303,14 @@ function splitExportProps({ label, columns, ...rest }: TMDataGridMenuExportProps
 /**
  * Downloads every filtered and sorted row, all pages, in the grid's export
  * format. Props override `exportOptions` for this item alone, which is how one
- * menu offers two formats.
+ * menu offers two formats. Renders nothing under `enableDownload: false`.
  */
 export function TMDataGridMenuExport(props: TMDataGridMenuExportProps) {
   const { label, custom, options } = splitExportProps(props);
   const { ui, labels } = useTMDataGridContext();
-  const { exportAll } = useTMDataGridExport(options);
+  const { exportAll, canDownload } = useTMDataGridExport(options);
+
+  if (!canDownload) return null;
 
   return (
     <Menu.Item
@@ -327,15 +329,15 @@ export function TMDataGridMenuExport(props: TMDataGridMenuExportProps) {
 /**
  * Downloads the selected rows, in grid order. Disabled while nothing is
  * selected; renders nothing when row selection is off, since then there is
- * never anything for it to do.
+ * never anything for it to do, and under `enableDownload: false`.
  */
 export function TMDataGridMenuExportSelected(props: TMDataGridMenuExportProps) {
   const { label, custom, options } = splitExportProps(props);
   const { ui, labels } = useTMDataGridContext();
-  const { exportSelected, selectedCount, canExportSelected } =
+  const { exportSelected, selectedCount, canExportSelected, canDownload } =
     useTMDataGridExport(options);
 
-  if (!canExportSelected) return null;
+  if (!canExportSelected || !canDownload) return null;
 
   return (
     <Menu.Item

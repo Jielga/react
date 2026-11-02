@@ -101,6 +101,12 @@ export type TMDataGridFeatureFlags = {
   /** Whether a rectangle of cells can be selected. Only under `"range"`. */
   cellRangeSelection: boolean;
   /**
+   * Whether the built-in download items are offered - `enableDownload`. Off,
+   * the cell-range menu keeps only Copy and the `TMDataGrid.Menu.Export*`
+   * items render nothing. The clipboard is not affected.
+   */
+  download: boolean;
+  /**
    * The one default-off flag: pagination must be asked for, either with the
    * grid's `enablePagination` or implicitly by declaring `manualPagination`.
    * Off, the grid renders every filtered row and relies on virtualization.
@@ -175,6 +181,7 @@ export function readFeatureFlags<TData extends RowData>(
     | "enableRowNumbers"
     | "enableRowPinning"
     | "enableMatchHighlighting"
+    | "enableDownload"
   >,
 ): TMDataGridFeatureFlags {
   const selectionMode = options.selectionMode ?? "checkbox";
@@ -213,6 +220,7 @@ export function readFeatureFlags<TData extends RowData>(
     cellSelection: cellSelectionMode !== "none",
     cellSelectionMode,
     cellRangeSelection: cellSelectionMode === "range",
+    download: options.enableDownload !== false,
     pagination:
       options.enablePagination === true || options.manualPagination === true,
     grouping: options.enableGrouping ?? options.manualPagination !== true,

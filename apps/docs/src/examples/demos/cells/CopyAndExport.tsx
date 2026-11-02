@@ -9,7 +9,7 @@ export function CopyAndExport() {
     getRowId: (row) => String(row.id),
     cellSelection: "range",
     selectionMode: "highlight",
-    // What Ctrl+C and the "Export cells" item write. The default is a CSV for
+    // What Ctrl+C and the download item write. The default is a CSV for
     // a Nordic Excel; this one is plain CSV, for Sheets and tooling.
     exportOptions: { format: csvFormat(), fileName: "employees" },
   });

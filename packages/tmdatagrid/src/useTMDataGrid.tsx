@@ -155,7 +155,9 @@ import type {
   TMDataGridTypedColumn,
 } from "./core/urlState";
 import {
+  registerExportDataMapper,
   resolveExportOptions,
+  type TMDataGridExportDataMapper,
   type TMDataGridExportOptions,
   type TMDataGridExportPickerRequest,
   type TMDataGridExportSettings,
@@ -982,6 +984,38 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    */
   exportOptions?: TMDataGridExportOptions;
   /**
+   * Whether the grid offers file downloads. `false` takes the download item
+   * and its Include headers toggle out of the cell-range menu, renders
+   * `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected` as nothing,
+   * and makes `useTMDataGridExport`'s `exportAll` and `exportSelected` do
+   * nothing, with its `canDownload` reporting `false`. Defaults to `true`.
+   *
+   * Copy and Ctrl+C are not affected; {@link mapExportData} is where the
+   * clipboard is limited. `exportGrid` still downloads, since only your own
+   * code calls it.
+   */
+  enableDownload?: boolean;
+  /**
+   * Changes what every export of the grid writes, to a file or the clipboard.
+   * Receives the data after `meta.exportValue` and before the format, with
+   * `{ target, rows }` naming the export, and returns the data to write, or
+   * `null` to cancel the export.
+   *
+   * ```tsx
+   * useTMDataGrid({
+   *   data,
+   *   columns,
+   *   mapExportData: (data, { target }) =>
+   *     target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+   * });
+   * ```
+   *
+   * Runs for Ctrl+C, the cell-range menu, the `TMDataGrid.Menu.Export*`
+   * items, `useTMDataGridExport` and `exportGrid`. Synchronous, because the
+   * clipboard write has to stay inside the user's gesture.
+   */
+  mapExportData?: TMDataGridExportDataMapper;
+  /**
    * How the quick search (`TMDataGrid.Search`) matches. `"fuzzy"` - the
    * default - forgives typos and skipped characters, and while it is the
    * only thing narrowing the grid (no sort, no grouping) the rows order by
@@ -1276,6 +1310,8 @@ export function useTMDataGrid<TData extends RowData>({
   onFocusedCellChange,
   filters: filterOptions,
   exportOptions: exportOptionsOverride,
+  enableDownload,
+  mapExportData,
   editing,
   renderDetails,
   renderDetailsEstHeight = DEFAULT_DETAILS_EST_HEIGHT,
@@ -1303,6 +1339,7 @@ export function useTMDataGrid<TData extends RowData>({
     showSelectedBackground,
     cellSelection,
     editing,
+    enableDownload,
   });
 
   // Resolved on the override's identity, so a module-scope dictionary costs one
@@ -1929,6 +1966,14 @@ export function useTMDataGrid<TData extends RowData>({
     () => registerDeletedRows(tableRef.current, engine.isRowDeleted),
     [engine],
   );
+
+  // The same arrangement for `mapExportData`, so `exportGrid` runs it too.
+  // Re-registered when its identity changes, which an inline arrow does every
+  // render - a map write, nothing more.
+  useEffect(() => {
+    if (!mapExportData) return;
+    return registerExportDataMapper(tableRef.current, mapExportData);
+  }, [mapExportData]);
 
   // Editing without stable ids points every draft at whatever record slides
   // into that index after a sort. Loud, once, in development.

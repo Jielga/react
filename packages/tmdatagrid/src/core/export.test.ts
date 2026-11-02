@@ -17,6 +17,7 @@ import {
   jsonFormat,
   resolveExportOptions,
   tsvFormat,
+  type TMDataGridExportContext,
   type TMDataGridExportData,
 } from "./export";
 
@@ -269,6 +270,53 @@ describe("exportGrid", () => {
     await exportGrid({ table: result.current.table });
 
     expect(downloads).toHaveLength(0);
+  });
+
+  it("runs the grid's mapExportData", async () => {
+    const downloads = captureDownloads();
+    const contexts: Array<TMDataGridExportContext> = [];
+    const { result } = renderGrid({
+      mapExportData: (data, context) => {
+        contexts.push(context);
+        return { ...data, rows: data.rows.slice(0, 1) };
+      },
+    });
+
+    await exportGrid({
+      table: result.current.table,
+      options: { format: csvFormat() },
+    });
+    await exportGrid({
+      table: result.current.table,
+      rows: result.current.table.getRowModel().rows.slice(1, 3),
+      options: { format: csvFormat() },
+    });
+
+    expect(await downloads[0]?.text()).toBe(
+      "﻿ID,Name,Age,City\r\n1,Anna,20,Stockholm\r\n",
+    );
+    expect(contexts).toEqual([
+      { target: "file", rows: "all" },
+      { target: "file", rows: "list" },
+    ]);
+  });
+
+  it("downloads nothing when mapExportData returns null", async () => {
+    const downloads = captureDownloads();
+    const { result } = renderGrid({ mapExportData: () => null });
+
+    await exportGrid({ table: result.current.table });
+
+    expect(downloads).toHaveLength(0);
+  });
+
+  it("still downloads under enableDownload: false", async () => {
+    const downloads = captureDownloads();
+    const { result } = renderGrid({ enableDownload: false });
+
+    await exportGrid({ table: result.current.table });
+
+    expect(downloads).toHaveLength(1);
   });
 });
 

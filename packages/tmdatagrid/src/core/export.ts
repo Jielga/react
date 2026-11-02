@@ -113,6 +113,29 @@ export type TMDataGridExportRows<TData extends RowData> =
   | "selected"
   | ReadonlyArray<Row<TMDataGridFeatures, TData>>;
 
+/** Where an export goes: a downloaded file, or the clipboard (Ctrl+C and Copy). */
+export type TMDataGridExportTarget = "file" | "clipboard";
+
+/** What `mapExportData` is told about the export it receives. */
+export type TMDataGridExportContext = {
+  target: TMDataGridExportTarget;
+  /**
+   * Which rows were taken: `"range"` the cell-range selection, `"all"` every
+   * filtered and sorted row, `"selected"` the selected ones among those,
+   * `"list"` a list of rows passed to `exportGrid`.
+   */
+  rows: "range" | "all" | "selected" | "list";
+};
+
+/**
+ * The `mapExportData` option: receives what an export would write and returns
+ * what it writes instead, or `null` to cancel it.
+ */
+export type TMDataGridExportDataMapper = (
+  data: TMDataGridExportData,
+  context: TMDataGridExportContext,
+) => TMDataGridExportData | null;
+
 /**
  * One value as text.
  *
@@ -610,6 +633,10 @@ export type ExportGridArgs<TData extends RowData> = {
  * items call this with the grid's own `exportOptions`; this is the entry point
  * for code that holds the table and nothing else.
  *
+ * The grid's `mapExportData` runs over the data before the format writes it,
+ * as it does for the grid's own exports. `enableDownload: false` does not stop
+ * this call: it hides what the user can reach, and this is your own code.
+ *
  * Nothing is downloaded when no column is exportable. A grid with no rows
  * still downloads its header row, since an empty file is the honest answer to
  * an empty view.
@@ -620,13 +647,58 @@ export type ExportGridArgs<TData extends RowData> = {
  */
 export async function exportGrid<TData extends RowData>({
   table,
-  rows,
+  rows = "all",
   options,
 }: ExportGridArgs<TData>): Promise<void> {
   const resolved = resolveExportOptions(options);
   const data = buildExportData({ table, rows, columns: resolved.columns });
   if (data.columnIds.length === 0) return;
-  await writeExportFile(data, resolved);
+  const mapped = applyExportDataMapper(table, data, {
+    target: "file",
+    rows: typeof rows === "string" ? rows : "list",
+  });
+  if (mapped === null) return;
+  await writeExportFile(mapped, resolved);
+}
+
+// Keyed on the store for the same reason as the deletion marks: every copy of
+// the table `useTable` hands out shares it. Registered rather than read from
+// context so that `exportGrid`, which holds the table and nothing else, runs
+// the same mapper as the grid's own exports.
+const exportDataMappers = new WeakMap<object, TMDataGridExportDataMapper>();
+
+/**
+ * Registers the grid's `mapExportData` for one table; returns the unregister.
+ *
+ * @internal
+ */
+export function registerExportDataMapper<TData extends RowData>(
+  table: TMDataGridTable<TData>,
+  mapper: TMDataGridExportDataMapper,
+): () => void {
+  exportDataMappers.set(table.store, mapper);
+  return () => {
+    if (exportDataMappers.get(table.store) === mapper) {
+      exportDataMappers.delete(table.store);
+    }
+  };
+}
+
+/**
+ * Runs the table's `mapExportData` over `data`. `null` means the export is
+ * cancelled, and so does a result with no columns, since there is nothing left
+ * to write.
+ *
+ * @internal
+ */
+export function applyExportDataMapper<TData extends RowData>(
+  table: TMDataGridTable<TData>,
+  data: TMDataGridExportData,
+  context: TMDataGridExportContext,
+): TMDataGridExportData | null {
+  const mapper = exportDataMappers.get(table.store);
+  const mapped = mapper ? mapper(data, context) : data;
+  return mapped === null || mapped.columnIds.length === 0 ? null : mapped;
 }
 
 export type TMDataGridClipboardTextOptions = {
