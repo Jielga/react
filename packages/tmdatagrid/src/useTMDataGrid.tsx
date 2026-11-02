@@ -55,6 +55,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -98,6 +99,12 @@ import {
   fuzzyGlobalFilterFn,
   type TMDataGridQuickSearchMode,
 } from "./core/quickSearch";
+import {
+  isFrozenSortStale,
+  requestSortAgain,
+  type TMDataGridSortMode,
+  withFrozenSort,
+} from "./core/frozenSort";
 import {
   mergeLabels,
   type TMDataGridLabels,
@@ -341,8 +348,10 @@ export const tmDataGridFeatures = tableFeatures({
   filteredRowModel: createFilteredRowModel(),
   groupedRowModel: createGroupedRowModel(),
   // The sorted model plus the fuzzy quick search's rank ordering - see
-  // core/quickSearch.ts for when the ordering applies.
-  sortedRowModel: createFuzzyRankedSortedRowModel(),
+  // core/quickSearch.ts for when the ordering applies - and the held order of
+  // `sortMode: "frozen"`, see core/frozenSort.ts. The two never meet: the
+  // ranking applies only without a sort, the held order only with one.
+  sortedRowModel: withFrozenSort(createFuzzyRankedSortedRowModel()),
   expandedRowModel: createExpandedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
   facetedRowModel: createFacetedRowModel(),
@@ -686,6 +695,27 @@ export type TMDataGridApi<TData extends RowData> = {
    */
   scrollToRow: (args: TMDataGridScrollToRowArgs) => boolean;
   /**
+   * Under `sortMode: "frozen"`, whether the held order differs from a fresh
+   * sort of the same rows. A changed value that leaves the order as it was
+   * does not count. Covers every row, including rows on other pages, inside
+   * collapsed groups and pinned rows. Always `false` under `"live"` and under
+   * `manualSorting`.
+   */
+  sortStale: boolean;
+  /**
+   * Under `sortMode: "frozen"`, sorts again on the current values, with the
+   * same sort, the whole multi-sort included. What the header's sort-again
+   * button and the column menu's Sort again item call. Keeps the page index.
+   * Does nothing under `"live"`, where the order is always current.
+   *
+   * Waits for any edit that is still committing, so the new order can show a
+   * render later than the call. It sorts on what `data` holds once
+   * `onCommit` resolves.
+   *
+   * Identity is stable, so it is safe in a dependency array.
+   */
+  sortAgain: () => void;
+  /**
    * @internal Wiring for `TMDataGrid.Table`, which holds the virtualizer and
    * fills this in. Not part of the public API.
    */
@@ -882,6 +912,22 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
           TableOptions<TMDataGridFeatures, TData>["getRowId"]
         >;
       }
+  ) &
+  (
+    | { sortMode?: "live" }
+    | {
+        // The whole union, not `"frozen"` alone: a mode held in a variable
+        // that may be either is accepted once there are ids.
+        sortMode: TMDataGridSortMode;
+        /**
+         * Required under `sortMode: "frozen"`: the held order is keyed by row
+         * id, and the index fallback gives a held place to a different record
+         * after a refetch.
+         */
+        getRowId: NonNullable<
+          TableOptions<TMDataGridFeatures, TData>["getRowId"]
+        >;
+      }
   ) & {
   /**
    * Restore and persist table state across mounts. Two storage keys, because
@@ -1030,6 +1076,21 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    * An explicit `globalFilterFn` overrides both.
    */
   quickSearchMode?: TMDataGridQuickSearchMode;
+  /**
+   * When the sorted order follows the values. `"live"` - the default -
+   * re-sorts on every change, so an edited row moves to its new place as
+   * soon as the edit lands. `"frozen"` sorts once, when the sort is applied,
+   * and holds that order through edits, refetches and filter changes, until
+   * it is taken again: a header click, any sort item in the column menu
+   * (Sort again included), the header's Sort again button, a grouping
+   * change, `setSorting` with a different sort, or `sortAgain()`.
+   * `setSorting` with the sort that is already set keeps the held order.
+   *
+   * Requires `getRowId`: rows are held by id. A row holds its place while it
+   * stays in `data`. No effect under `manualSorting`, where the server owns
+   * the order.
+   */
+  sortMode?: TMDataGridSortMode;
   /**
    * Highlights the matched text in cells while a contains-family column
    * filter or the quick search is active. Default-rendered cells only - a
@@ -1994,6 +2055,19 @@ export function useTMDataGrid<TData extends RowData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A frozen sort holds rows by id, and the index fallback hands a held place
+  // to whatever record a refetch puts at that index. Checked whenever the
+  // mode turns frozen, since the mode can be switched at run time.
+  const frozenWithoutRowId =
+    options.sortMode === "frozen" && options.getRowId === undefined;
+  useEffect(() => {
+    if (frozenWithoutRowId) {
+      console.error(
+        'TMDataGrid: sortMode "frozen" requires getRowId - the held order is keyed by row id, and the index fallback gives a held place to a different record after a refetch.',
+      );
+    }
+  }, [frozenWithoutRowId]);
+
   // A controlled slice without its `onXChange` cannot change: TanStack routes
   // every write through the callback, and the next options sync restores the
   // consumer's value. Warned once in development; `initialState` is the option
@@ -2321,6 +2395,30 @@ export function useTMDataGrid<TData extends RowData>({
     [],
   );
 
+  // The held order is not state TanStack knows about, so taking it again
+  // has to re-render the grid itself: bump the epoch the row model compares
+  // against, then render, and the next read of the sorted rows re-sorts.
+  //
+  // After any commit that is running: pressing the header's button blurs an
+  // open cell editor, which starts its commit, and a re-sort taken before
+  // that edit lands would be out of date again the moment it did.
+  const [, renderSortAgain] = useReducer((count: number) => count + 1, 0);
+  const sortAgain = useCallback(() => {
+    const run = () => {
+      requestSortAgain(tableRef.current);
+      renderSortAgain();
+    };
+    const settled = engine.commitsSettled();
+    if (settled === null) run();
+    else void settled.then(run);
+  }, [engine]);
+  // Derived on every render rather than subscribed to: everything that can
+  // make the held order stale - `data`, the draft store, the table state,
+  // `sortAgain` - already re-renders this hook. Not gated on
+  // `features.frozenSort`: the call also lets go of a hold that stopped
+  // applying.
+  const sortStale = isFrozenSortStale(table);
+
   return {
     table,
     ui,
@@ -2335,6 +2433,8 @@ export function useTMDataGrid<TData extends RowData>({
     resetSettings,
     views,
     scrollToRow,
+    sortStale,
+    sortAgain,
     scrollerRef,
   };
 }

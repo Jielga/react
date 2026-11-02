@@ -39,7 +39,7 @@ Turning it on changes three things about the body:
 | Ctrl+Home / Ctrl+End | First / last cell of the grid |
 | Enter or F2 | Steps into the cell, to its checkbox, link or button |
 | Escape | Steps back out, or drops the rectangle to the focused cell |
-| Space | Selects the row, as a row click does under `selectionMode: "row"` |
+| Space | Selects or deselects the row, or highlights it under `selectionMode: "highlight"`. See [Row selection](/docs/row-selection#with-cell-selection) |
 | Ctrl+C | Copies the selection as tab-separated text |
 | Ctrl+V | Not handled. The grid never writes cells from the clipboard |
 

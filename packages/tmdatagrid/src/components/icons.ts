@@ -35,6 +35,7 @@ export {
   IconTrash as TrashIcon,
   IconPencil as PencilIcon,
   IconPinnedOff as PinOffIcon,
+  IconRefresh as SortAgainIcon,
   IconSearch as SearchIcon,
   IconX as CloseIcon,
 } from "@tabler/icons-react";

@@ -62,7 +62,7 @@ Turning it on changes three things about the body:
 | Ctrl+Home / Ctrl+End | First / last cell of the grid |
 | Enter or F2 | Steps into the cell - its checkbox, link or button |
 | Escape | Steps back out, or drops the rectangle to the focused cell |
-| Space | Selects the row, as a row click does under `selectionMode: "row"` |
+| Space | Adds the row to the row selection or removes it, in every `selectionMode` that selects rows; Shift+Space adds the range from the anchor row. Under `"highlight"`, highlights the row |
 | Ctrl+C | Copies the selection as tab-separated text |
 
 Enter and F2 are the pair a cell editor takes over. Until then they focus the

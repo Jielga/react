@@ -6,15 +6,15 @@ description: >
   and editing.onSaveDrafts, why the grid never mutates data, gating with
   editing.columns, meta.edit.enabled and meta.edit.field, the built-in editors
   (meta.type, inputProps), custom editors via meta.edit.editor, value mapping
-  with mapValue and mapCommitValue, validation at every level -
-  meta.edit.validate, cross-field editing.rowValidators, cross-row
-  editing.tableValidators over the draft-overlaid collection - adding and
-  deleting rows (edit.addRow, newRowDefaults, onRowAdd, onRowDelete), the edit
-  lane, TMDataGrid.DraftActions and renderActions, and the edit engine (begin,
-  commit, commitAll, saveDrafts, addRows, setCellValue, setRowValues, getForm,
-  store). Load when making a grid editable, choosing an edit mode, wiring a
-  save, writing a cell editor, validating an edit, writing cells from a toolbar
-  action or bulk fill, or when cells will not open.
+  with mapValue and mapCommitValue, validation (meta.edit.validate,
+  editing.rowValidators, editing.tableValidators over the draft-overlaid rows),
+  adding and deleting rows (edit.addRow, newRowDefaults, onRowAdd, onRowDelete),
+  the edit lane, TMDataGrid.DraftActions and renderActions, and the edit engine
+  (begin, commit, commitAll, saveDrafts, addRows, setCellValue, setRowValues,
+  getForm, store). Load when making a grid editable, choosing an edit mode,
+  wiring a save, writing a cell editor, validating an edit, writing cells from a
+  toolbar action or bulk fill, or when cells will not open or an edited row
+  jumps after a sort.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -118,6 +118,7 @@ The mode's own commit gesture puts the row in the draft store instead of sending
 `edit.commit(rowId)` goes to the draft store too, so there is no per-row escape hatch to the consumer.
 A committed row is displayed: the cell renders the draft value through the column's own `cell` renderer, with the blue corner marking it dirty and `data-dirty` on the row.
 It is a row like any other to the table: sorting, filtering, quick search, grouping, aggregates, export, selection, the row counts, `edit.getRows()` and `editing.tableValidators` all read its draft values, and the row callbacks receive it with the draft as `row.original`.
+In a sorted grid, an edited row moves to its new place as soon as it commits, in either `draft` setting; `sortMode: "frozen"` keeps it in place until the user sorts again (the `columns` skill, `references/frozen-sort.md`).
 A committed row that stops matching a filter leaves the view, and the Save bar still counts it.
 `data` itself is never modified, and only top-level rows are overlaid - `getSubRows` children keep their `data` values.
 An entry row is row-shaped in every mode - every editable cell open at once, the browser's Tab, and the lane's ✓ to enter it.

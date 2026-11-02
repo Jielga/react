@@ -16,5 +16,11 @@ export function DocsRoutePage() {
     );
   }
 
-  return <DocsPage source={page.source} />;
+  return (
+    <DocsPage
+      source={page.source}
+      toc={false}
+      breadcrumb={[page.section, page.label]}
+    />
+  );
 }

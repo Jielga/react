@@ -58,6 +58,7 @@ extraSources: data/orders.ts
 | Footer total | Pre-paginated row count | `options.rowCount` |
 | `SummaryCount` total | Pre-filtered row count | `meta.totalRowCount`; without it, the count renders alone |
 | Loading state | Not applicable | `meta.loading` |
+| `sortMode: "frozen"` | Holds the order until the user sorts again | No effect under `manualSorting`; see [Sorting](/docs/sorting#server-side-sorting) |
 
 No additional configuration is required. Column menus, the filter panel and the
 column manager behave identically in both modes.
