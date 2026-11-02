@@ -76,6 +76,7 @@ const grid = useTMDataGrid({
 | Footer total | Pre-paginated row count | `options.rowCount` |
 | `SummaryCount` total | Pre-filtered row count | `meta.totalRowCount`; the count alone without it |
 | Loading state | Not applicable | `meta.loading` |
+| `sortMode: "frozen"` | Holds the order until the user sorts again | No effect under `manualSorting`: an edited row moves when the app refetches. To keep it in place, update the edited record in the data already held instead of refetching (the `columns` skill, `references/frozen-sort.md`) |
 
 Column menus, the filter panel and the column manager behave identically in both
 modes.

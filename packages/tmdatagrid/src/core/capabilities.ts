@@ -57,6 +57,12 @@ export type TMDataGridCellSelectionMode =
 
 export type TMDataGridFeatureFlags = {
   sorting: boolean;
+  /**
+   * Whether the sorted order is held until the user sorts again -
+   * `sortMode: "frozen"`. Off under `manualSorting`, where the server owns
+   * the order.
+   */
+  frozenSort: boolean;
   filtering: boolean;
   /** Whether the quick search may filter - `enableGlobalFilter`. */
   globalFiltering: boolean;
@@ -157,6 +163,8 @@ export function readFeatureFlags<TData extends RowData>(
   options: Pick<
     UseTMDataGridOptions<TData>,
     | "enableSorting"
+    | "sortMode"
+    | "manualSorting"
     | "enableColumnFilters"
     | "enableGlobalFilter"
     | "enableHiding"
@@ -191,6 +199,7 @@ export function readFeatureFlags<TData extends RowData>(
 
   return {
     sorting: options.enableSorting !== false,
+    frozenSort: options.sortMode === "frozen" && options.manualSorting !== true,
     filtering: options.enableColumnFilters !== false,
     globalFiltering: options.enableGlobalFilter !== false,
     hiding: options.enableHiding !== false,

@@ -45,6 +45,7 @@ import {
   PinLeftIcon,
   PinOffIcon,
   PinRightIcon,
+  SortAgainIcon,
   UngroupIcon,
 } from "./icons";
 import { GROUP_COLUMN_ID } from "./TMDataGridGroupColumn";
@@ -101,6 +102,8 @@ export function TMDataGridHeaderCell({
   // A resize drag ends with a click that bubbles to the header - without this
   // every resize would also toggle the column's sort order.
   const suppressSortRef = useRef(false);
+  // Where focus goes when the sort-again button unmounts under it.
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
 
   // Subscribing to the slices this cell renders from keeps it live even when the
   // surrounding tree is memoized (React Compiler) or the table lives elsewhere.
@@ -126,6 +129,9 @@ export function TMDataGridHeaderCell({
   const align = getColumnAlign(column);
   const sortDirection = sorting.find((sort) => sort.id === column.id)?.desc;
   const isSorted = sortDirection !== undefined;
+  // Read off the api, which every render of the grid rebuilds - not computed
+  // here, where the React Compiler would cache it on `table`.
+  const isSortStale = isSorted && api.sortStale;
   // 1-based position in a multi-sort, shown only while more than one column
   // sorts - under a single sort the arrow already says everything.
   const sortIndex =
@@ -280,25 +286,47 @@ export function TMDataGridHeaderCell({
     table.setColumnPinning(keepGeneratedColumnsOutermost);
   }
 
+  // Under a frozen sort, choosing the sort that is already set writes
+  // nothing new, so it would do nothing; the user asked for a sort, so it
+  // sorts again.
+  function sortBy(desc: boolean) {
+    if (features.frozenSort && sorting.length === 1 && sortDirection === desc) {
+      api.sortAgain();
+    } else {
+      column.toggleSorting(desc);
+    }
+  }
+
   const menuItems: ReactNode[] = [];
   if (canSort) {
     menuItems.push(
       <Menu.Item
         key="sort-asc"
         leftSection={<ArrowUpIcon size={16} stroke={1.6} />}
-        onClick={() => column.toggleSorting(false)}
+        onClick={() => sortBy(false)}
       >
         {labels.sortAsc}
       </Menu.Item>,
       <Menu.Item
         key="sort-desc"
         leftSection={<ArrowDownIcon size={16} stroke={1.6} />}
-        onClick={() => column.toggleSorting(true)}
+        onClick={() => sortBy(true)}
       >
         {labels.sortDesc}
       </Menu.Item>,
-      <Menu.Divider key="sort-divider" />,
     );
+    if (features.frozenSort && isSorted) {
+      menuItems.push(
+        <Menu.Item
+          key="sort-again"
+          leftSection={<SortAgainIcon size={16} stroke={1.6} />}
+          onClick={api.sortAgain}
+        >
+          {labels.sortAgain}
+        </Menu.Item>,
+      );
+    }
+    menuItems.push(<Menu.Divider key="sort-divider" />);
   }
   // Not under header filters: the item's only job is to reveal a control that
   // is already on screen, one row below this menu.
@@ -638,6 +666,7 @@ export function TMDataGridHeaderCell({
 
           {canSort && (
             <ActionIcon
+              ref={sortButtonRef}
               className={`${classes.headerAction} ${classes.sortAction}`}
               data-pinned-visible={isSorted || undefined}
               // The arrow is the only sort indicator now that the title no
@@ -664,6 +693,35 @@ export function TMDataGridHeaderCell({
                 <ArrowUpIcon size={14} stroke={1.6} />
               )}
             </ActionIcon>
+          )}
+
+          {/* Under `sortMode: "frozen"`, once an edit or a refetch has left
+              the held order out of sorted order. Always shown while it
+              holds, like the filter indicator. */}
+          {isSortStale && (
+            <Tooltip label={labels.sortAgainHint} openDelay={300} withinPortal>
+              <ActionIcon
+                className={classes.headerAction}
+                data-pinned-visible="true"
+                variant="subtle"
+                color="gray"
+                size="xs"
+                aria-label={labels.sortAgain}
+                data-dg-part="sort-again"
+                data-column-id={column.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  // The button unmounts once the order is fresh; a keyboard
+                  // user would be left on the page body.
+                  if (event.currentTarget === document.activeElement) {
+                    sortButtonRef.current?.focus();
+                  }
+                  api.sortAgain();
+                }}
+              >
+                <SortAgainIcon size={14} stroke={1.6} />
+              </ActionIcon>
+            </Tooltip>
           )}
 
           {/* Shift+click adds a column to the sort (TanStack's own

@@ -12,6 +12,7 @@ describe("readFeatureFlags", () => {
   it("defaults everything but pagination to on", () => {
     expect(readFeatureFlags({})).toEqual({
       sorting: true,
+      frozenSort: false,
       filtering: true,
       globalFiltering: true,
       hiding: true,
