@@ -192,26 +192,27 @@ A button of your own reads the grid from context, which returns every field
 
 ```tsx
 import {
-  exportGrid,
   getGridCapabilities,
   useTMDataGridContext,
 } from "@jielga/tmdatagrid";
 
-function ExportButton() {
+function ClearFiltersButton() {
   const { table, features, controlSize } = useTMDataGridContext();
   const { canFilterAny } = getGridCapabilities(table, features);
 
   if (!canFilterAny) return null;
 
   return (
-    <Button size={controlSize} onClick={() => void exportGrid({ table })}>
-      Export
+    <Button size={controlSize} onClick={() => table.resetColumnFilters()}>
+      Clear filters
     </Button>
   );
 }
 ```
 
-`getGridCapabilities(table, features)` returns `canSortAny`, `canFilterAny`,
+An export button uses `useTMDataGridExport` and hides on its `canDownload`,
+which is `false` under `enableDownload: false`; `exportGrid` ignores
+`enableDownload`. `getGridCapabilities(table, features)` returns `canSortAny`, `canFilterAny`,
 `canHideAny`, `canPinAny`, `canReorderAny`, `canGroupAny`, `canSelectRows`,
 `canPaginate` and `canSearch`. `getColumnCapabilities(column, features)` returns
 the same for one column as `canSort`, `canFilter`, `canHide`, `canPin`,

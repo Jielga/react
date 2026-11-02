@@ -54,17 +54,17 @@ flags and `rowCount`. The `features` option is supplied internally and cannot be
 overridden.
 
 The grid defines these options itself: `persist`, `labels`, `editing`,
-`filters`, `exportOptions`, `enableColumnOrdering`, `enablePagination`,
-`resetPageOnQueryChange`, `enableRowNumbers`, `selectionMode`,
-`showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
-`cellSelection`, `onFocusedCellChange`, `renderDetails`,
-`renderDetailsEstHeight`, `detailsColumnPosition`, `overscan`,
-`quickSearchMode`, `sortMode` and `enableMatchHighlighting`. The table below marks them
-"Defined by the grid"; every other row is a TanStack option, listed where the
-grid changes its default or where it decides something visible. A TanStack
-default the grid changes reads, for example, `"remove"` (grid default;
-TanStack: `"reorder"`). A TanStack option that is not listed passes through
-with TanStack's own default.
+`filters`, `exportOptions`, `enableDownload`, `mapExportData`,
+`enableColumnOrdering`, `enablePagination`, `resetPageOnQueryChange`,
+`enableRowNumbers`, `selectionMode`, `showSelectedBackground`,
+`defaultHighlightedRowId`, `onHighlightedRowChange`, `cellSelection`,
+`onFocusedCellChange`, `renderDetails`, `renderDetailsEstHeight`,
+`detailsColumnPosition`, `overscan`, `quickSearchMode`, `sortMode` and
+`enableMatchHighlighting`. The table below marks them "Defined by the grid";
+every other row is a TanStack option, listed where the grid changes its default
+or where it decides something visible. A TanStack default the grid changes
+reads, for example, `"remove"` (grid default; TanStack: `"reorder"`). A TanStack
+option that is not listed passes through with TanStack's own default.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -114,6 +114,8 @@ with TanStack's own default.
 | `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration. See below. |
 | `filters` | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Where the filter controls go - a popup, a sidebar, the column headers, or nowhere. Defined by the grid, see the `filtering` skill. |
 | `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see the `data` skill. |
+| `enableDownload` | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. Defined by the grid, see the `data` skill. |
+| `mapExportData` | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. Defined by the grid, see the `data` skill. |
 | `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see the `editing` skill. |
 | `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see below. |
 | `labels` | `TMDataGridLabelsOverride` | English | Overrides for the grid's strings and `aria-label`s. Defined by the grid, see the `appearance` skill. |
@@ -233,8 +235,7 @@ persistence is skipped rather than throwing.
 A payload from another version is dropped whole, not migrated. Payloads carry
 the exported `PERSIST_PAYLOAD_VERSION`; anything else, including everything
 written by a 0.x build, is discarded. Restored state is realigned against the
-columns that exist: entries naming a column removed between deploys are
-dropped.
+columns that exist: entries naming a column removed between deploys are dropped.
 
 Source: `packages/tmdatagrid/docs/persistence.md` (Behaviour).
 
@@ -405,14 +406,13 @@ const pageIndex = useSelector(grid.table.store, (state) => state.pagination.page
 const filterPanelOpen = useSelector(grid.ui, (state) => state.filterPanelOpen);
 ```
 
-`grid.table.store.state` is a plain read and does not subscribe the component.
-A bare read is stale in any component that does not call `useTMDataGrid`
-itself, and under the React Compiler also in the one that does; `useSelector`
-subscribes either way. A table or column getter such as
-`table.getSelectedRowModel()` or `column.getIsGrouped()` is a plain read as
-well; call it inside a selector, as above. `getTMDataGridPaginationApi(table)`
-is a snapshot too; wrap it in `useSelector` or use the `state` the Footer's
-`renderPagination` slot receives.
+`grid.table.store.state` is a plain read and does not subscribe the component. A
+bare read is stale in any component that does not call `useTMDataGrid` itself,
+and under the React Compiler also in the one that does; `useSelector` subscribes
+either way. A table or column getter such as `table.getSelectedRowModel()` or
+`column.getIsGrouped()` is a plain read as well; call it inside a selector, as
+above. `getTMDataGridPaginationApi(table)` is a snapshot too; wrap it in
+`useSelector` or use the `state` the Footer's `renderPagination` slot receives.
 
 ### ui actions
 

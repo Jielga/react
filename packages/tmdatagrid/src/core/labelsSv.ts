@@ -141,7 +141,7 @@ export const TMDATAGRID_LABELS_SV: TMDataGridLabels = {
 
   cellCount: (count) => (count === 1 ? "1 cell" : `${count} celler`),
   copy: "Kopiera",
-  exportCells: "Exportera celler",
+  exportCells: (format) => `Ladda ner som ${format}`,
   includeHeaders: "Ta med rubriker",
 
   exportAll: "Exportera alla rader",

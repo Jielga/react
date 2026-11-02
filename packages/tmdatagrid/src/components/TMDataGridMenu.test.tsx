@@ -16,13 +16,15 @@ import {
   type TestRow,
 } from "../../test/gridHarness";
 import { captureDownloads } from "../../test/downloadStub";
-import { jsonFormat } from "../core/export";
+import { jsonFormat, type TMDataGridExportContext } from "../core/export";
 import { TMDATAGRID_LABELS_EN } from "../core/labels";
 import {
   createTMDataGridColumnHelper,
   useTMDataGrid,
   type UseTMDataGridOptions,
 } from "../useTMDataGrid";
+import { useTMDataGridExport } from "../useTMDataGridExport";
+import { useTMDataGridContext } from "../TMDataGridContext";
 import { TMDataGrid } from "./TMDataGrid";
 
 /** Every hideable column of the harness grid, in render order. */
@@ -386,6 +388,112 @@ describe("TMDataGrid.Menu.Export", () => {
     const text = (await downloads[0]?.text()) ?? "";
     expect(text).toContain("1;Anna;20;Stockholm\r\n2;Erik;27;Göteborg\r\n");
     expect(text.trim().split("\r\n")).toHaveLength(4);
+  });
+
+  it("renders neither item under enableDownload: false", async () => {
+    const user = userEvent.setup();
+    renderWithMantine(
+      <MenuGrid options={{ enableDownload: false }}>
+        <TMDataGrid.Menu>
+          <TMDataGrid.Menu.Export />
+          <TMDataGrid.Menu.ExportSelected />
+          <Menu.Item>Own item</Menu.Item>
+        </TMDataGrid.Menu>
+      </MenuGrid>,
+    );
+
+    await user.click(part("menu-button"));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "Own item" }),
+    ).toBeInTheDocument();
+    expect(queryPart("menu-export")).not.toBeInTheDocument();
+    expect(queryPart("menu-export-selected")).not.toBeInTheDocument();
+  });
+
+  it("writes what mapExportData returns", async () => {
+    const downloads = captureDownloads();
+    const user = userEvent.setup();
+    const contexts: Array<TMDataGridExportContext> = [];
+    exportMenu({
+      mapExportData: (data, context) => {
+        contexts.push(context);
+        return { ...data, rows: data.rows.slice(0, 2) };
+      },
+    });
+
+    await user.click(part("menu-button"));
+    await user.click(part("menu-export"));
+
+    await waitFor(() => expect(downloads).toHaveLength(1));
+    const text = (await downloads[0]?.text()) ?? "";
+    expect(text.trim().split("\r\n")).toHaveLength(4);
+    expect(contexts).toEqual([{ target: "file", rows: "all" }]);
+  });
+
+  it("downloads nothing when mapExportData returns null", async () => {
+    const downloads = captureDownloads();
+    const user = userEvent.setup();
+    let calls = 0;
+    exportMenu({
+      mapExportData: () => {
+        calls += 1;
+        return null;
+      },
+    });
+
+    await user.click(part("menu-button"));
+    await user.click(part("menu-export"));
+
+    await waitFor(() => expect(calls).toBe(1));
+    expect(downloads).toHaveLength(0);
+  });
+
+  it("makes the hook report and honour enableDownload: false", async () => {
+    const downloads = captureDownloads();
+    const user = userEvent.setup();
+    function OwnButton() {
+      const { exportAll, canDownload } = useTMDataGridExport();
+      return (
+        <Button onClick={() => void exportAll()}>
+          {canDownload ? "Can download" : "Cannot download"}
+        </Button>
+      );
+    }
+    renderWithMantine(
+      <MenuGrid options={{ enableDownload: false }}>
+        <OwnButton />
+      </MenuGrid>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cannot download" }));
+
+    expect(downloads).toHaveLength(0);
+  });
+
+  it("keeps the column picker closed under enableDownload: false", async () => {
+    const user = userEvent.setup();
+    function OpenPicker() {
+      const { ui } = useTMDataGridContext();
+      return (
+        <Button
+          onClick={() =>
+            ui.actions.openExportPicker({ rows: "all", options: {} })
+          }
+        >
+          Pick columns
+        </Button>
+      );
+    }
+    renderWithMantine(
+      <MenuGrid options={{ enableDownload: false }}>
+        <OpenPicker />
+      </MenuGrid>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Pick columns" }));
+
+    expect(queryPart("export-picker")).not.toBeInTheDocument();
   });
 
   it("has no selected-rows item when nothing can be selected", async () => {

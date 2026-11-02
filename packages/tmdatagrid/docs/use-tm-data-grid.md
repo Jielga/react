@@ -17,7 +17,8 @@ including `data`, `columns`, `getRowId`, `state` and the `onXChange` callbacks
 The `features` option is supplied internally and cannot be overridden.
 
 The grid defines these options itself: `persist`, `labels`, `editing`,
-`filters`, `exportOptions`, `enableColumnOrdering`, `enablePagination`,
+`filters`, `exportOptions`, `enableDownload`, `mapExportData`,
+`enableColumnOrdering`, `enablePagination`,
 `resetPageOnQueryChange`, `enableRowNumbers`, `selectionMode`,
 `showSelectedBackground`, `defaultHighlightedRowId`, `onHighlightedRowChange`,
 `cellSelection`, `onFocusedCellChange`, `renderDetails`,
@@ -77,6 +78,8 @@ with TanStack's own default.
 | `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration. See [meta](#meta). |
 | `filters` | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Where the filter controls go - a popup, a sidebar, the column headers, or nowhere. Defined by the grid, see [Filtering](/docs/filtering#the-filters-option). |
 | `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see [Export](/docs/export). |
+| `enableDownload` | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. Defined by the grid, see [Export](/docs/export). |
+| `mapExportData` | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. Defined by the grid, see [Export](/docs/export). |
 | `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see [Editing](/docs/editing). |
 | `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see [persist](#persist). |
 | `views` | `TMDataGridViewsOptions` | – | Saved views: named layouts from presets in code and from the user. Defined by the grid, see [Saved views](/docs/saved-views). |

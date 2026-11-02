@@ -185,7 +185,7 @@ shows it; a function label shows its template:
 | `rowStateDeleted` | `Marked for deletion` | Edit lane: the row-state marker of a row marked for deletion. |
 | `cellCount` | `"1 cell"` when `count` is 1, else `` `${count} cells` `` | Cell-selection context menu: its heading. |
 | `copy` | `Copy` | Cell-selection context menu item. |
-| `exportCells` | `Export cells` | Cell-selection context menu item. |
+| `exportCells` | `` `Download as ${format}` `` | Cell-selection context menu: the download item. `format` is the file extension in upper case; a string is shown as it is. |
 | `includeHeaders` | `Include headers` | Cell-selection context menu: the checkbox. |
 | `exportAll` | `Export all rows` | `TMDataGrid.Menu.Export`. Its `label` prop wins. |
 | `exportSelected` | `"Export 1 selected row"` when `count` is 1, else `` `Export ${count} selected rows` `` | `TMDataGrid.Menu.ExportSelected`. Its `label` prop wins. |

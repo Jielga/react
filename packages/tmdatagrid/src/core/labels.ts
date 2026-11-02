@@ -184,7 +184,11 @@ export type TMDataGridLabels = {
   // Cell selection menu
   cellCount: (count: number) => string;
   copy: string;
-  exportCells: string;
+  /**
+   * The download item; `format` is the file extension in upper case, "CSV".
+   * A plain string is shown whatever the format.
+   */
+  exportCells: string | ((format: string) => string);
   includeHeaders: string;
 
   // Export
@@ -345,7 +349,7 @@ export const TMDATAGRID_LABELS_EN: TMDataGridLabels = {
 
   cellCount: (count) => (count === 1 ? "1 cell" : `${count} cells`),
   copy: "Copy",
-  exportCells: "Export cells",
+  exportCells: (format) => `Download as ${format}`,
   includeHeaders: "Include headers",
 
   exportAll: "Export all rows",

@@ -7,13 +7,13 @@ description: >
   state, actions, Controls }, getTMDataGridPaginationApi, isPagingActive versus
   canPaginate, always-on virtualization with overscan and meta.rowHeight,
   scrollToRow, the edge callbacks onScrollToBottom / onScrollToRight and why
-  onReachEnd is better for loading more, the header and pinned-lane depth
-  shadows, and the five empty states in precedence order with meta.loading,
+  onReachEnd is better for loading more, the header and pinned-lane
+  shadows, the five empty states in precedence order with meta.loading,
   renderEmptyState, hasActiveFilters, TMDataGrid.LoadingIndicator and
-  TMDataGrid.SummaryCount, and export: TMDataGrid.Menu.Export and
-  Menu.ExportSelected, useTMDataGridExport, exportGrid, exportOptions, the
-  csvExcel / csv / tsv / json formats, meta.exportValue and meta.enableExport.
-  Load when adding a pager, tuning scrolling, scrolling to a row, deciding what
+  TMDataGrid.SummaryCount, and export: TMDataGrid.Menu.Export /
+  .ExportSelected, useTMDataGridExport, exportGrid, exportOptions, the csvExcel
+  / csv / tsv / json formats, meta.exportValue, meta.enableExport,
+  enableDownload, mapExportData. Load when adding a pager, tuning scrolling, scrolling to a row, deciding what
   an empty grid should say, or exporting rows to Excel or CSV.
 metadata:
   type: core
@@ -230,8 +230,8 @@ const grid = useTMDataGrid({
 
 ```tsx
 function ExportButton() {
-  const { exportAll, exportSelected, selectedCount, canExportSelected } =
-    useTMDataGridExport();
+  const { exportAll, canDownload } = useTMDataGridExport();
+  if (!canDownload) return null;
   return <Button onClick={() => void exportAll()}>Export</Button>;
 }
 ```
@@ -267,9 +267,51 @@ The text formats guard against formula injection by default: a value starting
 with `=`, `+`, `-` or `@` that is not a number is prefixed with `'`.
 `escapeFormulas: false` on the format turns that off.
 
+An export is any write of the grid's values out of the grid: a file, or the
+clipboard (Ctrl+C and Copy under cell selection). `meta.enableExport`,
+`meta.exportValue` and `mapExportData` apply to both.
+
+`enableDownload: false` removes every download the user can start: the
+`Menu.Export*` items render nothing, the cell-range menu keeps only Copy, the
+column picker does not open, and the hook's `canDownload` is `false` with
+`exportAll` / `exportSelected` doing nothing. Copy and Ctrl+C are not affected.
+A button of your own hides itself on `canDownload`. `TMDataGrid.Menu` still
+renders when its export items render nothing: hide a menu that holds only
+export items, and a `Menu.Divider` beside them, with the condition you pass
+to `enableDownload`.
+
+`mapExportData(data, { target, rows })` receives the built data - after
+`meta.exportValue`, before the format or the clipboard - and returns the data
+to write, or `null` to cancel. `target` is `"file"` or `"clipboard"`; `rows` is
+`"range"`, `"all"`, `"selected"` or `"list"` (rows passed to `exportGrid`). It
+is synchronous, and a grid option, so no menu item can override it.
+`columnIds`, `headers` and each row are parallel arrays: drop a column from all
+three.
+
+```tsx
+const grid = useTMDataGrid({
+  data,
+  columns,
+  enableDownload: user.roles.includes("export"),
+  // Mask the email column on the clipboard; files keep it.
+  mapExportData: (data, { target }) => {
+    const email = data.columnIds.indexOf("email");
+    if (target !== "clipboard" || email === -1) return data;
+    const rows = data.rows.map((row) =>
+      row.map((value, index) => (index === email ? "***" : value)),
+    );
+    return { ...data, rows };
+  },
+});
+```
+
+These are UI controls, not access control: rows the user may not take out must
+not be sent to the browser.
+
 `exportGrid({ table, rows: "all" | "selected" | rows, options })` is the same
-export for code outside a component; `buildExportData` is the step before the
-file. A format of your own is `{ id, extension, mimeType, write(data, { includeHeaders }) }`
+export for code outside a component; it runs `mapExportData` and still
+downloads under `enableDownload: false`. `buildExportData` is the step before
+the file; it and `writeExportFile` do not run `mapExportData`. A format of your own is `{ id, extension, mimeType, write(data, { includeHeaders }) }`
 returning a string, a `Blob`, or a promise of either.
 
 Source: `packages/tmdatagrid/docs/export.md`.
@@ -403,13 +445,17 @@ Source: `packages/tmdatagrid/docs/pagination.md` (Grouping).
 | `--dg-header-shadow-color` | CSS variable | colour | Themed | The shadow under the sticky header. |
 | `--dg-sticky-edge-range` | CSS variable | length | `20px` | How far the pinned-lane band takes to fade in. |
 | `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row for every export of the grid. |
+| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. |
+| `mapExportData` | Option | `TMDataGridExportDataMapper`: `(data, { target, rows }) => TMDataGridExportData \| null` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. |
+| `TMDataGridExportContext` · `TMDataGridExportTarget` | Types | `{ target, rows }` · `"file" \| "clipboard"` | – | The second argument of `mapExportData`, and its `target`. `rows` names the export's rows: `"range"`, `"all"`, `"selected"`, or `"list"` for rows passed to `exportGrid`. |
+| `TMDataGridExportData` | Type | `{ columnIds: Array<string>; headers: Array<string>; rows: Array<Array<unknown>> }` | – | The column ids, their labels and one array of values per row, after `meta.exportValue` and before any text formatting. What `mapExportData` receives and returns, and what a format's `write` receives. |
 | `meta.enableExport` | Column meta | `boolean` | `true` | `false` leaves the column out of every export and of Ctrl+C. |
 | `meta.exportValue` | Column meta | `TMDataGridExportValueGetter`: `({ value, row, column }) => unknown` | – | The value written in place of `row.getValue`. |
-| `TMDataGrid.Menu.Export` · `TMDataGrid.Menu.ExportSelected` | Components | `TMDataGridMenuExportProps` | – | Menu items: every filtered row, and the selected rows. `columns="custom"` opens the picker. |
+| `TMDataGrid.Menu.Export` · `TMDataGrid.Menu.ExportSelected` | Components | `TMDataGridMenuExportProps` | – | Menu items: every filtered row, and the selected rows. `columns="custom"` opens the picker. Render nothing under `enableDownload: false`. |
 | `ui.state.exportPicker` | UI state | `TMDataGridExportPickerRequest \| null` | `null` | The column picker while open: `{ rows, options }`. |
 | `getExportableColumns` | Export | `(table) => Array<Column>` | – | Every column an export could take, hidden ones included. The list the picker shows. |
-| `useTMDataGridExport` | Hook | `(overrides?) => TMDataGridExportApi` | – | `exportAll`, `exportSelected`, `selectedCount`, `canExportSelected`. |
-| `exportGrid` | Export | `(args: ExportGridArgs) => Promise<void>` | – | Downloads the grid from outside a component. `ExportGridArgs` is `{ table, rows?, options? }`. |
+| `useTMDataGridExport` | Hook | `(overrides?) => TMDataGridExportApi` | – | `exportAll`, `exportSelected`, `selectedCount`, `canExportSelected`, `canDownload`. |
+| `exportGrid` | Export | `(args: ExportGridArgs) => Promise<void>` | – | Downloads the grid from outside a component. `ExportGridArgs` is `{ table, rows?, options? }`. Runs `mapExportData`; `enableDownload` does not apply. |
 | `buildExportData` | Export | `(args: BuildExportDataArgs) => TMDataGridExportData` | – | The columns, labels and values a format writes. `BuildExportDataArgs` is `{ table, rows?, columns?, bounds? }`. |
 | `TMDataGridExportRows` · `TMDataGridExportColumns` | Types | `"all" \| "selected" \| rows` · `"visible" \| "all" \| ReadonlyArray<string>` | `"all"` · `"visible"` | Which rows and which columns an export takes. |
 | `writeExportFile` | Export | `(data, settings) => Promise<void>` | – | Writes export data in a format and downloads it. |

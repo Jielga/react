@@ -92,7 +92,8 @@ An export button uses `useTMDataGridExport`, which hands back the export as clic
 import { useTMDataGridExport } from "@jielga/tmdatagrid";
 
 function ExportButton() {
-  const { exportAll } = useTMDataGridExport();
+  const { exportAll, canDownload } = useTMDataGridExport();
+  if (!canDownload) return null;
   return (
     <Button size="xs" onClick={() => void exportAll()}>
       Export
@@ -102,6 +103,7 @@ function ExportButton() {
 ```
 
 It writes every filtered row, whatever the cell selection is or whether cell selection is on at all.
+`canDownload` is `false` under `enableDownload: false`, where `exportAll` does nothing.
 The format, the file name and the selected-rows variant are on [Export](/docs/export).
 
 ### Hide a button when its feature is off
@@ -112,7 +114,7 @@ same checks instead of re-deriving them:
 ```tsx
 import { getGridCapabilities, useTMDataGridContext } from "@jielga/tmdatagrid";
 
-function ExportButton() {
+function FilterButton() {
   const { table, features } = useTMDataGridContext();
   const { canFilterAny } = getGridCapabilities(table, features);
 

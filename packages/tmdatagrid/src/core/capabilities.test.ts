@@ -29,6 +29,7 @@ describe("readFeatureFlags", () => {
       cellSelection: false,
       cellSelectionMode: "none",
       cellRangeSelection: false,
+      download: true,
       pagination: false,
       grouping: true,
       editing: false,

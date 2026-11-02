@@ -34,11 +34,15 @@ import { SearchIcon } from "./icons";
  * menu item that opens it unmounts with the dropdown on the click. The form
  * inside is keyed on the request, so each opening starts from the visible
  * columns again rather than from the last choice.
+ *
+ * Never opens under `enableDownload: false`, where its Export button would
+ * have nothing to do.
  */
 export function TMDataGridExportPicker() {
-  const { ui, labels, size, controlSize, exportOptions } =
+  const { ui, labels, size, controlSize, exportOptions, features } =
     useTMDataGridContext();
-  const request = useSelector(ui, (state) => state.exportPicker);
+  const opened = useSelector(ui, (state) => state.exportPicker);
+  const request = features.download ? opened : null;
   const format = request
     ? resolveExportOptions(exportOptions, request.options).format
     : null;
