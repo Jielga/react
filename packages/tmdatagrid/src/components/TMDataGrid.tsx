@@ -18,6 +18,7 @@ import {
   TMDataGridToolbarSpacer,
 } from "./TMDataGridToolbar";
 import { TMDataGridExportPicker } from "./TMDataGridExportPicker";
+import { TMDataGridViewsMenu } from "./TMDataGridViews";
 import {
   DEFAULT_TMDATAGRID_SIZE,
   SIZE_CONTROL_SIZE,
@@ -70,6 +71,7 @@ function TMDataGridRoot<TData extends RowData>({
   renderDetailsEstHeight,
   overscan,
   resetSettings,
+  views,
   scrollToRow,
   sortStale,
   sortAgain,
@@ -96,6 +98,7 @@ function TMDataGridRoot<TData extends RowData>({
       renderDetailsEstHeight,
       overscan,
       resetSettings,
+      views,
       scrollToRow,
       sortStale,
       sortAgain,
@@ -116,6 +119,7 @@ function TMDataGridRoot<TData extends RowData>({
       renderDetailsEstHeight,
       overscan,
       resetSettings,
+      views,
       scrollToRow,
       sortStale,
       sortAgain,
@@ -188,4 +192,9 @@ export const TMDataGrid = Object.assign(TMDataGridRoot, {
    * inline layout; `TMDataGrid.Menu.Columns` is the same thing as menu items.
    */
   ColumnsPanel: TMDataGridColumnsPanel,
+  /**
+   * The saved views behind a toolbar button of their own;
+   * `TMDataGrid.Menu.Views` is the same thing as items for any menu.
+   */
+  ViewsMenu: TMDataGridViewsMenu,
 });

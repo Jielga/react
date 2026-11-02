@@ -116,6 +116,8 @@ import {
   findOverlappingSlices,
   hasPersistenceKeys,
   readPersistedState,
+  realignToColumns,
+  SETTINGS_STATE_SLICES,
   type TMDataGridPersistence,
   writePersistedState,
 } from "./core/persistence";
@@ -140,6 +142,14 @@ import {
   endControlledStateSync,
 } from "./core/controlledStateSync";
 import { registerDeletedRows } from "./core/deletedRows";
+import { resolveStartingView, useGridViews } from "./core/useGridViews";
+import {
+  captureViewState,
+  pickViewSlices,
+  type TMDataGridViewState,
+  type TMDataGridViewsApi,
+  type TMDataGridViewsOptions,
+} from "./core/views";
 import {
   withPageReset,
   type TMDataGridQueryTable,
@@ -659,6 +669,13 @@ export type TMDataGridApi<TData extends RowData> = {
    */
   resetSettings: () => void;
   /**
+   * The saved views: the list, the selected one and whether the layout has
+   * moved away from it, and `select`, `saveAs`, `overwrite` and `remove`.
+   * `enabled` is `false` until the `views` option is set. See
+   * {@link TMDataGridViewsApi}.
+   */
+  views: TMDataGridViewsApi;
+  /**
    * Scrolls a row into view. The grid is always virtualized, so a row far down
    * the list has no element to scroll to - this moves the virtualizer instead,
    * which is the only thing that can put one there.
@@ -919,6 +936,15 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    * dependency of the subscription that writes back.
    */
   persist?: TMDataGridPersistence;
+  /**
+   * Saved views: named layouts the user switches between, from presets in
+   * code and, unless `allowUserViews` is `false`, views of their own kept in
+   * `store`. A view holds the settings slices only - visibility, widths,
+   * order, pinning and grouping. See {@link TMDataGridViewsOptions}.
+   *
+   * The `store` must be referentially stable; it is a dependency of the load.
+   */
+  views?: TMDataGridViewsOptions;
   /**
    * Overrides for the grid's strings - menu items, panels, the pager, and
    * every `aria-label`. Any subset, merged over the English defaults; a full
@@ -1296,6 +1322,7 @@ function withTMDataGridDefaults<TData extends RowData>(
  */
 export function useTMDataGrid<TData extends RowData>({
   persist,
+  views: viewsOptions,
   // Not TanStack options, so they are kept out of what `useTable` receives.
   labels: labelsOverride,
   enableColumnOrdering,
@@ -1526,10 +1553,32 @@ export function useTMDataGrid<TData extends RowData>({
     }),
   );
 
+  // Whether storage gave back a layout. A first visit - nothing restored -
+  // starts on the `defaultView` preset, laid under the restored state the way
+  // `initialState` is, so the first paint already shows it.
+  const restoredSettings = SETTINGS_STATE_SLICES.some(
+    (slice) => persistedState[slice] !== undefined,
+  );
+  const [startingView] = useState(() => {
+    const preset = resolveStartingView(viewsOptions, restoredSettings);
+    if (preset === null) return null;
+    return {
+      id: preset.id,
+      state: pickViewSlices(
+        realignToColumns(preset.state, new Set(collectLeafColumnIds(columns))),
+        viewsOptions?.slices,
+      ) as TMDataGridViewState,
+    };
+  });
+  const startingViewState: TMDataGridViewState = startingView?.state ?? {};
+
   // Restored grouping decides whether the tree column starts out visible, so a
   // reload comes back to the tree the user left rather than to a hidden lane.
   const initialGrouping =
-    persistedState.grouping ?? options.initialState?.grouping ?? [];
+    persistedState.grouping ??
+    startingViewState.grouping ??
+    options.initialState?.grouping ??
+    [];
 
   // Current grouping state, feeding the tree column's entry in a controlled
   // `columnVisibility` (below). A ref, not state: it is only read while
@@ -1850,10 +1899,12 @@ export function useTMDataGrid<TData extends RowData>({
     state: controlledState,
     initialState: {
       ...options.initialState,
+      ...startingViewState,
       ...persistedState,
       columnVisibility: {
         ...withoutControlColumnVisibility({
           ...options.initialState?.columnVisibility,
+          ...startingViewState.columnVisibility,
           ...persistedState.columnVisibility,
         }),
         // Last word, because the tree column's visibility is not a user setting
@@ -1865,9 +1916,11 @@ export function useTMDataGrid<TData extends RowData>({
       columnPinning: structuralPinning({
         start:
           persistedState.columnPinning?.start ??
+          startingViewState.columnPinning?.start ??
           options.initialState?.columnPinning?.start,
         end:
           persistedState.columnPinning?.end ??
+          startingViewState.columnPinning?.end ??
           options.initialState?.columnPinning?.end,
       }),
       pagination: {
@@ -2246,6 +2299,41 @@ export function useTMDataGrid<TData extends RowData>({
   };
   const resetSettings = useCallback(() => resetSettingsRef.current(), []);
 
+  // A view's slices laid onto the table: realigned against the columns that
+  // exist now, the control lanes kept out of the visibility map and pinned
+  // back on, the tree lane following the grouping - the same rules the mount
+  // and `resetSettings` follow. A slice the view does not hold is left alone.
+  const applyViewState = (state: TMDataGridViewState) => {
+    const view = realignToColumns(
+      state,
+      new Set(collectLeafColumnIds(columns)),
+    ) as TMDataGridViewState;
+    if (view.grouping) table.setGrouping([...view.grouping]);
+    if (view.columnVisibility) {
+      const grouping = view.grouping ?? table.store.state.grouping;
+      table.setColumnVisibility({
+        ...withoutControlColumnVisibility({ ...view.columnVisibility }),
+        ...(groupColumnEnabled
+          ? { [GROUP_COLUMN_ID]: grouping.length > 0 }
+          : {}),
+      });
+    }
+    if (view.columnSizing) table.setColumnSizing({ ...view.columnSizing });
+    if (view.columnOrder) table.setColumnOrder([...view.columnOrder]);
+    if (view.columnPinning) {
+      table.setColumnPinning(structuralPinning(view.columnPinning));
+    }
+  };
+  const views = useGridViews({
+    options: viewsOptions,
+    startingViewId: startingView?.id ?? null,
+    restoredSettings,
+    applyState: applyViewState,
+    readState: () => captureViewState(table.store.state),
+    tableStore: table.store,
+    columnIds: collectLeafColumnIds(columns),
+  });
+
   // Filled in by `TMDataGrid.Table` on every render, because only the body
   // holds the virtualizer and the current view. Returns `false` until one is
   // mounted, since there is nothing to scroll before then.
@@ -2291,6 +2379,7 @@ export function useTMDataGrid<TData extends RowData>({
     renderDetailsEstHeight,
     overscan,
     resetSettings,
+    views,
     scrollToRow,
     sortStale,
     sortAgain,

@@ -17,9 +17,7 @@ test("an extended number editor commits through its inputProps", async ({
   await expect(cell).toHaveText("499");
 });
 
-test("an extended select keeps its dropdown inside the cell", async ({
-  page,
-}) => {
+test("an extended select commits a pick", async ({ page }) => {
   const grid = await openDemoGrid(page, {
     route: "/docs/editors",
     file: "editing/ExtendedEditors.tsx",
@@ -27,18 +25,12 @@ test("an extended select keeps its dropdown inside the cell", async ({
   const cell = grid.cell({ rowId: "1", columnId: "category" });
 
   await cell.dblclick();
-  const select = grid
-    .part("editor", { rowId: "1", columnId: "category" })
-    .locator('[data-dg-part="editor-input"]');
-  await select.click();
-  const listboxId = await select.getAttribute("aria-controls");
-  if (listboxId === null) throw new Error("The select has no listbox.");
-
-  // The demo passes its own comboboxProps; the grid still renders the
-  // dropdown in the cell, so picking an option is not a click away from it.
-  const listbox = cell.locator(`[id="${listboxId}"]`);
-  await expect(listbox).toBeVisible();
-  await listbox.locator('[role="option"][value="Cables"]').click();
+  await grid.chooseOption({
+    select: grid
+      .part("editor", { rowId: "1", columnId: "category" })
+      .locator('[data-dg-part="editor-input"]'),
+    value: "Cables",
+  });
 
   await expect(cell).toHaveText("Cables");
 });

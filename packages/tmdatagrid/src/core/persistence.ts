@@ -184,10 +184,21 @@ function resolveStorage(
   persistence: TMDataGridPersistence | undefined,
 ): Storage | null {
   if (!persistence) return null;
+  return resolveStorageArea(persistence.storageMode);
+}
+
+/**
+ * The web storage area a mode names, or `null` where there is none.
+ *
+ * @internal Shared with the saved views' local store.
+ */
+export function resolveStorageArea(
+  storageMode: TMDataGridStorageMode | undefined,
+): Storage | null {
   // Absent under SSR, and access throws outright in some privacy modes.
   try {
     if (typeof window === "undefined") return null;
-    return persistence.storageMode === "sessionStorage"
+    return storageMode === "sessionStorage"
       ? window.sessionStorage
       : window.localStorage;
   } catch {
@@ -287,6 +298,27 @@ function normalizeColumnPinning(value: unknown): unknown {
 function isValidSlice(slice: keyof GridState, value: unknown): boolean {
   const guard = SLICE_GUARDS[slice as keyof typeof SLICE_GUARDS];
   return guard === undefined || guard(value);
+}
+
+/**
+ * The settings slices of an untrusted record that pass their shape guards,
+ * with the 1.x pinning keys rewritten. Every other key is ignored.
+ *
+ * @internal Reads the state of a saved view.
+ */
+export function readSettingsSlices(
+  value: unknown,
+): Partial<Pick<GridState, TMDataGridSettingsSlice>> {
+  if (typeof value !== "object" || value === null) return {};
+  const record = value as Record<string, unknown>;
+  const read: Record<string, unknown> = {};
+  for (const slice of SETTINGS_STATE_SLICES) {
+    const entry = record[slice];
+    if (entry === undefined || !isValidSlice(slice, entry)) continue;
+    read[slice] =
+      slice === "columnPinning" ? normalizeColumnPinning(entry) : entry;
+  }
+  return read as Partial<Pick<GridState, TMDataGridSettingsSlice>>;
 }
 
 function readSlices({
@@ -552,8 +584,10 @@ export function forEachLeafColumnDef(
  * nothing, and worse, a *filter or sort that is active but has no column to
  * show for itself*. New columns need no counterpart here: TanStack appends
  * columns missing from `columnOrder` on its own, in definition order.
+ *
+ * @internal Also applied to a saved view before it is applied.
  */
-function realignToColumns(
+export function realignToColumns(
   restored: Partial<GridState>,
   known: ReadonlySet<string>,
 ): Partial<GridState> {

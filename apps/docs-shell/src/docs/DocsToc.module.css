@@ -1,7 +1,7 @@
-/* The rail only appears where there is room for it beside the article: the
-   left nav is 260px and the measure is 820px, so below this the article would
-   start losing width to it. */
-@media (max-width: 1279px) {
+/* The rail stays beside the article down to Mantine's `xs` breakpoint, taking
+   its width from the article. Below that, on a phone, the article has no width
+   left to give. */
+@media (max-width: 35.99em) {
   .rail {
     display: none;
   }
