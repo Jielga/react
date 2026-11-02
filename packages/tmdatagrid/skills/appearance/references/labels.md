@@ -36,6 +36,22 @@ The `labels` option takes a partial override, `TMDataGridLabelsOverride`, merged
 | `columnsReset` | `Reset layout` | `TMDataGrid.ColumnsPanel` and `TMDataGrid.Menu.ResetLayout`. |
 | `columnsResetHint` | `Resets column visibility, order, widths, pinning and grouping` | Tooltip of the reset button in `TMDataGrid.ColumnsPanel`. |
 | `rowNumberColumnLabel` | `Row number` | `meta.label` of the generated row-number lane. |
+| `views` | `Views` | Heading over a list of one kind of saved view, and the tooltip and `aria-label` of `TMDataGrid.ViewsMenu`. |
+| `viewsPresets` | `Presets` | Heading over the developer's presets when the user's own views are listed too. |
+| `viewsMine` | `My views` | Heading over the user's own views when presets are listed too. |
+| `viewsNone` | `No saved views` | Shown in place of the views list when there is no view. |
+| `viewsNoneSelected` | `No view selected` | Placeholder of the view picker in `TMDataGrid.ColumnsPanel`. |
+| `viewsPresetLocked` | `Preset, can't be changed` | `aria-label` of the lock on a preset. |
+| `viewsModified` | `modified` | The marker on the selected view once the layout has moved away from it, and the `aria-label` of the dot on the Views item. |
+| `viewsDiscardChanges` | `Discard changes` | Tooltip of a modified selected view, which applies it again on click, and the panel's button that does the same. |
+| `viewsOverwrite` | `Save changes to view` | Tooltip and `aria-label` of the action that saves the current layout into the selected user view. |
+| `viewsSaveAs` | `Save current layout as new view` | The menu item that opens the name field, and the panel's save button. |
+| `viewsName` | `View name` | Placeholder and `aria-label` of the name field. |
+| `viewsSave` | `Save` | `aria-label` of the submit inside the name field in a menu. |
+| `viewsDelete` | `Delete view` | Tooltip and `aria-label` of the action that deletes the selected user view. |
+| `viewsNameEmpty` | `Enter a name` | Under the name field, when a save is tried with no name. |
+| `viewsNameDuplicate` | `A view with that name already exists` | Under the name field, while the name is taken. |
+| `viewsSaveFailed` | `The view could not be saved` | Under the name field, when the store rejects the save. |
 | `noRows` | `No rows to show` | Body, when the view is empty, no column filter is active (`isFilterActive`) and the quick search is blank. |
 | `filterColumn` | `Column` | Label of the column field in `TMDataGrid.FilterPanel`. |
 | `filterOperator` | `Operator` | Label of the operator field in `TMDataGrid.FilterPanel`. |

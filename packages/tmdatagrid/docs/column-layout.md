@@ -160,6 +160,9 @@ grouping in one call. The columns panel offers it as **Reset layout**.
 const { resetSettings } = useTMDataGrid({ data, columns });
 ```
 
+To keep several named layouts and switch between them, see
+[Saved views](/docs/saved-views).
+
 ## Reference
 
 | Name | Kind | Type | Default | What it does |
