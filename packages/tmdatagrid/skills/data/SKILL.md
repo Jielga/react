@@ -7,14 +7,14 @@ description: >
   state, actions, Controls }, getTMDataGridPaginationApi, isPagingActive versus
   canPaginate, always-on virtualization with overscan and meta.rowHeight,
   scrollToRow, the edge callbacks onScrollToBottom / onScrollToRight and why
-  onReachEnd is better for loading more, the header and pinned-lane
-  shadows, the five empty states in precedence order with meta.loading,
-  renderEmptyState, hasActiveFilters, TMDataGrid.LoadingIndicator and
-  TMDataGrid.SummaryCount, and export: TMDataGrid.Menu.Export /
-  .ExportSelected, useTMDataGridExport, exportGrid, exportOptions, the csvExcel
-  / csv / tsv / json formats, meta.exportValue, meta.enableExport,
-  enableDownload, mapExportData. Load when adding a pager, tuning scrolling, scrolling to a row, deciding what
-  an empty grid should say, or exporting rows to Excel or CSV.
+  onReachEnd is better for loading more, the header and pinned-lane shadows, the
+  five empty states in precedence order with meta.loading, renderEmptyState,
+  hasActiveFilters, TMDataGrid.LoadingIndicator and TMDataGrid.SummaryCount, and
+  export: TMDataGrid.Menu.Export / .ExportSelected, useTMDataGridExport,
+  exportGrid, exportOptions, the csvExcel / csv / tsv / json formats,
+  meta.exportValue, meta.enableExport, enableDownload, mapExportData. Load when
+  adding a pager, tuning scrolling, scrolling to a row, deciding what an empty
+  grid should say, or exporting rows to Excel or CSV.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'

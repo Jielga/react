@@ -9,9 +9,10 @@ description: >
   ui.state.cellRange keyed by id, onFocusedCellChange, the Copy / Download as
   CSV / Include headers context menu that writes the rectangle in the grid's
   exportOptions format, enableDownload to drop the download item, and
-  mapExportData to change or cancel a copy. Load when adding keyboard cell navigation, selecting
-  blocks of cells, copying to a spreadsheet, or when Tab walks through controls
-  inside the grid body. Exporting whole rows is the data skill.
+  mapExportData to change or cancel a copy. Load when adding keyboard cell
+  navigation, selecting blocks of cells, copying to a spreadsheet, or when Tab
+  walks through controls inside the grid body. Exporting whole rows is the data
+  skill.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
