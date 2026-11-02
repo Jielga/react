@@ -187,7 +187,7 @@ Unlike the download item, `resolveRangeBounds` does not fall back to the focused
 | `TMDataGridCellSelectionMode` | Type | – | – | The type of `cellSelection`. |
 | `onFocusedCellChange` | Callback | `(cell \| null) => void` | – | Follows the cursor. |
 | `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row of the download item. See [Export](/docs/export). |
-| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. |
+| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. |
 | `mapExportData` | Option | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. |
 | `ui.state.focusedCell` | UI state | `{ rowId, columnId } \| null` | `null` | The cursor. |
 | `ui.state.cellRange` | UI state | `{ anchor, focus } \| null` | `null` | The rectangle's two corners. |

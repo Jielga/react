@@ -111,7 +111,7 @@ option that is not listed passes through with TanStack's own default.
 | `meta` | `TMDataGridTableMeta` | `{}` | Grid configuration. See below. |
 | `filters` | `TMDataGridFiltersOptions` | `{ surface: "popup" }` | Where the filter controls go - a popup, a sidebar, the column headers, or nowhere. Defined by the grid, see the `filtering` skill. |
 | `exportOptions` | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | The export's `format`, `fileName`, `includeHeaders` and `columns`. Defined by the grid, see the `data` skill. |
-| `enableDownload` | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. Defined by the grid, see the `data` skill. |
+| `enableDownload` | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. Defined by the grid, see the `data` skill. |
 | `mapExportData` | `TMDataGridExportDataMapper` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. Defined by the grid, see the `data` skill. |
 | `editing` | `TMDataGridEditingOptions` | off | Turns editing on. `mode` picks what counts as a commit and `draft` whether edits collect in the draft store. Requires `getRowId`. Defined by the grid, see the `editing` skill. |
 | `persist` | `TMDataGridPersistence` | – | State persistence. Defined by the grid, see below. |

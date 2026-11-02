@@ -230,8 +230,7 @@ const grid = useTMDataGrid({
 
 ```tsx
 function ExportButton() {
-  const { exportAll, exportSelected, selectedCount, canExportSelected, canDownload } =
-    useTMDataGridExport();
+  const { exportAll, canDownload } = useTMDataGridExport();
   if (!canDownload) return null;
   return <Button onClick={() => void exportAll()}>Export</Button>;
 }
@@ -276,7 +275,10 @@ clipboard (Ctrl+C and Copy under cell selection). `meta.enableExport`,
 `Menu.Export*` items render nothing, the cell-range menu keeps only Copy, the
 column picker does not open, and the hook's `canDownload` is `false` with
 `exportAll` / `exportSelected` doing nothing. Copy and Ctrl+C are not affected.
-A button of your own hides itself on `canDownload`.
+A button of your own hides itself on `canDownload`. `TMDataGrid.Menu` still
+renders when its export items render nothing: hide a menu that holds only
+export items, and a `Menu.Divider` beside them, with the condition you pass
+to `enableDownload`.
 
 `mapExportData(data, { target, rows })` receives the built data - after
 `meta.exportValue`, before the format or the clipboard - and returns the data
@@ -443,16 +445,17 @@ Source: `packages/tmdatagrid/docs/pagination.md` (Grouping).
 | `--dg-header-shadow-color` | CSS variable | colour | Themed | The shadow under the sticky header. |
 | `--dg-sticky-edge-range` | CSS variable | length | `20px` | How far the pinned-lane band takes to fade in. |
 | `exportOptions` | Option | `TMDataGridExportOptions` | `csvExcelFormat()`, `"export"`, headers on, `"visible"` columns | Format, file name and header row for every export of the grid. |
-| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items; the clipboard is not affected. |
+| `enableDownload` | Option | `boolean` | `true` | Determines whether the grid offers file downloads. `false` hides the built-in download items and makes the `useTMDataGridExport` handlers do nothing; Copy, Ctrl+C and `exportGrid` are not affected. |
 | `mapExportData` | Option | `TMDataGridExportDataMapper`: `(data, { target, rows }) => TMDataGridExportData \| null` | – | Changes what every export writes, to a file or the clipboard. Returns the data, or `null` to cancel. |
-| `TMDataGridExportContext` · `TMDataGridExportTarget` | Types | `{ target, rows }` · `"file" \| "clipboard"` | – | The second argument of `mapExportData`, and its `target`. |
+| `TMDataGridExportContext` · `TMDataGridExportTarget` | Types | `{ target, rows }` · `"file" \| "clipboard"` | – | The second argument of `mapExportData`, and its `target`. `rows` names the export's rows: `"range"`, `"all"`, `"selected"`, or `"list"` for rows passed to `exportGrid`. |
+| `TMDataGridExportData` | Type | `{ columnIds: Array<string>; headers: Array<string>; rows: Array<Array<unknown>> }` | – | The column ids, their labels and one array of values per row, after `meta.exportValue` and before any text formatting. What `mapExportData` receives and returns, and what a format's `write` receives. |
 | `meta.enableExport` | Column meta | `boolean` | `true` | `false` leaves the column out of every export and of Ctrl+C. |
 | `meta.exportValue` | Column meta | `TMDataGridExportValueGetter`: `({ value, row, column }) => unknown` | – | The value written in place of `row.getValue`. |
-| `TMDataGrid.Menu.Export` · `TMDataGrid.Menu.ExportSelected` | Components | `TMDataGridMenuExportProps` | – | Menu items: every filtered row, and the selected rows. `columns="custom"` opens the picker. |
+| `TMDataGrid.Menu.Export` · `TMDataGrid.Menu.ExportSelected` | Components | `TMDataGridMenuExportProps` | – | Menu items: every filtered row, and the selected rows. `columns="custom"` opens the picker. Render nothing under `enableDownload: false`. |
 | `ui.state.exportPicker` | UI state | `TMDataGridExportPickerRequest \| null` | `null` | The column picker while open: `{ rows, options }`. |
 | `getExportableColumns` | Export | `(table) => Array<Column>` | – | Every column an export could take, hidden ones included. The list the picker shows. |
 | `useTMDataGridExport` | Hook | `(overrides?) => TMDataGridExportApi` | – | `exportAll`, `exportSelected`, `selectedCount`, `canExportSelected`, `canDownload`. |
-| `exportGrid` | Export | `(args: ExportGridArgs) => Promise<void>` | – | Downloads the grid from outside a component. `ExportGridArgs` is `{ table, rows?, options? }`. |
+| `exportGrid` | Export | `(args: ExportGridArgs) => Promise<void>` | – | Downloads the grid from outside a component. `ExportGridArgs` is `{ table, rows?, options? }`. Runs `mapExportData`; `enableDownload` does not apply. |
 | `buildExportData` | Export | `(args: BuildExportDataArgs) => TMDataGridExportData` | – | The columns, labels and values a format writes. `BuildExportDataArgs` is `{ table, rows?, columns?, bounds? }`. |
 | `TMDataGridExportRows` · `TMDataGridExportColumns` | Types | `"all" \| "selected" \| rows` · `"visible" \| "all" \| ReadonlyArray<string>` | `"all"` · `"visible"` | Which rows and which columns an export takes. |
 | `writeExportFile` | Export | `(data, settings) => Promise<void>` | – | Writes export data in a format and downloads it. |
