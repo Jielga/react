@@ -9,7 +9,7 @@ description: >
   ui.state.cellRange keyed by id, onFocusedCellChange, the Copy / Download as
   CSV / Include headers context menu that writes the rectangle in the grid's
   exportOptions format, enableDownload to drop the download item, and
-  mapExportData to limit or cancel a copy. Load when adding keyboard cell navigation, selecting
+  mapExportData to change or cancel a copy. Load when adding keyboard cell navigation, selecting
   blocks of cells, copying to a spreadsheet, or when Tab walks through controls
   inside the grid body. Exporting whole rows is the data skill.
 metadata:
@@ -153,9 +153,15 @@ const grid = useTMDataGrid({
   columns,
   cellSelection: "range",
   enableDownload: false,
-  // At most 100 rows per copy.
-  mapExportData: (data, { target }) =>
-    target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+  // Mask the email column on the clipboard; files keep it.
+  mapExportData: (data, { target }) => {
+    const email = data.columnIds.indexOf("email");
+    if (target !== "clipboard" || email === -1) return data;
+    const rows = data.rows.map((row) =>
+      row.map((value, index) => (index === email ? "***" : value)),
+    );
+    return { ...data, rows };
+  },
 });
 ```
 

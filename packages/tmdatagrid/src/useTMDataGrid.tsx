@@ -990,9 +990,9 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    * and makes `useTMDataGridExport`'s `exportAll` and `exportSelected` do
    * nothing, with its `canDownload` reporting `false`. Defaults to `true`.
    *
-   * Copy and Ctrl+C are not affected; {@link mapExportData} is where the
-   * clipboard is limited. `exportGrid` still downloads, since only your own
-   * code calls it.
+   * Copy and Ctrl+C are not affected; {@link mapExportData} changes or
+   * cancels them. `exportGrid` still downloads, since only your own code
+   * calls it.
    */
   enableDownload?: boolean;
   /**
@@ -1005,8 +1005,15 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
    * useTMDataGrid({
    *   data,
    *   columns,
-   *   mapExportData: (data, { target }) =>
-   *     target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+   *   // Mask the email column on the clipboard; files keep it.
+   *   mapExportData: (data, { target }) => {
+   *     const email = data.columnIds.indexOf("email");
+   *     if (target !== "clipboard" || email === -1) return data;
+   *     const rows = data.rows.map((row) =>
+   *       row.map((value, index) => (index === email ? "***" : value)),
+   *     );
+   *     return { ...data, rows };
+   *   },
    * });
    * ```
    *

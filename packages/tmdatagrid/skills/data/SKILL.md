@@ -291,8 +291,15 @@ const grid = useTMDataGrid({
   data,
   columns,
   enableDownload: user.roles.includes("export"),
-  mapExportData: (data, { target }) =>
-    target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+  // Mask the email column on the clipboard; files keep it.
+  mapExportData: (data, { target }) => {
+    const email = data.columnIds.indexOf("email");
+    if (target !== "clipboard" || email === -1) return data;
+    const rows = data.rows.map((row) =>
+      row.map((value, index) => (index === email ? "***" : value)),
+    );
+    return { ...data, rows };
+  },
 });
 ```
 

@@ -139,7 +139,7 @@ Ctrl+C writes numbers with the format's decimal mark, so what is pasted matches 
 Exporting every filtered row rather than the rectangle is `TMDataGrid.Menu.Export` and `useTMDataGridExport`, on [Export](/docs/export).
 
 Set `enableDownload` to `false` to keep Copy and remove the download item and the Include headers toggle.
-To limit or cancel what Copy, Ctrl+C and the download item write, set `mapExportData`; it receives `target: "clipboard"` or `target: "file"` and `rows: "range"`.
+To change or cancel what Copy, Ctrl+C and the download item write, set `mapExportData`; it receives `target: "clipboard"` or `target: "file"` and `rows: "range"`.
 See [Turn off downloads](/docs/export#turn-off-downloads) and [Change the exported data](/docs/export#change-the-exported-data).
 
 ### Export the range from your own code

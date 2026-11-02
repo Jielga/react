@@ -145,7 +145,7 @@ const grid = useTMDataGrid({ data, columns, enableDownload: false });
 - The column picker does not open.
 - `useTMDataGridExport` reports `canDownload: false`, and its `exportAll` and `exportSelected` do nothing.
 
-Copy and Ctrl+C are not affected; use `mapExportData` to limit or cancel them.
+Copy and Ctrl+C are not affected; use `mapExportData` to change or cancel them.
 `exportGrid` still downloads, since only your own code calls it.
 
 ## Change the exported data
@@ -156,9 +156,15 @@ Copy and Ctrl+C are not affected; use `mapExportData` to limit or cancel them.
 const grid = useTMDataGrid({
   data,
   columns,
-  // At most 100 rows on the clipboard; files are written in full.
-  mapExportData: (data, { target }) =>
-    target === "clipboard" ? { ...data, rows: data.rows.slice(0, 100) } : data,
+  // Mask the email column on the clipboard; files keep it.
+  mapExportData: (data, { target }) => {
+    const email = data.columnIds.indexOf("email");
+    if (target !== "clipboard" || email === -1) return data;
+    const rows = data.rows.map((row) =>
+      row.map((value, index) => (index === email ? "***" : value)),
+    );
+    return { ...data, rows };
+  },
 });
 ```
 
