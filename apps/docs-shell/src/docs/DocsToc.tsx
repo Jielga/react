@@ -1,7 +1,7 @@
 import { Text } from "@mantine/core";
-import { useEffect, useState } from "react";
 import classes from "./DocsToc.module.css";
 import { extractHeadings } from "./headings";
+import { useActiveHeading } from "./useActiveHeading";
 
 /**
  * The table of contents rail: every `##` and `###` on the page, as deep links.
@@ -11,41 +11,6 @@ import { extractHeadings } from "./headings";
  * the hash, which is exactly the shareable deep link that is wanted. The
  * router only wants to hear about navigation between pages.
  */
-
-/**
- * Marks the heading currently being read. `rootMargin` pulls the observation
- * band up to a strip near the top of the viewport, so the active entry is the
- * heading the text belongs to rather than whichever one is merely on screen.
- */
-function useActiveHeading(slugKey: string): string | undefined {
-  const [active, setActive] = useState<string>();
-
-  // The comma-joined slugs rather than the array: a fresh array every render
-  // would re-observe every render, and slugs cannot contain a comma.
-  useEffect(() => {
-    const headings = slugKey
-      .split(",")
-      .map((slug) => document.getElementById(slug))
-      .filter((element) => element !== null);
-
-    if (headings.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id);
-        }
-      },
-      { rootMargin: "0px 0px -80% 0px", threshold: 0 },
-    );
-
-    for (const heading of headings) observer.observe(heading);
-    return () => observer.disconnect();
-  }, [slugKey]);
-
-  return active;
-}
-
 export function DocsToc({ source }: { source: string }) {
   const headings = extractHeadings(source);
   const active = useActiveHeading(

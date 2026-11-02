@@ -1,5 +1,10 @@
 import { rankItem, rankings } from "@tanstack/match-sorter-utils";
-import { extractHeadings, headingSlug } from "docs-shell/docs/headings.ts";
+import {
+  extractHeadings,
+  headingSlug,
+  REFERENCE_NAME,
+  referenceSlug,
+} from "docs-shell/docs/headings.ts";
 import { DOCS_PAGES } from "./docsPages";
 import { SEARCH_ALIASES } from "./searchAliases";
 
@@ -36,21 +41,15 @@ export type SearchEntry = {
 };
 
 /**
- * Names in a Reference table read `| \`onCellClick\` | Table prop | ...`, so
- * the first backticked cell of a table row is a documented symbol. Cheap, and
- * it needs no build step: the page that documents a name is by construction
- * the page the name was found on.
- *
- * Identifier-shaped only. Some rows lead with a value rather than a name -
- * `{ updated, created, deleted }` - and indexing those as symbols put them in
- * front of unrelated queries.
+ * Names in a Reference table read `| \`onCellClick\` | ...`, so the first
+ * backticked cell of a table row is a documented symbol. Cheap, and it needs
+ * no build step: the page that documents a name is by construction the page
+ * the name was found on.
  */
-const IDENTIFIER = /^[A-Za-z_$@-][\w$.@/-]*$/;
-
 function symbolsIn(source: string): Array<string> {
   return [...source.matchAll(/^\| `([^`]+)`\s*\|/gm)]
     .map((match) => match[1])
-    .filter((name) => IDENTIFIER.test(name));
+    .filter((name) => REFERENCE_NAME.test(name));
 }
 
 /** Inline markdown, as text: `code` to code, [label](href) to label. */
@@ -112,9 +111,18 @@ function passagesIn(source: string): Array<Passage> {
     // would quote a whole reference table back as one passage.
     if (line.startsWith("|")) {
       flush();
-      // Anything but the `| --- |` separator under the header row.
+      // Anything but the `| --- |` separator under the header row. A row that
+      // names a symbol links to the row's own anchor, as the symbol does.
       if (!/^\|[\s|:-]+\|$/.test(line)) {
-        push(plainText(line.replace(/\|/g, " ")));
+        const name = /^\| `([^`]+)`\s*\|/.exec(line)?.[1];
+        const text = plainText(line.replace(/\|/g, " "));
+        if (name && REFERENCE_NAME.test(name)) {
+          if (text.length >= MIN_PASSAGE) {
+            passages.push({ heading, slug: referenceSlug(name), text });
+          }
+        } else {
+          push(text);
+        }
       }
       continue;
     }
@@ -181,7 +189,9 @@ function buildIndex(): Array<SearchEntry> {
         title: symbol,
         context: page.label,
         to,
-        hash: "reference",
+        // The renderer gives the row its own anchor, so a hit lands on the
+        // row, not on the top of the table.
+        hash: referenceSlug(symbol),
       });
     }
 
@@ -285,7 +295,7 @@ export function searchDocs(query: string): Array<SearchEntry> {
   const scored = SEARCH_INDEX.flatMap((entry) => {
     const hit =
       entry.kind === "text"
-        ? scoreText((entry.body ?? "").toLowerCase(), tokens)
+        ? scoreText((entry.body ?? "").toLowerCase(), needle, tokens)
         : scoreTitle(entry, entry.title.toLowerCase(), needle, tokens);
 
     if (hit.score <= 0) return [];
@@ -365,37 +375,56 @@ function scoreTitle(
  * on nearly every page, and a result list that always fills is the failure
  * this index was built to end. One word of a phrase is not an answer to the
  * phrase either, so a partial match scores nothing.
+ *
+ * The whole query counts as a word of its own. A name is one word in the
+ * prose and several to the tokenizer: `createTMDataGridColumnHelper` splits
+ * into `tmdata`, which no passage holds on its own, so the paragraph defining
+ * the name scored nothing and only its Reference row was found. A passage
+ * that opens with the query is the one defining it, and ranks above the ones
+ * that only mention it.
  */
-function scoreText(body: string, tokens: Array<string>): Hit {
-  const miss = { score: 0, complete: false };
-  if (tokens.length === 0) return miss;
+function scoreText(body: string, needle: string, tokens: Array<string>): Hit {
+  const phrase = wordScore(body, needle) * (body.startsWith(needle) ? 2 : 1);
 
-  let score = 0;
+  let words = 0;
   for (const token of tokens) {
     const hit = wordScore(body, token);
-    if (hit === 0) return miss;
-    score += hit;
+    if (hit === 0) {
+      words = 0;
+      break;
+    }
+    words += hit;
   }
 
+  const score = phrase + words;
+  if (score === 0) return { score: 0, complete: false };
   return { score: score * TEXT_WEIGHT, complete: true };
 }
 
 /**
  * One row per destination. The prose repeats itself across a page, so several
  * passages under one heading can all match - and a list of five links to the
- * same anchor answers nothing the first one did not. Symbols keep their name
- * in the key: a Reference table is one anchor holding many of them.
+ * same anchor answers nothing the first one did not. Symbols are the
+ * exception: a Reference table is one anchor holding many of them, so each
+ * symbol keeps its row, and a passage landing on an anchor a symbol already
+ * holds - the symbol's own table row - does not.
  */
 function dedupe(
   results: Array<{ entry: SearchEntry; score: number }>,
 ): Array<SearchEntry> {
-  const seen = new Set<string>();
+  const anchors = new Set<string>();
+  const symbols = new Set<string>();
   const kept: Array<SearchEntry> = [];
   for (const { entry } of results) {
-    const name = entry.kind === "symbol" ? entry.title : "";
-    const key = `${name} ${entry.to}#${entry.hash ?? ""}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    const anchor = `${entry.to}#${entry.hash ?? ""}`;
+    if (entry.kind === "symbol") {
+      const key = `${entry.title} ${anchor}`;
+      if (symbols.has(key)) continue;
+      symbols.add(key);
+    } else if (anchors.has(anchor)) {
+      continue;
+    }
+    anchors.add(anchor);
     kept.push(entry);
   }
   return kept;

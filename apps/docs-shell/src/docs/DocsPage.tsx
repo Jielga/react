@@ -1,13 +1,15 @@
 import { Box, Table, Typography } from "@mantine/core";
 import { useEffect, type ComponentPropsWithoutRef } from "react";
-import Markdown, { type Components } from "react-markdown";
+import Markdown, { type Components, type Options } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./CodeBlock";
+import { DocsBreadcrumb } from "./DocsBreadcrumb";
 import { DemoBlock } from "./DemoBlock";
 import { splitDemoFences } from "./demoFence";
 import { useDocsLinkRenderer } from "./DocsSite";
 import { DocsToc } from "./DocsToc";
-import { headingSlug } from "./headings";
+import { headingSlug, nodeText } from "./headings";
+import { rehypeReferenceRows } from "./referenceRows";
 import classes from "./DocsPage.module.css";
 
 /** ```tsx → "tsx". Anything unrecognised falls back to plain text. */
@@ -20,14 +22,30 @@ function languageFromClassName(className: string | undefined): string {
  * Headings carry their slug as an id. Without this every `#anchor` on the
  * site is dead - react-markdown emits no ids of its own, which is how the
  * docs accumulated 18 links pointing at nothing.
+ *
+ * Each heading also ends in a `#` link to itself, so a deep link can be copied
+ * from any heading, not only from the table of contents, which a narrow
+ * viewport hides. The link sits inside the heading with an `aria-label`, as
+ * VitePress and Docusaurus place theirs. A plain `href="#slug"`, like the
+ * rail's: the browser scrolls and writes the hash itself.
  */
 function heading(level: 2 | 3 | 4) {
   const Tag = `h${level}` as const;
-  return ({ children, ...props }: ComponentPropsWithoutRef<"h2">) => (
-    <Tag id={headingSlug(children)} {...props}>
-      {children}
-    </Tag>
-  );
+  return ({ children, ...props }: ComponentPropsWithoutRef<"h2">) => {
+    const slug = headingSlug(children);
+    return (
+      <Tag id={slug} {...props}>
+        {children}
+        <a
+          href={`#${slug}`}
+          className={classes.headingAnchor}
+          aria-label={`Link to "${nodeText(children)}"`}
+        >
+          #
+        </a>
+      </Tag>
+    );
+  };
 }
 
 /**
@@ -103,6 +121,12 @@ const markdownComponents: Components = {
   a: MarkdownLink,
 };
 
+type PluggableList = NonNullable<Options["rehypePlugins"]>;
+
+const REHYPE_PLUGINS: PluggableList = [
+  [rehypeReferenceRows, { anchorClass: classes.rowAnchor }],
+];
+
 /**
  * The markdown renderer every prose page of a site shares - on the grid site,
  * the docs routes and the getting-started front page. Mantine's `Typography` styles the raw HTML that
@@ -128,6 +152,7 @@ export function DocsMarkdown({ source }: { source: string }) {
           <Typography key={index}>
             <Markdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={REHYPE_PLUGINS}
               components={markdownComponents}
             >
               {segment.markdown}
@@ -147,23 +172,38 @@ export function DocsMarkdown({ source }: { source: string }) {
  * sticky` has this scroll container to stick within - and so an anchor jump
  * scrolls the article under a rail that stays put.
  */
-export function DocsPage({ source }: { source: string }) {
+export function DocsPage({
+  source,
+  toc = true,
+  breadcrumb,
+}: {
+  source: string;
+  /** `false` leaves the rail out, for a site that lists the headings in its own navigation. */
+  toc?: boolean;
+  /** The trail to this page, such as section and page label, shown above the scroll area with the section being read. */
+  breadcrumb?: ReadonlyArray<string>;
+}) {
   // A pasted `/docs/grouping#aggregation` asks the browser to scroll to an
-  // element React has not rendered yet. Chromium usually retries once the
-  // document settles; this makes it certain, and covers the router
-  // navigating between pages without a document load at all.
+  // element React has not rendered yet, and a router navigation writes the
+  // hash with `pushState`, which neither scrolls nor moves `:target`. Doing the
+  // fragment navigation again once the page is rendered does both, and it
+  // replaces the history entry rather than adding one.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    if (id) document.getElementById(id)?.scrollIntoView();
+    const { hash } = window.location;
+    const target = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (target && !target.matches(":target")) window.location.replace(hash);
   }, [source]);
 
   return (
-    <div className={classes.scroller}>
-      <div className={classes.layout}>
-        <article className={classes.article}>
-          <DocsMarkdown source={source} />
-        </article>
-        <DocsToc source={source} />
+    <div className={classes.page}>
+      {breadcrumb && <DocsBreadcrumb trail={breadcrumb} source={source} />}
+      <div className={classes.scroller}>
+        <div className={classes.layout}>
+          <article className={classes.article}>
+            <DocsMarkdown source={source} />
+          </article>
+          {toc && <DocsToc source={source} />}
+        </div>
       </div>
     </div>
   );

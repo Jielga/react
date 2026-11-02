@@ -57,7 +57,14 @@ export function DocsSearch({
   const go = (entry: SearchEntry | undefined) => {
     if (!entry) return;
     onClose();
-    navigate({ to: entry.to, hash: entry.hash });
+    // The router writes the hash with `pushState`, which does not move
+    // `:target`, so the reference row a symbol links to would not show as the
+    // one landed on. `DocsPage` redoes the fragment navigation when the page
+    // changes; a hit on the page already open needs it done here.
+    void navigate({ to: entry.to, hash: entry.hash }).then(() => {
+      const { hash } = entry;
+      if (hash && document.getElementById(hash)) window.location.replace(`#${hash}`);
+    });
   };
 
   return (

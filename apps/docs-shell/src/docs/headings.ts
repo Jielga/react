@@ -15,7 +15,7 @@ import { isValidElement, type ReactNode } from "react";
  * punctuation it keeps: a spaced `-` survives into the slug as three hyphens,
  * so editing one into a heading silently breaks every link to it.
  */
-function nodeText(node: ReactNode): string {
+export function nodeText(node: ReactNode): string {
   if (node === null || node === undefined || typeof node === "boolean") {
     return "";
   }
@@ -38,6 +38,21 @@ export function headingSlug(children: ReactNode): string {
     .replace(/[^\w\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
+}
+
+/**
+ * A table row documents a name when its first cell is one backticked
+ * identifier - `| \`selectionMode\` | ...`. Identifier-shaped only: some rows
+ * lead with a value, `{ updated, created, deleted }`, not a name.
+ */
+export const REFERENCE_NAME = /^[A-Za-z_$@-][\w$.@/-]*$/;
+
+/**
+ * The anchor of a reference row, shared by the renderer that stamps the `id`
+ * and the search that links to it. "--dg-row-selected-bg" → "ref-dg-row-selected-bg".
+ */
+export function referenceSlug(name: string): string {
+  return `ref-${name.replace(/^-+/, "").replace(/[^\w-]/g, "-")}`;
 }
 
 export type DocsHeading = {

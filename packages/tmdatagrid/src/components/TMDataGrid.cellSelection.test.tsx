@@ -362,6 +362,31 @@ describe("cell selection", () => {
     expect(bodyRows()[1]).not.toHaveAttribute("tabindex");
   });
 
+  it("adds the range from the anchor row with Shift+Space", async () => {
+    const user = userEvent.setup();
+    renderGridUi({ cellSelection: "single", selectionMode: "row" });
+
+    await user.click(cellAt(0, 2));
+    await user.keyboard("{ArrowDown}{ArrowDown}{Shift>} {/Shift}");
+
+    for (const row of bodyRows().slice(0, 3)) {
+      expect(row).toHaveAttribute("data-selected", "true");
+    }
+    expect(bodyRows()[3]).not.toHaveAttribute("data-selected");
+  });
+
+  it("highlights the row from Space under the highlight mode", async () => {
+    const user = userEvent.setup();
+    renderGridUi({ cellSelection: "single", selectionMode: "highlight" });
+
+    await user.click(cellAt(0, 2));
+    await user.keyboard("{ArrowDown} ");
+
+    expect(bodyRows()[1]).toHaveAttribute("data-highlighted", "true");
+    expect(bodyRows()[0]).not.toHaveAttribute("data-highlighted");
+    expect(bodyRows()[1]).not.toHaveAttribute("data-selected");
+  });
+
   it("keeps the focus on its cell when sorting moves the row", async () => {
     const user = userEvent.setup();
     renderGridUi({ cellSelection: "single" });
@@ -464,6 +489,21 @@ describe("cell selection - ranges", () => {
       "3:name",
       "3:age",
     ]);
+  });
+
+  it("extends the rectangle and the row selection with one Shift+click under selectionMode \"row\"", async () => {
+    const user = userEvent.setup();
+    renderGridUi({ cellSelection: "range", selectionMode: "row" });
+
+    await user.click(cellAt(0, 2));
+    await user.keyboard("{Shift>}");
+    await user.click(cellAt(2, 2));
+    await user.keyboard("{/Shift}");
+
+    expect(selectedCells()).toHaveLength(3);
+    for (const row of bodyRows().slice(0, 3)) {
+      expect(row).toHaveAttribute("data-selected", "true");
+    }
   });
 
   it("selects the same rectangle dragged the other way", async () => {
