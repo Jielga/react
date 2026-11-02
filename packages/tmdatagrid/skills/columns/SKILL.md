@@ -3,16 +3,17 @@ name: columns
 description: >
   Define and arrange TMDataGrid columns. Covers createTMDataGridColumnHelper,
   every column meta field (label, type, options, flex, align, colSpan, autoSize,
-  enableOrdering, and the meta.filter and meta.edit namespaces holding operators,
-  defaultOperator, control, url, enabled, field, editor, validate and mapValue),
-  the six column types, fluid minmax sizing versus fixed width with minSize /
-  maxSize / size, autosizing and autosizeColumn, hiding through enableHiding and
-  the columns panel, pinning and why a pinned column becomes fixed-width,
-  ordering with enableColumnOrdering, meta.enableOrdering, moveColumn,
-  moveColumnByStep, getStepTargetColumn and the pinned regions, resetSettings,
-  sorting with isMultiSortEvent, sortFn and a frozen sortMode, and the generated
-  lanes. Load when adding or changing columns, controlling widths, hiding,
-  pinning, reordering or sorting them, or when an edited row jumps after a sort.
+  enableOrdering, and the meta.filter and meta.edit namespaces holding
+  operators, defaultOperator, control, url, enabled, field, editor, validate and
+  mapValue), the six column types, fluid minmax sizing versus fixed width with
+  minSize / maxSize / size, autosizing and autosizeColumn, hiding through
+  enableHiding and the columns panel, pinning and why a pinned column becomes
+  fixed-width, ordering with enableColumnOrdering, meta.enableOrdering,
+  moveColumn, moveColumnByStep, getStepTargetColumn and the pinned regions,
+  resetSettings, sorting with isMultiSortEvent, sortFn and a frozen sortMode,
+  and the generated lanes. Load when adding or changing columns, controlling
+  widths, hiding, pinning, reordering or sorting them, or when an edited row
+  jumps after a sort.
 metadata:
   type: core
   library: '@jielga/tmdatagrid'
@@ -30,8 +31,7 @@ sources:
 # TMDataGrid - Columns
 
 `createTMDataGridColumnHelper<TData>()` returns a TanStack column helper bound to
-the grid's feature set, which is what gives `meta` and `filterFn` their correct
-types.
+the grid's feature set, which gives `meta` and `filterFn` their correct types.
 
 ```tsx
 import { createTMDataGridColumnHelper } from "@jielga/tmdatagrid";
