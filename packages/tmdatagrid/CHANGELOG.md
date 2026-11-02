@@ -1,5 +1,35 @@
 # @jielga/tmdatagrid
 
+## 2.7.0
+
+### Minor Changes
+
+- [#182](https://github.com/Jielga/react/pull/182) [`3d0f1e8`](https://github.com/Jielga/react/commit/3d0f1e8d228350b2b626ad233e8d812e0cde52a3) Thanks [@Psvensso](https://github.com/Psvensso)! - `searchable` on `TMDataGrid.Menu.Columns` and `TMDataGrid.ColumnsPanel` takes a number: the search box shows from that many hideable columns.
+
+- [#190](https://github.com/Jielga/react/pull/190) [`7c2a036`](https://github.com/Jielga/react/commit/7c2a036f3315824b6a643b389b7aeb7d14cb6bc2) Thanks [@Psvensso](https://github.com/Psvensso)! - Control what leaves the grid, for a file and for the clipboard.
+
+  - `enableDownload: false` hides every built-in download item: the cell-range menu's download item and Include headers toggle, `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected`. Copy and Ctrl+C stay. `useTMDataGridExport` gains `canDownload`.
+  - `mapExportData(data, { target, rows })` changes or cancels what every export writes, Ctrl+C and Copy included. Return the data, or `null` to cancel.
+  - The cell-range menu item now reads "Download as CSV" ("Ladda ner som CSV"), naming the format's extension. `labels.exportCells` accepts `(format) => string`; a string still works.
+
+- [#187](https://github.com/Jielga/react/pull/187) [`b6913da`](https://github.com/Jielga/react/commit/b6913da23e7de5252927a14a820418b0ef42d297) Thanks [@Psvensso](https://github.com/Psvensso)! - `sortMode: "frozen"` sorts once, when the sort is applied, and holds the order through edits, refetches and filter changes until the user sorts again. It requires `getRowId`.
+  A ↻ button on the sorted header and a Sort again item in its column menu re-sort on the current values; `sortAgain()` and `sortStale` are on the hook's return value.
+  New labels `sortAgain` and `sortAgainHint`.
+
+- [#184](https://github.com/Jielga/react/pull/184) [`892a7dd`](https://github.com/Jielga/react/commit/892a7dd133dcee0c7157d5d6a1003f6aecc94a6e) Thanks [@Psvensso](https://github.com/Psvensso)! - Saved views: named column layouts the user switches between.
+
+  - `views` option: read-only `presets`, `defaultView`, `allowUserViews`, the `slices` a view holds, and a `store` for the user's own views.
+  - `createLocalStorageViewStore`, or any async `TMDataGridViewStore`.
+  - `grid.views` / `useTMDataGridViews` with `modified`, `select`, `saveAs`, `overwrite` and `remove`.
+  - `TMDataGrid.ViewsMenu` and `TMDataGrid.Menu.Views`; `TMDataGrid.Menu.Columns` shows the views in a Views submenu and `TMDataGrid.ColumnsPanel` lists them, both take `views={false}`.
+  - New `views*` labels, in English and Swedish.
+
+### Patch Changes
+
+- [#188](https://github.com/Jielga/react/pull/188) [`a9ea8c1`](https://github.com/Jielga/react/commit/a9ea8c1e66d8a3214376006d62b9bcc598a942db) Thanks [@Psvensso](https://github.com/Psvensso)! - Docs: the row selection page starts from the four modes, covers row selection with cell selection, reading and clearing the highlighted row, and a reference grouped by kind. The cell-selection skill says what Space and Shift+Space do in each `selectionMode`.
+
+- [#185](https://github.com/Jielga/react/pull/185) [`17a1981`](https://github.com/Jielga/react/commit/17a198104c97ae7d3dc8cd859a1f5939b9d0fb23) Thanks [@Psvensso](https://github.com/Psvensso)! - The select and multi-select editors render their dropdown in a portal, so a short grid or a low row no longer clips it. Their `inputProps.comboboxProps` accepts `withinPortal` again.
+
 ## 2.6.0
 
 ### Minor Changes
