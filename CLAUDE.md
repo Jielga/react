@@ -22,6 +22,17 @@ Do not start held or iceboxed work without the stakeholder's go.
 
 `plans/` is gitignored. Working notes may live there, but they stay local and nothing committed may depend on them.
 
+## Branches
+
+All work lands on `main`, and every pull request targets it.
+The repository's default branch is `public`, so `gh pr create` needs `--base main`.
+
+`public` holds one `jielga[bot]` commit per sync, which keeps the App as the only author on the first page and in the Contributors list.
+[sync-public.yml](.github/workflows/sync-public.yml) writes it on each push to `main`, so never commit to it.
+The two branches share no history, so never merge one into the other.
+
+GitHub honours closing keywords only on a pull request into the default branch, so [close-issues.yml](.github/workflows/close-issues.yml) reads them from the description of a pull request merged into `main`.
+
 ## Commands
 
 All from the repository root.

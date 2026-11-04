@@ -1,0 +1,66 @@
+name: Sync Public
+
+# `public` is the repository's default branch, so GitHub builds the first page
+# and the Contributors list from it. All work still lands on `main`; this job
+# copies main's files to `public` as a commit by the org's GitHub App, which
+# leaves the App as the only author in that branch's history.
+#
+# The two branches share no history, so never merge one into the other.
+#
+# The GITHUB_TOKEN cannot push a change to `.github/workflows/`, so this needs a
+# token from the App, which has write access to contents and workflows. The push
+# starts no second run, because this trigger is limited to `main`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-public
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.PUBLIC_SYNC_CLIENT_ID }}
+          private-key: ${{ secrets.PUBLIC_SYNC_APP_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Commit main's files on public
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          bot="${APP_SLUG}[bot]"
+          bot_id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          export GIT_AUTHOR_NAME="$bot"
+          export GIT_AUTHOR_EMAIL="${bot_id}+${bot}@users.noreply.github.com"
+          export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+          export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          parent=()
+          # The first run finds no `public` and creates it with a root commit.
+          if git fetch --depth=1 origin public; then
+            if [ "$(git rev-parse 'FETCH_HEAD^{tree}')" = "$tree" ]; then
+              echo "public already matches main"
+              exit 0
+            fi
+            parent=(-p "$(git rev-parse FETCH_HEAD)")
+          fi
+
+          commit="$(git commit-tree "$tree" "${parent[@]}" -m "Sync from main ($(git rev-parse --short HEAD))")"
+          git push origin "$commit:refs/heads/public"
