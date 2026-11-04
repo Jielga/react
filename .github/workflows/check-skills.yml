@@ -81,6 +81,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          # A schedule runs on the default branch, `public`, which shares no
+          # history with `main`, so a pull request from it could not be opened.
+          ref: main
           fetch-depth: 0
 
       - name: Setup Node
@@ -113,7 +116,7 @@ jobs:
           # update, rather than opening a fresh PR every week.
           VERSION="review"
           BRANCH="skills/review-${VERSION}"
-          BASE_BRANCH="${{ github.event.repository.default_branch }}"
+          BASE_BRANCH="main"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
