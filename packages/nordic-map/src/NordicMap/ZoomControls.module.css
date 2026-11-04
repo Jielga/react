@@ -1,0 +1,50 @@
+.controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--nordic-map-control-border, var(--_control-border));
+  border-radius: var(--nordic-map-radius, 6px);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--nordic-map-control-color, var(--_control-color));
+  background: var(--nordic-map-control-bg, var(--_control-bg));
+  cursor: pointer;
+  font: inherit;
+}
+
+.button + .button {
+  border-top: 1px solid var(--nordic-map-control-border, var(--_control-border));
+}
+
+.button:hover:not(:disabled) {
+  background: var(--nordic-map-control-hover-bg, var(--_control-hover-bg));
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--nordic-map-focus-ring, var(--_focus-ring));
+  outline-offset: -2px;
+}
+
+.button:disabled {
+  color: var(--nordic-map-control-disabled-color, var(--_control-disabled-color));
+  cursor: default;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+}

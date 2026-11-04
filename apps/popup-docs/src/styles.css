@@ -1,0 +1,321 @@
+/* Mantine's tokens, so the page matches the shared header and every other
+   package site, and follows the colour scheme the header switches. */
+:root {
+  --bg: var(--mantine-color-body);
+  --surface: var(--mantine-color-default);
+  --border: var(--mantine-color-default-border);
+  --text: var(--mantine-color-text);
+  --text-muted: var(--mantine-color-dimmed);
+  --accent: var(--mantine-primary-color-filled);
+  --accent-contrast: var(--mantine-primary-color-contrast);
+  --code-bg: var(--mantine-color-gray-0);
+}
+
+:root[data-mantine-color-scheme='dark'] {
+  --code-bg: var(--mantine-color-dark-8);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
+}
+
+.intro {
+  padding: 3rem 0 1rem;
+}
+
+.intro h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.tagline {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin: 0 0 1rem;
+  max-width: 46rem;
+}
+
+section {
+  margin-top: 2.5rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 0 0 0.75rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.25rem;
+}
+
+p {
+  margin: 0.4rem 0;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.card > p:first-of-type {
+  margin-top: 0.1rem;
+}
+
+.demo {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.9rem;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+p code,
+li code,
+td code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.85em;
+}
+
+button {
+  font: inherit;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input[type='text'] {
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+/* Hosts for TMDataGrid — the grid needs a bounded height. */
+.grid-host {
+  height: 340px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.75rem;
+}
+
+.grid-query-row {
+  margin-bottom: 0.6rem;
+}
+
+.popup-grid-panel {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.popup-grid-panel .grid-host {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  margin-top: 0;
+}
+
+.popup-note {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* Resizable panels example */
+.panels-frame {
+  height: 440px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 0.9rem;
+}
+
+.panel-side {
+  overflow: auto;
+  background: var(--surface);
+}
+
+.panel-separator {
+  width: 6px;
+  background: var(--border);
+  cursor: col-resize;
+  flex-shrink: 0;
+}
+
+.panel-separator:hover,
+.panel-separator[data-resize='active'] {
+  background: var(--accent);
+}
+
+.panel-filters {
+  padding: 1rem;
+}
+
+.filters-form h4,
+.panel-results-header h4 {
+  margin: 0 0 0.5rem;
+}
+
+.filters-form label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.filters-form input[type='text'],
+.filters-form select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font: inherit;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+.filters-form .filters-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+}
+
+.panel-results-inner {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.panel-results-header {
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.panel-strip {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.panel-strip button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+}
+
+.panel-strip-label {
+  writing-mode: vertical-rl;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+}
+
+/* Content rendered inside the popup window. Global styles (including this
+   file) are mirrored into the popup by the library, so it just works. */
+.popup-panel {
+  padding: 1rem 1.25rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.popup-panel h2 {
+  margin-top: 0;
+}
+
+table.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+table.api-table th,
+table.api-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

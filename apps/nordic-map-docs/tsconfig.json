@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/nordic-map-docs.tsbuildinfo",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"],
+    // Mirrors the alias in vite.alias.ts: the library by package name,
+    // resolved to its source.
+    "paths": {
+      "@jielga/nordic-map": ["./src/examples/nordicMapForDemos.tsx"]
+    }
+  },
+  // The Vite config and the alias are Node files: tsconfig.node.json checks
+  // them. The shell's file declares the deploy's build-time variables.
+  "include": ["src", "../docs-shell/src/env.d.ts", "../../vitest.setup.ts"]
+}

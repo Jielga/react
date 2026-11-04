@@ -1,0 +1,40 @@
+.status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--nordic-map-control-border, var(--_control-border));
+  border-top-color: var(--nordic-map-focus-ring, var(--_focus-ring));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  padding: 6px 12px;
+  border: 1px solid var(--nordic-map-control-border, var(--_control-border));
+  border-radius: var(--nordic-map-radius, 6px);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--nordic-map-control-color, var(--_control-color));
+  background: var(--nordic-map-control-bg, var(--_control-bg));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+}

@@ -1,0 +1,117 @@
+/* The grid root: the size scale every other module reads, and the frame.
+   Each component owns its own module; these variables cascade into all of
+   them, and the pinned-column boundary shared by header and body cells lives
+   in sticky.module.css. */
+
+/* Size scale. Row heights mirror SIZE_ROW_HEIGHT in core/sizes.ts - the
+   virtualizer needs the number in JS, so the two have to agree. */
+.root[data-size="xs"] {
+  --dg-row-height: 34px;
+  --dg-header-height: 32px;
+  --dg-font-size: var(--mantine-font-size-xs);
+  --dg-padding: 6px;
+}
+
+.root[data-size="sm"] {
+  --dg-row-height: 42px;
+  --dg-header-height: 38px;
+  --dg-font-size: var(--mantine-font-size-sm);
+  --dg-padding: 8px;
+}
+
+.root[data-size="md"] {
+  --dg-row-height: 52px;
+  --dg-header-height: 44px;
+  --dg-font-size: var(--mantine-font-size-sm);
+  --dg-padding: 10px;
+}
+
+.root[data-size="lg"] {
+  --dg-row-height: 62px;
+  --dg-header-height: 52px;
+  --dg-font-size: var(--mantine-font-size-md);
+  --dg-padding: 14px;
+}
+
+.root[data-size="xl"] {
+  --dg-row-height: 72px;
+  --dg-header-height: 60px;
+  --dg-font-size: var(--mantine-font-size-lg);
+  --dg-padding: 18px;
+}
+
+.root {
+  /* The frame's corner radius. Any length or Mantine radius token; `0` squares
+     the grid off against a card or a full-bleed page. Override it on the grid:
+     <TMDataGrid style={{ "--dg-radius": 0 }} />
+     The root clips its overflow, so the header and the last row follow it. */
+  --dg-radius: var(--mantine-radius-md);
+  /* Fallbacks, so the parts still work if rendered outside a sized root. */
+  --dg-row-height: 52px;
+  --dg-header-height: 44px;
+  --dg-font-size: var(--mantine-font-size-sm);
+  --dg-padding: 10px;
+  /* The header's font size. Resolved on the root, so it follows whatever
+     `--dg-font-size` the scale or an override gives the cells, until set on
+     its own:
+     <TMDataGrid style={{ "--dg-header-font-size": "var(--mantine-font-size-md)" }} /> */
+  --dg-header-font-size: var(--dg-font-size);
+  /* Background of a selected row, when `showSelectedBackground` is on. Override
+     it on the grid:
+     <TMDataGrid style={{ "--dg-row-selected-bg": "var(--mantine-color-blue-0)" }} /> */
+  --dg-row-selected-bg: var(--mantine-primary-color-light);
+  /* Background of the highlighted row, under a selectionMode that has one.
+     Stronger than the selected background by default, since under
+     "checkboxAndHighlight" the two show up together. */
+  --dg-row-highlight-bg: var(--mantine-primary-color-light-hover);
+  /* Background of a group row. Transparent by default - the bold label and the
+     chevron are enough, and with the tree collapsed every row on screen is a
+     group row, so a tint would grey out the whole grid. Set it to give groups a
+     band of their own. */
+  --dg-row-group-bg: var(--mantine-color-body);
+  /* Every second row under `striped`. A whisper of the text colour over the
+     body, so one declaration is right in both themes. */
+  --dg-row-striped-bg: color-mix(
+    in srgb,
+    var(--mantine-color-text) 3.5%,
+    var(--mantine-color-body)
+  );
+  /* A confirmed entry row under draft mode - entered, awaiting Save all. A
+     whisper of green over the body, one declaration for both themes. */
+  --dg-row-new-bg: color-mix(
+    in srgb,
+    var(--mantine-color-green-6) 8%,
+    var(--mantine-color-body)
+  );
+
+  /* The stacking ladder, stated once. Body cells sit at auto (0); everything
+     sticky stacks over them in this order, and a sticky row crossing a sticky
+     column takes the row's slot plus one. */
+  /* The focus ring is drawn inside the focused cell's own box, so the cell
+     takes a slot of its own - above the plain cells beside it, but under the
+     pinned lanes, which a scrolling row has to pass beneath ring and all. A
+     focused cell that is itself pinned goes above them instead, so its ring
+     stays whole while the rest of the row slides under it. */
+  --dg-z-focused-cell: 1;
+  --dg-z-pinned-cell: 2;
+  --dg-z-pinned-focused-cell: 3;
+  /* The pinned-row slot serves both sticky rows: the summary along the
+     bottom and the entry block under the header. */
+  --dg-z-pinned-row: 4;
+  --dg-z-pinned-row-pinned-cell: 5;
+  --dg-z-summary-row: 4;
+  --dg-z-summary-pinned-cell: 5;
+  --dg-z-header: 6;
+  --dg-z-header-pinned-cell: 7;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  /* Header text is a stretched flex item, so an inherited `text-align: center`
+     from the host page would centre headers away from their cell content. */
+  text-align: left;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--dg-radius);
+  background-color: var(--mantine-color-body);
+}

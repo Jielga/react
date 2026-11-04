@@ -1,0 +1,18 @@
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-lg);
+  padding: 4px var(--mantine-spacing-sm);
+  min-height: 48px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+/* Grouping suspends paging. The pager stays put and fades rather than
+   disappearing, so the footer reads as switched off rather than as having
+   vanished - and the row it holds does not change height under the grid. Its
+   controls carry their own `disabled`; this is the label half. */
+.footer[data-paging-suspended="true"] {
+  opacity: 0.55;
+}

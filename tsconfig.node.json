@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "strict": true,
+
+    /* Bundler mode */
+    "module": "nodenext",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  // The tool configs of every workspace package, typechecked as one Node
+  // project.
+  "include": [
+    "vitest.config.ts",
+    "packages/*/vite.config.ts",
+    "packages/*/vitest.config.ts",
+    "packages/*/test/gallery/vite.config.ts",
+    "apps/*/vite.config.ts",
+    "apps/*/vite.alias.ts",
+    "apps/*/vitest.config.ts"
+  ]
+}

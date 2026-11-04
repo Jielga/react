@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/playwright.tsbuildinfo",
+    // Node for the runner and the config; DOM (from the base `lib`) for the
+    // callbacks passed to `page.evaluate`, which run in the browser.
+    "types": ["node"]
+  },
+  // The end-to-end suite and its config, typechecked as one project.
+  "include": ["**/*.ts", "../playwright.config.ts"]
+}

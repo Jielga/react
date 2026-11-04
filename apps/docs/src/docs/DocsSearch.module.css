@@ -1,0 +1,45 @@
+.input {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.results {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-xs);
+}
+
+.result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px var(--mantine-spacing-sm);
+  border: none;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* One highlight, driven by the cursor rather than by :hover - the keyboard and
+   the pointer both move the cursor, so two rows can never look selected. */
+.result[data-active] {
+  background: var(--mantine-color-default-hover);
+}
+
+/* Lets the title, context and excerpt truncate instead of pushing the badge
+   out. The badge holds its own width: a long excerpt line was squeezing it to
+   "TE…", which names nothing. */
+.text {
+  min-width: 0;
+}
+
+.kind {
+  flex-shrink: 0;
+}
+
+.footer {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-default-border);
+}

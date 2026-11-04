@@ -1,0 +1,27 @@
+{
+  // Shared compiler options. Each workspace package extends this and adds its
+  // own `include`, `types` and build-info file; the root tsconfig.json only
+  // references them, so `tsc -b` at the root typechecks everything.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "skipLibCheck": true,
+    "strict": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}

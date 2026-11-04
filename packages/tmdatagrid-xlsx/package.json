@@ -1,0 +1,69 @@
+{
+  "name": "@jielga/tmdatagrid-xlsx",
+  "version": "2.7.0",
+  "description": "Excel (xlsx) export format for @jielga/tmdatagrid, on exceljs.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jielga/react.git",
+    "directory": "packages/tmdatagrid-xlsx"
+  },
+  "homepage": "https://jielga.github.io/react/tmdatagrid/docs/xlsx",
+  "bugs": {
+    "url": "https://github.com/Jielga/react/issues"
+  },
+  "keywords": [
+    "react",
+    "datagrid",
+    "excel",
+    "xlsx",
+    "export",
+    "tanstack-intent"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "intent": {
+    "docs": "docs/"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "docs",
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./docs/*": "./docs/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json && rolldown -c rolldown.dts.config.mjs",
+    "test": "vitest run",
+    "prepublishOnly": "oxlint && bun run build"
+  },
+  "peerDependencies": {
+    "@jielga/tmdatagrid": "^2.0.1"
+  },
+  "dependencies": {
+    "exceljs": "catalog:"
+  },
+  "devDependencies": {
+    "@jielga/tmdatagrid": "workspace:*",
+    "@tanstack/intent": "catalog:",
+    "rolldown": "~1.1.5",
+    "rolldown-plugin-dts": "^0.27.14",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

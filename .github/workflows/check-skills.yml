@@ -1,0 +1,142 @@
+# check-skills.yml - Drop this into your library repo's .github/workflows/
+#
+# Validates intent skills on PRs. After a release or manual run, opens or
+# updates one review PR when existing skills, artifact coverage, or workspace
+# package coverage need review.
+#
+# Triggers: pull requests touching skills/artifacts, a weekly schedule, or
+# manual workflow_dispatch.
+#
+# The upstream template runs the review job on `release: [published]`. That
+# cannot work here: Changesets creates the tag and the Release using the default
+# GITHUB_TOKEN, and events raised by GITHUB_TOKEN do not start new workflow runs.
+# A `push: tags` trigger is dead for the same reason. Version drift is instead
+# prevented up front -- `bun run version-packages` bumps each skill's
+# library_version in the same PR that bumps package.json -- so the only drift
+# left for this job to find is a source doc changing under a skill, which a
+# schedule catches perfectly well.
+#
+# Diverges from the upstream template in two ways, and `intent setup` would
+# undo both. The template installs the CLI globally at `latest`, which validated
+# CI against a different version than the pinned devDependency anyone runs
+# locally; both jobs use the repo's own copy through scripts/intent.mjs. And the
+# template passes `--package-label` with one package name, which `intent setup`
+# fills in. The workspace has several packages that version on their own, so
+# the review job leaves it out: the label is only a fallback for review items
+# that belong to no package (workflow advisories, a failed stale check), and
+# without it they read `workspace`. Items about a package carry its own name.
+#
+# intent-workflow-version: 3
+
+name: Check Skills
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - '**/skills/**'
+      - '_artifacts/**'
+      - '**/_artifacts/**'
+  schedule:
+    - cron: '0 6 * * 1' # Mondays, 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate intent skills
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - run: bun install --frozen-lockfile
+
+      - name: Validate skills
+        run: node scripts/intent.mjs validate --github-summary
+
+  review:
+    name: Check intent skill coverage
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # A schedule runs on the default branch, `public`, which shares no
+          # history with `main`, so a pull request from it could not be opened.
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check skills
+        id: stale
+        run: |
+          node scripts/intent.mjs stale --github-review
+
+      - name: Open or update review PR
+        if: steps.stale.outputs.has_review == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A constant label keeps one long-lived review PR that later runs
+          # update, rather than opening a fresh PR every week.
+          VERSION="review"
+          BRANCH="skills/review-${VERSION}"
+          BASE_BRANCH="main"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin "$BRANCH" || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+            git commit --allow-empty -m "chore: review intent skills for ${VERSION}"
+            git push origin "$BRANCH"
+          fi
+
+          PR_URL="$(gh pr list --head "$BRANCH" --json url --jq '.[0].url')"
+          if [ -n "$PR_URL" ]; then
+            gh pr edit "$PR_URL" --body-file pr-body.md
+          else
+            gh pr create \
+              --title "Review intent skills (${VERSION})" \
+              --body-file pr-body.md \
+              --head "$BRANCH" \
+              --base "$BASE_BRANCH"
+          fi

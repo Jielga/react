@@ -1,0 +1,25 @@
+/* The live area of a demo.
+
+   Fixed height so the page does not resize itself as demos mount, and so
+   every grid on the site is judged at the same size. */
+.live {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* A demo is an app, not prose.
+
+   Mantine's Typography wraps the whole docs article, and its rules are
+   descendant selectors - they reach every element a demo renders, not just the
+   markdown around it. A `p` picks up a 20px bottom margin that way, and on a
+   flex item a bottom margin shifts the border box up off centre: that is how
+   the pager came to sit half a line below its own label. Mantine's components
+   ship margin-free, so clearing these is what makes a demo on a docs page look
+   like the same demo in an app.
+
+   `:is()`, not `:where()`: Typography's own selectors are one class deep, and
+   `:where()` here would tie with them and leave stylesheet order to decide. */
+.live :is(p, h1, h2, h3, h4, h5, h6, ul, ol, table, blockquote, pre, hr, img) {
+  margin: 0;
+}

@@ -1,0 +1,78 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0 var(--mantine-spacing-md);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  /* Stays in view on a site whose page scrolls as a whole, over whatever
+     scrolls under it. */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--mantine-color-body);
+}
+
+.brand {
+  flex-shrink: 0;
+}
+
+.packageButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px;
+  margin-left: -8px;
+  border-radius: var(--mantine-radius-sm);
+  color: inherit;
+}
+
+.packageButton:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.packageButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.wordmark {
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--mantine-color-dimmed);
+}
+
+.version {
+  cursor: pointer;
+  /* A button, since it opens the version menu, so the browser's own button
+     chrome has to go. Mantine styles everything else about the badge. */
+  border: none;
+}
+
+/* The search, when a site has one. Empty, it still takes the space, so the
+   actions stay at the right edge. */
+.centre {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.actions {
+  flex-shrink: 0;
+}
+
+/* The wordmark and version give way before the search box does - the box is
+   the thing people are reaching for. */
+@media (max-width: 640px) {
+  .wordmark,
+  .version {
+    display: none;
+  }
+}

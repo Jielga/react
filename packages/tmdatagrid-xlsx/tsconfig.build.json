@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/tmdatagrid-xlsx.build.tsbuildinfo",
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "rootDir": "src",
+    // Per-file declarations are an intermediate artefact: rolldown-plugin-dts
+    // flattens them into a single dist/index.d.ts. This must not live under
+    // node_modules - the plugin treats anything resolving in there as
+    // external and would re-export the files instead of inlining them.
+    "outDir": ".types-tmp",
+    // No `paths` here on purpose. The declaration build must resolve
+    // `@jielga/tmdatagrid` the way a consumer does, to the workspace-linked
+    // `packages/tmdatagrid/dist/index.d.ts`, so the grid's types stay external
+    // in the dts rollup instead of being inlined from its source.
+    "paths": {}
+  },
+  "include": ["src"],
+  // Tests live beside the code they cover but are not part of the package, and
+  // emitting declarations for them would drag the test types into the rollup.
+  "exclude": ["src/**/*.test.ts"]
+}

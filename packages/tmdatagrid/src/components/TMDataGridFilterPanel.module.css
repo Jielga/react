@@ -1,0 +1,54 @@
+/* A plain block of controls. Nothing here positions it - the popup and the
+   sidebar own their own placement, and a consumer placing the panel by hand
+   places it the way any other block. */
+.filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+
+/* Column, operator and value side by side, bottom-aligned so their fields line
+   up under labels of differing heights. */
+.filterRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs);
+}
+
+/* The narrow-host layout: the same three fields one under the other, each
+   filling the width, with the ✕ beside the column it removes. A card rather
+   than a bare stack, because without the side-by-side alignment there is
+   nothing else saying where one filter ends and the next begins. */
+.filterRow[data-layout="stacked"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 6px var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.filterRow[data-layout="stacked"] .filterRemove {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.filterRow[data-layout="stacked"] .filterColumnSlot {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.filterRow[data-layout="stacked"] .filterOperatorSlot,
+.filterRow[data-layout="stacked"] .filterValueSlot {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.filterPanelFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+}

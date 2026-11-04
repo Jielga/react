@@ -1,0 +1,31 @@
+.main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 16px 64px;
+}
+
+.title {
+  margin-bottom: var(--mantine-spacing-xs);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+
+@media (max-width: 400px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+}
+
+.packages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

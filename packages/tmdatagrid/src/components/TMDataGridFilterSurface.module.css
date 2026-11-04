@@ -1,0 +1,54 @@
+/* Chrome shared by the two automatic surfaces. The panel inside them is a
+   plain block; everything that makes one float or sit beside the rows is
+   here. */
+
+.surfaceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  padding-bottom: var(--mantine-spacing-xs);
+}
+
+/* Floats over the first body rows, anchored to `.tableWrapper`. Sits below the
+   whole header - group rows and the filter row included - which the table
+   measures onto the wrapper as `--dg-header-stack-height`. The size scale's
+   single-row value is the fallback for the frame before the first
+   measurement. */
+.filterPopup {
+  position: absolute;
+  top: calc(var(--dg-header-stack-height, var(--dg-header-height)) + 2px);
+  left: var(--mantine-spacing-md);
+  z-index: var(--dg-z-filter-popup, 20);
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+/* A column of the table wrapper rather than a layer over it: the rows give up
+   the width instead of being covered by it. `flex: none` so the declared
+   width holds whatever the panel inside asks for. */
+.filterSidebar {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-width: 0;
+  padding: var(--mantine-spacing-sm);
+  background-color: var(--mantine-color-body);
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+/* On the left it is the same panel with its divider on the other edge, and
+   ahead of the scroll container in the flex order. */
+.filterSidebar[data-side="left"] {
+  order: -1;
+  border-left: none;
+  border-right: 1px solid var(--mantine-color-default-border);
+}
+
+.filterSidebarBody {
+  flex: 1;
+  min-height: 0;
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/docs-home.tsbuildinfo",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
+  },
+  // The shell's declarations of the deploy's build-time variables.
+  "include": ["src", "../docs-shell/src/env.d.ts"]
+}

@@ -1,0 +1,92 @@
+{
+  "name": "@jielga/nordic-map",
+  "version": "0.3.0",
+  "description": "An offline map of Sweden for React, with GPS pins, labels, clusters, areas and paths.",
+  "license": "MIT",
+  "author": "jielga",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jielga/react.git",
+    "directory": "packages/nordic-map"
+  },
+  "homepage": "https://jielga.github.io/react/nordic-map/",
+  "bugs": {
+    "url": "https://github.com/Jielga/react/issues"
+  },
+  "keywords": [
+    "react",
+    "map",
+    "sweden",
+    "nordic",
+    "offline",
+    "canvas",
+    "openstreetmap",
+    "tanstack-intent"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "intent": {
+    "docs": "docs/"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "!src/data/swedenOsm/cells",
+    "!src/data/swedenRegions/*.json",
+    "docs",
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./styles.layer.css": "./dist/styles.layer.css",
+    "./docs/*": "./docs/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json && rolldown -c rolldown.dts.config.mjs",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1"
+  },
+  "devDependencies": {
+    "@babel/core": "catalog:",
+    "@rolldown/plugin-babel": "catalog:",
+    "@tanstack/intent": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/babel__core": "catalog:",
+    "@types/d3-geo": "^3.1.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "jsdom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "rolldown": "~1.1.5",
+    "rolldown-plugin-dts": "^0.27.14",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

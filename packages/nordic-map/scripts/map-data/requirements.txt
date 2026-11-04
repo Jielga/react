@@ -1,0 +1,5 @@
+osmium>=4
+shapely>=2.1
+pyproj>=3.7
+pyshp>=2.3
+numpy>=2

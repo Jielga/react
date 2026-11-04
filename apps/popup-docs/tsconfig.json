@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/popup-docs.tsbuildinfo",
+    "types": ["vite/client"],
+    // Mirrors the alias in vite.alias.ts: the libraries by package name,
+    // resolved to their source.
+    "paths": {
+      "@jielga/react-popup-window": [
+        "../../packages/react-popup-window/src/index.ts"
+      ],
+      "@jielga/tmdatagrid": ["../../packages/tmdatagrid/src/index.ts"]
+    }
+  },
+  // The Vite config and the alias are Node files: tsconfig.node.json checks
+  // them. The shell's file declares the deploy's build-time variables.
+  "include": ["src", "../docs-shell/src/env.d.ts"]
+}

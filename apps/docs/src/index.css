@@ -1,0 +1,11 @@
+/* `color-scheme` is deliberately left to MantineProvider. Hard-coding
+   `light dark` here makes scrollbars and other native widgets follow the OS
+   instead of the selected scheme, and breaks CSS `light-dark()`. */
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+}

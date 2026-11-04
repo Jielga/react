@@ -1,0 +1,58 @@
+/* The rail stays beside the article down to Mantine's `xs` breakpoint, taking
+   its width from the article. Below that, on a phone, the article has no width
+   left to give. */
+@media (max-width: 35.99em) {
+  .rail {
+    display: none;
+  }
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  width: 200px;
+  flex-shrink: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+}
+
+.label {
+  letter-spacing: 0.05em;
+  margin-bottom: var(--mantine-spacing-xs);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* The line the entries hang off, so the rail reads as one column. */
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.link {
+  display: block;
+  padding: 4px 0 4px var(--mantine-spacing-sm);
+  /* Sits over the list's border, so the active marker replaces that segment
+     rather than doubling it. */
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.35;
+  color: var(--mantine-color-dimmed);
+  text-decoration: none;
+}
+
+.link[data-level="3"] {
+  padding-left: calc(var(--mantine-spacing-sm) + var(--mantine-spacing-md));
+}
+
+.link:hover {
+  color: var(--mantine-color-text);
+}
+
+.link[data-active] {
+  color: var(--mantine-primary-color-filled);
+  border-left-color: var(--mantine-primary-color-filled);
+}

@@ -1,0 +1,77 @@
+.title {
+  font-weight: 500;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-default);
+  overflow: hidden;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  background-color: var(--mantine-color-default-hover);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.headerLabel {
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--mantine-spacing-xs) / 2) 0;
+}
+
+/* Each column is one full-width row: the label stretches over the free space
+   so the whole row toggles the box, and the row highlights on hover like a
+   menu item. */
+.row {
+  padding: 0 var(--mantine-spacing-sm);
+}
+
+.row:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.rowBody {
+  align-items: center;
+}
+
+.rowLabelWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding-block: calc(var(--mantine-spacing-xs) * 0.75);
+  cursor: pointer;
+}
+
+.rowText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowHint {
+  flex: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.empty {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+}

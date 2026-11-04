@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/docs.tsbuildinfo",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"],
+    // Mirrors the alias in vite.alias.ts: the library by package name,
+    // resolved to its source.
+    "paths": {
+      "@jielga/tmdatagrid": ["../../packages/tmdatagrid/src/index.ts"],
+      "@jielga/tmdatagrid-xlsx": [
+        "../../packages/tmdatagrid-xlsx/src/index.ts"
+      ]
+    }
+  },
+  // The shell's declarations of the deploy's build-time variables.
+  "include": ["src", "../docs-shell/src/env.d.ts"]
+}

@@ -1,0 +1,293 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* `height` for a page that uses the scroller on its own; inside `.page` the
+   flex basis decides, and the breadcrumb takes its share. */
+.scroller {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* A short page has no scrollbar and a long one does, so without a reserved
+     gutter the centred article moves sideways between them. */
+  scrollbar-gutter: stable;
+}
+
+/* The bar above the scroll area. It reserves the same scrollbar gutter as the
+   scroller under it, so its text lines up with the article's left edge. */
+.breadcrumb {
+  flex-shrink: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
+.breadcrumbTrail {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mantine-spacing-xs);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbTrail [data-current-page] {
+  color: var(--mantine-color-text);
+}
+
+.breadcrumbTrail a {
+  color: var(--mantine-color-text);
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbTrail a:hover {
+  color: var(--mantine-color-anchor);
+}
+
+/* Article and table-of-contents rail, centred as a pair - so the prose does
+   not jump sideways when the rail drops out on a narrow viewport. */
+.layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--mantine-spacing-xl);
+}
+
+.article {
+  /* Mantine's docs measure - long prose stays readable. */
+  max-width: 1280px;
+  width: 100%;
+  /* Without this a wide table or code block sets the flex base width and
+     pushes the rail off the edge. */
+  min-width: 0;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-xl)
+    calc(var(--mantine-spacing-xl) * 3);
+  text-align: left;
+  /* The stacked table layout below follows the article's width, not the
+     viewport's: an open navigation narrows the article on a wide screen too. */
+  container-type: inline-size;
+}
+
+.article h1 {
+  margin-top: 0;
+  margin-bottom: var(--mantine-spacing-lg);
+}
+
+.article h2 {
+  margin-top: calc(var(--mantine-spacing-xl) * 1.5);
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.article h3 {
+  margin-top: var(--mantine-spacing-xl);
+}
+
+/* An anchor jump lands the heading a little below the top edge rather than
+   flush against it, so its rule and the text under it read as one block. */
+.article h2,
+.article h3,
+.article h4 {
+  scroll-margin-top: var(--mantine-spacing-md);
+}
+
+/* The `#` link at the end of every heading. It shows while the heading is
+   hovered or the link has focus, so it does not sit beside every heading on
+   the page; where nothing hovers, it stays visible but faint. */
+.headingAnchor {
+  margin-left: 0.3em;
+  color: var(--mantine-color-dimmed);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.article h2:hover .headingAnchor,
+.article h3:hover .headingAnchor,
+.article h4:hover .headingAnchor,
+.headingAnchor:focus-visible {
+  opacity: 1;
+}
+
+.headingAnchor:hover {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+/* The `#` link after the name in a reference row, which carries the row's
+   `ref-` anchor. Shown the same way as a heading's. */
+.rowAnchor {
+  margin-left: 0.3em;
+  color: var(--mantine-color-dimmed);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.article tr:hover .rowAnchor,
+.rowAnchor:focus-visible {
+  opacity: 1;
+}
+
+.rowAnchor:hover {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+@media (hover: none) {
+  .headingAnchor,
+  .rowAnchor {
+    opacity: 0.5;
+  }
+}
+
+.article tr[id] {
+  scroll-margin-top: var(--mantine-spacing-md);
+}
+
+/* The row a link or a search result landed on. */
+.article tr:target > td {
+  background: var(--mantine-primary-color-light);
+}
+
+/* No rules for `pre` here: every fence in the article renders as a `CodeBlock`,
+   which owns its own border, radius and surface. Styling the bare element was
+   what stacked a second outline inside that border. */
+
+.article td,
+.article th {
+  font-size: var(--mantine-font-size-sm);
+  vertical-align: top;
+}
+
+/* `break-word` rather than `anywhere`: it leaves the column's min-content width
+   at the full identifier, so names stay on one line while there is room, and
+   only break when the cell would otherwise clip them. */
+.article td code,
+.article th code {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Mantine's Typography colours `code` after it colours `a`, at the same
+   specificity, so a link whose whole label is inline code loses the anchor
+   colour. Underlines are on hover only, so that colour is the sole thing
+   marking it as a link - without this the 15 code-labelled links in the docs
+   render as plain black chips. */
+.article a code {
+  color: var(--mantine-color-anchor);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Relative, not Typography's absolute 12px: a chip has to hold its ratio to
+   whatever text carries it, and 12px inside 16px prose reads a size small for
+   pages this dense with identifiers. The tighter horizontal padding is what
+   keeps the comma after a chip from floating away from it. */
+.article code {
+  font-size: 0.875em;
+  padding-inline: 0.25em;
+}
+
+/* The wrapper `markdownComponents.pre` renders in place of the `pre` element.
+   It carries the gap around a code block, which nothing else does: Typography
+   styles `pre`, and the `pre` never reaches the DOM. Adjacent margins collapse,
+   so this is 20px above and below rather than 20px added to the paragraph's
+   own. */
+.fence {
+  margin-block: var(--mantine-spacing-lg);
+}
+
+/* The same gap for a table: the scroll container wrapping it has no margin of
+   its own, so the paragraph after a table sat against its bottom border. */
+.tableBlock {
+  margin-block: var(--mantine-spacing-lg);
+}
+
+/* On a narrow page every row becomes a block: the first cell, the name, on
+   its own line, and each other cell under its column's header, which the
+   renderer copies into `data-label`. A table with four columns otherwise
+   scrolls sideways and shows one column at a time. */
+@container (max-width: 36em) {
+  .article .tableBlock > div {
+    min-width: 0;
+  }
+
+  .article table,
+  .article tbody,
+  .article tr,
+  .article td {
+    display: block;
+  }
+
+  .article table {
+    border-bottom: none;
+  }
+
+  .article thead {
+    display: none;
+  }
+
+  .article tr {
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    border-bottom: 1px solid var(--mantine-color-default-border);
+  }
+
+  .article tr > td {
+    border: none;
+    padding: 2px 0;
+    background: none;
+  }
+
+  .article tr > td:first-child {
+    font-weight: 600;
+  }
+
+  .article tr > td:not(:first-child)[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--mantine-color-dimmed);
+    font-size: var(--mantine-font-size-xs);
+  }
+
+  .article tr:target {
+    background: var(--mantine-primary-color-light);
+  }
+}
+
+/* The `code` rule above is for an inline chip, and highlighted code is a `code`
+   too - in a fence and in a demo's source panel alike. Both sit inside the
+   `pre` the component renders, which is what separates them from an inline
+   chip; Mantine's own 13px is what those blocks were measured at, so it is
+   restored rather than left to scale with the prose. */
+.article pre code {
+  font-size: calc(0.8125rem * var(--mantine-scale));
+}
+
+/* A blockquote is a note. Typography renders it as a filled, rounded card at
+   font-size lg, which sets a caveat two points larger than the text it
+   qualifies and makes it the loudest thing on a page whose code blocks are
+   white on white. It also fills with gray-0, the same colour as an inline code
+   chip, so chips inside a note vanish in light mode. A left accent and no fill
+   says "aside" without any of that. */
+.article blockquote {
+  font-size: inherit;
+  background: none;
+  border-radius: 0;
+  border-inline-start: 3px solid var(--mantine-primary-color-filled);
+  padding: 0 0 0 var(--mantine-spacing-md);
+  margin-block: var(--mantine-spacing-lg);
+}

@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node runs the tool binaries (vite, vitest, tsc); bun installs and runs
+      # the scripts.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run lint
+
+      - run: bun run typecheck
+
+      - run: bun run test
+
+      # The browser download is keyed on the Playwright version the lockfile
+      # pins; the system libraries it needs are not cached and are installed
+      # either way.
+      - name: Read the Playwright version
+        id: playwright-version
+        run: echo "version=$(grep -oE '"@playwright/test@[^"]+"' bun.lock | head -n 1 | sed -E 's/.*@([^"]+)"/\1/')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium
+
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
+
+      - run: bun run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      # Build both outputs: the package and the demo site.
+      - run: bun run build

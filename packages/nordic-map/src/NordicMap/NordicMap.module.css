@@ -1,0 +1,100 @@
+/*
+ * Fills its parent, so the parent sets the size.
+ *
+ * The `--_*` variables are the defaults of each color scheme. The parts read the public `--nordic-map-*`
+ * variables first, so a value set on the map or on any element around it wins over the defaults.
+ */
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--nordic-map-font-family, system-ui, sans-serif);
+
+  --_control-bg: #ffffff;
+  --_control-hover-bg: #f1f3f5;
+  --_control-color: #212529;
+  --_control-disabled-color: #adb5bd;
+  --_control-border: #dee2e6;
+  --_focus-ring: #1d5fa8;
+  --_tooltip-bg: #1b2b40;
+  --_tooltip-color: #ffffff;
+  --_attribution-bg: rgb(255 255 255 / 75%);
+  --_attribution-color: #3d4451;
+}
+
+.root[data-color-scheme="dark"] {
+  --_control-bg: #1f2937;
+  --_control-hover-bg: #2b3647;
+  --_control-color: #e6edf7;
+  --_control-disabled-color: #5c6b80;
+  --_control-border: #3a4659;
+  --_focus-ring: #fecc02;
+  --_tooltip-bg: #e6edf7;
+  --_tooltip-color: #0b1f3a;
+  --_attribution-bg: rgb(6 17 31 / 70%);
+  --_attribution-color: #c3cfde;
+}
+
+.canvas,
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  /* A finger drag selects pins or pans, and two fingers zoom, instead of scrolling the page */
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+  outline: none;
+}
+
+.overlay:focus-visible {
+  outline: 2px solid var(--nordic-map-focus-ring, var(--_focus-ring));
+  outline-offset: -2px;
+}
+
+/* Without box selection a left drag pans, so the cursor is a hand */
+.overlay[data-drag-pans] {
+  cursor: grab;
+}
+
+.overlay[data-clickable] {
+  cursor: pointer;
+}
+
+.overlay[data-panning] {
+  cursor: grabbing;
+}
+
+.dragBox {
+  position: absolute;
+  border: 1px dashed;
+  pointer-events: none;
+}
+
+/* Small license credit in the bottom right corner, readable on any map background */
+.attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--nordic-map-attribution-color, var(--_attribution-color));
+  background: var(--nordic-map-attribution-bg, var(--_attribution-bg));
+  border-top-left-radius: 4px;
+}
+
+.attribution a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.attribution a:hover {
+  text-decoration: underline;
+}

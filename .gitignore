@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.playwright-mcp
+node_modules
+dist
+dist-ssr
+.types-tmp
+*.local
+*.tgz
+.serena
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local planning notes, never committed
+plans/
+
+# Local user feedback notes, never committed
+user-feedback/
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
+
+# Map data sources and the Python environment of the nordic-map data scripts
+packages/nordic-map/.cache/
+packages/nordic-map/scripts/map-data/.venv/
+__pycache__/

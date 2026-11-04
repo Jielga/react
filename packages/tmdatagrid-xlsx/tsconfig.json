@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/tmdatagrid-xlsx.tsbuildinfo",
+    "types": ["vite/client"],
+    // Mirrors the alias in vitest.config.ts: the grid by package name,
+    // resolved to its source, so neither the typecheck nor the tests need a
+    // build of it first.
+    "paths": {
+      "@jielga/tmdatagrid": ["../tmdatagrid/src/index.ts"]
+    }
+  },
+  // The typecheck project: source and its co-located tests. The declaration
+  // build is tsconfig.build.json.
+  "include": ["src"]
+}

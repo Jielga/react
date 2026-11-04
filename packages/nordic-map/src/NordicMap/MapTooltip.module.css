@@ -1,0 +1,19 @@
+.tooltip {
+  position: absolute;
+  z-index: 1;
+  max-width: 280px;
+  padding: 4px 8px;
+  border-radius: var(--nordic-map-radius, 6px);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--nordic-map-tooltip-color, var(--_tooltip-color));
+  background: var(--nordic-map-tooltip-bg, var(--_tooltip-bg));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  width: max-content;
+}
+
+.tooltip[data-below] {
+  transform: translate(-50%, 10px);
+}

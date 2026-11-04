@@ -1,0 +1,35 @@
+{
+  "sites": [
+    {
+      "slug": "tmdatagrid",
+      "title": "TMDataGrid",
+      "description": "A React data grid built on TanStack Table v9 and Mantine, with xlsx export.",
+      "packages": [
+        "@jielga/tmdatagrid",
+        "@jielga/tmdatagrid-xlsx"
+      ],
+      "dir": "packages/tmdatagrid",
+      "app": "apps/docs"
+    },
+    {
+      "slug": "react-popup-window",
+      "title": "React Popup Window",
+      "description": "A React hook that renders part of the UI in a separate browser window.",
+      "packages": [
+        "@jielga/react-popup-window"
+      ],
+      "dir": "packages/react-popup-window",
+      "app": "apps/popup-docs"
+    },
+    {
+      "slug": "nordic-map",
+      "title": "Nordic Map",
+      "description": "An offline map of Sweden for React, with GPS pins, labels, clusters, areas and paths.",
+      "packages": [
+        "@jielga/nordic-map"
+      ],
+      "dir": "packages/nordic-map",
+      "app": "apps/nordic-map-docs"
+    }
+  ]
+}

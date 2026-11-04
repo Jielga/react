@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/tmdatagrid" },
+    { "path": "./packages/tmdatagrid-xlsx" },
+    { "path": "./packages/react-popup-window" },
+    { "path": "./packages/nordic-map" },
+    { "path": "./apps/docs-shell" },
+    { "path": "./apps/docs" },
+    { "path": "./apps/docs-home" },
+    { "path": "./apps/popup-docs" },
+    { "path": "./apps/nordic-map-docs" },
+    { "path": "./playwright" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

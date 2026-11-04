@@ -1,0 +1,285 @@
+name: Deploy docs
+
+# Every package documentation site is published under one Pages root, each as
+# several complete builds in a directory of its own:
+#
+#   /react/                      the index page: every package site
+#   /react/sites.json            the site registry, as the headers read it
+#   /react/404.html              sends a deep link to the copy that owns it
+#   /react/<site>/               the site's newest release, or the newest line
+#                                there is
+#   /react/<site>/next/          the tip of main
+#   /react/<site>/v2.0/          one directory per minor line
+#   /react/<site>/b/<branch>/    a build published by hand from a branch
+#   /react/<site>/versions.json  the manifest the site's version menu reads
+#
+# The sites are listed in apps/docs-shell/sites.json, and each is versioned by
+# the first package it lists. Adding a site is adding an entry there.
+#
+# The gh-pages branch is the store: a run writes its directories there and then
+# deploys the whole branch as the Pages artifact. Keeping the artifact flow
+# means no repository setting has to change and every deploy stays visible in
+# the Environments tab, while the branch is what makes several versions live at
+# once.
+#
+# A versioned snapshot hangs off the push to main rather than off a tag, because
+# Changesets creates tags with GITHUB_TOKEN and events raised by that token do
+# not start workflow runs. See scripts/docs-plan.mjs for the rules.
+
+# Only a push to main, and a build asked for by hand. Not `pull_request`: such
+# a run's ref is `refs/pull/<n>/merge`, which is not a branch and so matches no
+# deployment branch policy on the `github-pages` environment - not even a `*`
+# entry. The job is rejected at the environment gate before its first step,
+# whatever it was going to publish, so a pull request cannot deploy to Pages
+# under this flow at all. A branch is previewed with a `workflow_dispatch` into
+# a `b/<name>` slug instead, and a back version is published the same way.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'Site to build: a "slug" from apps/docs-shell/sites.json, such as "tmdatagrid".'
+        required: true
+      ref:
+        description: "Ref to build. Empty builds the default branch."
+        required: false
+        default: ""
+      slug:
+        description: 'Directory to publish into: "root", "next", "v1.1", "b/name".'
+        required: true
+      mirror_root:
+        description: "Also serve this build from the site's own directory."
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # commit the built site to gh-pages
+  pages: write
+  id-token: write
+
+# Every run writes the same branch and deploys the same site, so they queue
+# rather than overlap. Not cancel-in-progress: a run stopped between the push
+# and the upload would leave the branch ahead of what is being served.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PAGES_ROOT: /react/
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Tags, so a catch-up snapshot can be built from the exact release
+          # commit rather than from whatever main has moved on to.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - name: Check out the branch that stores the site
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads "$REMOTE" gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages "$REMOTE" site
+          else
+            mkdir site
+            git -C site init -q -b gh-pages
+            git -C site remote add origin "$REMOTE"
+          fi
+          git -C site config user.name "github-actions[bot]"
+          git -C site config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Decide what to publish
+        id: plan
+        env:
+          DOCS_INPUT_SITE: ${{ inputs.site }}
+          DOCS_INPUT_REF: ${{ inputs.ref }}
+          DOCS_INPUT_SLUG: ${{ inputs.slug }}
+          DOCS_INPUT_MIRROR_ROOT: ${{ inputs.mirror_root }}
+        run: |
+          set -euo pipefail
+          plan=$(node scripts/docs-targets.mjs site)
+          echo "plan=$plan" >> "$GITHUB_OUTPUT"
+          echo "work=$(jq -r .work <<<"$plan")" >> "$GITHUB_OUTPUT"
+
+      - if: steps.plan.outputs.work == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Build and stage every target
+        if: steps.plan.outputs.work == 'true'
+        env:
+          PLAN: ${{ steps.plan.outputs.plan }}
+        run: |
+          set -euo pipefail
+
+          # A snapshot may be built from a ref that predates these files, and
+          # checking that ref out replaces the working tree, so the deploy's own
+          # tooling is put out of reach of the checkout first.
+          tools="$RUNNER_TEMP/docs-deploy"
+          mkdir -p "$tools"
+          cp -a scripts/. "$tools/"
+
+          head_sha=$(git rev-parse HEAD)
+          current=""
+          # Set by build(): the directory the site was built into.
+          out=""
+
+          build() {
+            local site="$1" app="$2" slug="$3" ref="$4"
+            local label="$5" version="$6" kind="$7"
+            local site_root="$PAGES_ROOT$site/"
+            local base="$site_root"
+            if [ "$slug" != "root" ]; then base="$site_root$slug/"; fi
+
+            if [ ! -f "$app/package.json" ]; then
+              echo "Cannot build $site at $ref: there is no $app/package.json."
+              exit 1
+            fi
+            VITE_SITES_ROOT="$PAGES_ROOT" VITE_DOCS_SITE_ROOT="$site_root" \
+              VITE_DOCS_SLUG="$slug" \
+              bun run --cwd "$app" build --base="$base"
+            out="$app/dist"
+
+            # Pages answers every missing path with the Pages root's 404 page,
+            # which sends a deep link here with the path parked in the query;
+            # this puts it back. In the head, and synchronous: module scripts
+            # are deferred, so this settles the URL before the router reads it.
+            # A copy's own 404 page is never consulted, so none is published.
+            head_tag="<script src=\"${PAGES_ROOT}docs-spa-path.js\" data-site-root=\"$site_root\" data-slug=\"$slug\"></script>"
+            sed -i "s#<head>#<head>$head_tag#" "$out/index.html"
+            rm -f "$out/404.html"
+
+            jq -n --arg slug "$slug" --arg label "$label" \
+              --arg version "$version" --arg kind "$kind" \
+              '{slug:$slug,label:$label,version:$version,kind:$kind}' \
+              > "$out/meta.json"
+
+            # Only for a build whose own header cannot switch versions: one
+            # without the shared header, and without the grid's own header
+            # from before it.
+            if ! git grep -q '"docs-shell"' "$ref" -- "$app/package.json" &&
+               ! git cat-file -e "$ref:$app/src/docsVersions.ts" 2>/dev/null; then
+              local tag="<script src=\"${PAGES_ROOT}docs-version-switcher.js\" data-site-root=\"$site_root\" data-slug=\"$slug\" defer></script>"
+              sed -i "s#</body>#$tag</body>#" "$out/index.html"
+            fi
+          }
+
+          for i in $(seq 0 $(($(jq '.targets | length' <<<"$PLAN") - 1))); do
+            target=$(jq -c ".targets[$i]" <<<"$PLAN")
+            site=$(jq -r .site <<<"$target")
+            app=$(jq -r .app <<<"$target")
+            slug=$(jq -r .slug <<<"$target")
+            ref=$(jq -r .ref <<<"$target")
+            label=$(jq -r '.label // ""' <<<"$target")
+            version=$(jq -r '.version // ""' <<<"$target")
+            kind=$(jq -r .kind <<<"$target")
+            mirror=$(jq -r .mirrorRoot <<<"$target")
+
+            if [ "$ref" != "$current" ]; then
+              git checkout --force "${ref:-$head_sha}"
+              if [ -f bun.lock ]; then bun install --frozen-lockfile; else npm ci; fi
+              current="$ref"
+            fi
+            sha=$(git rev-parse HEAD)
+
+            build "$site" "$app" "$slug" "$sha" "$label" "$version" "$kind"
+            rm -rf "site/$site/$slug"
+            mkdir -p "site/$site/$slug"
+            cp -a "$out/." "site/$site/$slug/"
+
+            if [ "$mirror" = "true" ]; then
+              build "$site" "$app" root "$sha" "$label" "$version" "$kind"
+              # Replace the root copy's own files and leave every versioned
+              # directory beside it alone.
+              find "site/$site" -maxdepth 1 -type f -delete
+              rm -rf "site/$site/assets"
+              cp -a "$out/." "site/$site/"
+              # The root is a mirror, not a copy of its own: the manifest marks
+              # the entry it serves rather than listing the root twice.
+              jq -n --arg slug "$slug" '{slug:$slug}' > "site/$site/meta.json"
+            fi
+          done
+
+          for gone in $(jq -r '.remove[]' <<<"$PLAN"); do
+            rm -rf "site/$gone"
+          done
+
+          for site in $(jq -r '[.targets[].site] | unique | .[]' <<<"$PLAN"); do
+            rmdir "site/$site/b" 2>/dev/null || true
+            node "$tools/docs-manifest.mjs" "site/$site"
+          done
+
+      # The index page, the shared 404 page and the files every copy loads from
+      # the Pages root. Built from the commit this run is for, and only on
+      # main: a branch build publishes into its own site directory and leaves
+      # the root alone.
+      - name: Build and stage the Pages root
+        if: steps.plan.outputs.work == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+
+          # The loop above checks each target's ref out into this same working
+          # tree, so it can leave an older snapshot behind.
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            git checkout --force "$GITHUB_SHA"
+            bun install --frozen-lockfile
+          fi
+
+          VITE_SITES_ROOT="$PAGES_ROOT" \
+            bun run --cwd apps/docs-home build --base="$PAGES_ROOT"
+          node scripts/docs-root.mjs site apps/docs-home/dist "$PAGES_ROOT"
+
+      - name: Commit the site
+        if: steps.plan.outputs.work == 'true'
+        run: |
+          set -euo pipefail
+          cd site
+          git add -A
+          if git diff --quiet --cached; then
+            echo "The published site is already up to date."
+            exit 0
+          fi
+          git commit -q -m "docs: publish ${GITHUB_SHA:0:7}"
+          for attempt in 1 2 3 4; do
+            if git push -u origin gh-pages; then exit 0; fi
+            sleep $((attempt * 2))
+            git pull --rebase origin gh-pages
+          done
+          echo "Could not push gh-pages."
+          exit 1
+
+      - name: Stage the artifact
+        if: steps.plan.outputs.work == 'true'
+        # The branch's history is not part of the site.
+        run: rm -rf site/.git
+
+      - if: steps.plan.outputs.work == 'true'
+        uses: actions/configure-pages@v5
+
+      - if: steps.plan.outputs.work == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        if: steps.plan.outputs.work == 'true'
+        uses: actions/deploy-pages@v4

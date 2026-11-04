@@ -1,0 +1,33 @@
+/* The details lane is a fixed track holding one control, so the button fills it
+   and the whole cell is the hit target. */
+.detailsToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+}
+
+.detailsToggle:hover .chevron {
+  color: var(--mantine-color-text);
+}
+
+.chevron {
+  display: flex;
+  align-items: center;
+  color: var(--mantine-color-dimmed);
+  transition: transform 120ms ease;
+}
+
+.chevron[data-expanded="true"] {
+  transform: rotate(90deg);
+}
+
+/* One icon rotated rather than two swapped: the turn is what reads as the
+   expand, and a swap would jump. */
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/react-popup-window.tsbuildinfo",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
+  },
+  // The typecheck project: source, co-located tests and the shared jsdom
+  // setup. The declaration build is tsconfig.build.json.
+  "include": ["src", "../../vitest.setup.ts"]
+}

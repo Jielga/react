@@ -1,0 +1,78 @@
+{
+  "name": "@jielga/react-popup-window",
+  "version": "0.3.1",
+  "description": "React hook to open part of your UI in a separate browser popup window — live portal rendering, style syncing and cross-window messaging.",
+  "license": "MIT",
+  "author": "jielga",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jielga/react.git",
+    "directory": "packages/react-popup-window"
+  },
+  "homepage": "https://jielga.github.io/react/react-popup-window/",
+  "bugs": {
+    "url": "https://github.com/Jielga/react/issues"
+  },
+  "keywords": [
+    "react",
+    "hook",
+    "popup",
+    "window",
+    "portal",
+    "window.open",
+    "multi-window",
+    "detached",
+    "panel",
+    "tanstack-intent"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "intent": {
+    "docs": "README.md"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json && rolldown -c rolldown.dts.config.mjs",
+    "test": "vitest run",
+    "prepublishOnly": "oxlint && bun run build"
+  },
+  "peerDependencies": {
+    "react": ">=19.2.0",
+    "react-dom": ">=19.2.0"
+  },
+  "devDependencies": {
+    "@tanstack/intent": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "jsdom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "rolldown": "~1.1.5",
+    "rolldown-plugin-dts": "^0.27.14",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

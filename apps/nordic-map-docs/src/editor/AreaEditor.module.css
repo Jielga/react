@@ -1,0 +1,169 @@
+.page {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.mapPane {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+
+  --editor-accent: #1d5fa8;
+  --editor-snap: #e8590c;
+  --editor-halo: #ffffff;
+}
+
+:global([data-mantine-color-scheme="dark"]) .mapPane {
+  --editor-accent: #fecc02;
+  --editor-halo: #0b1f3a;
+}
+
+/* Points are placed with a click, so the cursor is a crosshair while drawing */
+.mapPane[data-mode="draw"] [aria-roledescription="map"] {
+  cursor: crosshair;
+}
+
+.mapPane[data-mode="selectRegions"] [aria-roledescription="map"] {
+  cursor: pointer;
+}
+
+.panel {
+  width: 360px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-md);
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+@media (max-width: 47.99em) {
+  .page {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .mapPane {
+    flex: none;
+    height: 60vh;
+  }
+
+  .panel {
+    width: auto;
+    overflow-y: visible;
+    border-left: 0;
+    border-top: 1px solid var(--mantine-color-default-border);
+  }
+}
+
+/* The overlay passes every pointer event to the map, except on its handles */
+.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.outline,
+.drawn {
+  fill: none;
+  stroke: var(--editor-accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.rubberBand {
+  fill: none;
+  stroke: var(--editor-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.vertex,
+.drawnVertex {
+  fill: var(--editor-halo);
+  stroke: var(--editor-accent);
+  stroke-width: 2;
+}
+
+.vertex {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: move;
+}
+
+.vertex[data-selected] {
+  fill: var(--editor-accent);
+  stroke: var(--editor-halo);
+}
+
+.midpoint {
+  fill: var(--editor-accent);
+  fill-opacity: 0.5;
+  stroke: var(--editor-halo);
+  stroke-width: 1.5;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: copy;
+}
+
+.closeHandle {
+  fill: var(--editor-accent);
+  stroke: var(--editor-halo);
+  stroke-width: 2;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.snapVertex,
+.snapEdge {
+  fill: none;
+  stroke: var(--editor-snap);
+  stroke-width: 2.5;
+}
+
+.snapEdge {
+  stroke-dasharray: 3 3;
+}
+
+.hint {
+  fill: var(--mantine-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--mantine-color-body);
+  stroke-width: 4px;
+}
+
+/* Fingers need larger handles */
+@media (pointer: coarse) {
+  .vertex {
+    r: 10px;
+  }
+
+  .midpoint {
+    r: 8px;
+  }
+}
+
+.areaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: 6px var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.areaRow:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.areaRow[data-selected] {
+  background: var(--mantine-primary-color-light);
+}
+
+.areaName {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,0 +1,35 @@
+{
+  "name": "react-popup-window-docs",
+  "private": true,
+  "type": "module",
+  "description": "The react-popup-window documentation site: live examples of the usePopupWindow hook.",
+  "scripts": {
+    "dev": "vite --port 5275 --strictPort",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@jielga/react-popup-window": "workspace:*",
+    "@jielga/tmdatagrid": "workspace:*",
+    "@mantine/core": "catalog:",
+    "@mantine/hooks": "catalog:",
+    "@tabler/icons-react": "catalog:",
+    "@tanstack/react-form": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-store": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@tanstack/react-virtual": "catalog:",
+    "@tanstack/store": "catalog:",
+    "@tanstack/table-core": "catalog:",
+    "docs-shell": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-resizable-panels": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

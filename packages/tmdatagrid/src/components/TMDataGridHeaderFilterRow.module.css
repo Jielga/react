@@ -1,0 +1,51 @@
+/* The second header row, under the group rows and above the body. Same column
+   tracks as every other row, through subgrid, so it follows resizing,
+   reordering and pinning without knowing about any of them.
+
+   Sticky like the header rows above it, and stacked under them by the same
+   measurement: the table writes every header row's `top` inline once it knows
+   how tall the rows before it are. This is the pre-measurement fallback, and
+   it is right for the common case of one header row. */
+.headerFilterRow {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  position: sticky;
+  top: var(--dg-header-height);
+  z-index: var(--dg-z-header, 6);
+}
+
+.headerFilterCell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  /* A 60px column has room for the input and nothing beside it. Clipping is
+     what keeps the control from spilling over its neighbour; the operator
+     button is the first thing to go. */
+  overflow: hidden;
+  padding: calc(var(--dg-padding) / 2);
+  /* Opaque: the body scrolls underneath it. */
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+/* The generated lanes - checkbox, details, row number - hold no filter, so
+   they keep the header's own padding rather than a control's. */
+.headerFilterCell[data-control-column="true"] {
+  padding: 0;
+}
+
+.headerFilterValue {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerFilterOperator {
+  flex: none;
+}
+
+.operatorItemActive {
+  font-weight: 600;
+  color: var(--mantine-primary-color-filled);
+}

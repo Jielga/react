@@ -1,0 +1,29 @@
+.columnsPanel {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.columnsPanelSearch {
+  padding: var(--mantine-spacing-sm);
+}
+
+.columnsPanelList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+}
+
+.columnsPanelSearch + * .columnsPanelList {
+  padding-top: 0;
+}
+
+.columnsPanelFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--mantine-color-default-border);
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/tmdatagrid.tsbuildinfo",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
+  },
+  // The typecheck project: source, co-located tests, the harness under test/
+  // and the shared jsdom setup. The declaration build is tsconfig.build.json.
+  "include": ["src", "test", "../../vitest.setup.ts"],
+  // The gallery's Vite config is a Node file: tsconfig.node.json checks it.
+  "exclude": ["test/gallery/vite.config.ts"]
+}
