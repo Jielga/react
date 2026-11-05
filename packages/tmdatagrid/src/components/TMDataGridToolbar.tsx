@@ -79,7 +79,9 @@ export function TMDataGridToolbarSpacer({ className, ...others }: BoxProps) {
 export function TMDataGridLoadingIndicator() {
   const { table, labels } = useTMDataGridContext();
   if (table.options.meta?.loading !== true) return null;
-  return <Loader size="xs" data-dg-part="loading" aria-label={labels.loading} />;
+  return (
+    <Loader size="xs" data-dg-part="loading" aria-label={labels.loading} />
+  );
 }
 
 /**
@@ -168,7 +170,9 @@ export function TMDataGridFilterButton() {
           // blank row on the first filterable column on top of them.
           const seedColumn =
             columnFilters.length === 0
-              ? table.getAllLeafColumns().find((column) => column.getCanFilter())
+              ? table
+                  .getAllLeafColumns()
+                  .find((column) => column.getCanFilter())
               : undefined;
           if (seedColumn) seedColumnFilter(api, seedColumn.id);
           ui.actions.openFilterPanel(seedColumn?.id ?? null);

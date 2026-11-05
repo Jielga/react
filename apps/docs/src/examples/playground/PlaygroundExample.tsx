@@ -15,12 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useSelector } from "@tanstack/react-store";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import {
   aggregateColumn,
   createTMDataGridColumnHelper,
@@ -442,7 +437,11 @@ export function PlaygroundExample() {
             {showOptions ? "Hide options" : "Options"}
           </Button>
           {/* Set the switches below to what you want, then take the code. */}
-          <Button size="xs" variant="light" onClick={() => setSnippetOpen(true)}>
+          <Button
+            size="xs"
+            variant="light"
+            onClick={() => setSnippetOpen(true)}
+          >
             Get the code
           </Button>
         </Group>
@@ -475,10 +474,12 @@ export function PlaygroundExample() {
                 onChange={(value) =>
                   setSelectionMode(value as TMDataGridSelectionMode)
                 }
-                data={SELECTION_MODES as unknown as Array<{
-                  value: string;
-                  label: string;
-                }>}
+                data={
+                  SELECTION_MODES as unknown as Array<{
+                    value: string;
+                    label: string;
+                  }>
+                }
               />
               <Group gap="md">
                 <FeatureSwitches
@@ -507,10 +508,12 @@ export function PlaygroundExample() {
                   onChange={(value) =>
                     setCellSelection(value as TMDataGridCellSelectionMode)
                   }
-                  data={CELL_SELECTION_MODES as unknown as Array<{
-                    value: string;
-                    label: string;
-                  }>}
+                  data={
+                    CELL_SELECTION_MODES as unknown as Array<{
+                      value: string;
+                      label: string;
+                    }>
+                  }
                 />
               </Tooltip>
             </Stack>
@@ -549,7 +552,9 @@ export function PlaygroundExample() {
                   label="Custom pager"
                   disabled={!features.enablePagination}
                   checked={customPager}
-                  onChange={(event) => setCustomPager(event.currentTarget.checked)}
+                  onChange={(event) =>
+                    setCustomPager(event.currentTarget.checked)
+                  }
                 />
                 <Tooltip
                   label="Right-click any row - the grid owns the Menu, you fill the dropdown"
@@ -576,7 +581,9 @@ export function PlaygroundExample() {
                     size="xs"
                     label="Row details"
                     checked={rowDetails}
-                    onChange={(event) => setRowDetails(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      setRowDetails(event.currentTarget.checked)
+                    }
                   />
                 </Tooltip>
                 <Tooltip
@@ -589,7 +596,9 @@ export function PlaygroundExample() {
                     size="xs"
                     label="Striped"
                     checked={striped}
-                    onChange={(event) => setStriped(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      setStriped(event.currentTarget.checked)
+                    }
                   />
                 </Tooltip>
                 <Tooltip
@@ -602,7 +611,9 @@ export function PlaygroundExample() {
                     size="xs"
                     label="Row numbers"
                     checked={rowNumbers}
-                    onChange={(event) => setRowNumbers(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      setRowNumbers(event.currentTarget.checked)
+                    }
                   />
                 </Tooltip>
                 <Tooltip
@@ -757,7 +768,9 @@ export function PlaygroundExample() {
                     // "42 000 kr" but filters and copies as 42000.
                     const value = cell ? String(cell.getValue() ?? "") : "";
                     const canFilter =
-                      cell !== null && cell.column.getCanFilter() && value !== "";
+                      cell !== null &&
+                      cell.column.getCanFilter() &&
+                      value !== "";
 
                     return (
                       <>
@@ -774,9 +787,7 @@ export function PlaygroundExample() {
                         </Menu.Item>
                         <Menu.Item
                           disabled={!cell}
-                          onClick={() =>
-                            navigator.clipboard.writeText(value)
-                          }
+                          onClick={() => navigator.clipboard.writeText(value)}
                         >
                           Copy cell value
                         </Menu.Item>

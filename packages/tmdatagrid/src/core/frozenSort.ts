@@ -179,7 +179,10 @@ function reorder(
     const next = held[index + 1];
     const high = next ? rank(next) : low + after.length + 1;
     after.forEach((newRow, offset) => {
-      level.set(newRow.id, low + ((offset + 1) * (high - low)) / (after.length + 1));
+      level.set(
+        newRow.id,
+        low + ((offset + 1) * (high - low)) / (after.length + 1),
+      );
       ordered.push(newRow);
     });
   });
@@ -275,7 +278,9 @@ export function withFrozenSort<
       const result = reorder(rows, "", state, flatRows);
       // The core model, not this one: a row filtered out is still in the data.
       const core = (
-        table as unknown as { getCoreRowModel: () => RowModel<TFeatures, TData> }
+        table as unknown as {
+          getCoreRowModel: () => RowModel<TFeatures, TData>;
+        }
       ).getCoreRowModel().rowsById;
       prune(
         state.ranks,
@@ -317,7 +322,9 @@ export function isFrozenSortStale<
     return false;
   }
   // Brings the held order up to date with the current rows first.
-  (table as unknown as { getSortedRowModel: () => unknown }).getSortedRowModel();
+  (
+    table as unknown as { getSortedRowModel: () => unknown }
+  ).getSortedRowModel();
   return stateOf(table).stale;
 }
 

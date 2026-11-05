@@ -12,7 +12,13 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** Opacity of a layer at `zoom`: 1 inside its range, fading to 0 within one fade step outside it. */
-export function layerOpacity({ visibility, zoom }: { visibility: LayerVisibility; zoom: number }): number {
+export function layerOpacity({
+  visibility,
+  zoom,
+}: {
+  visibility: LayerVisibility;
+  zoom: number;
+}): number {
   if (typeof visibility === "boolean") {
     return visibility ? 1 : 0;
   }

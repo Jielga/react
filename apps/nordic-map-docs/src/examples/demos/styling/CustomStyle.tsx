@@ -20,11 +20,13 @@ export function CustomStyle() {
           pinRadius: 6,
         }}
         // The buttons take their colors from CSS variables
-        style={{
-          "--nordic-map-control-bg": "#1f2a1f",
-          "--nordic-map-control-border": "#3b4f3b",
-          "--nordic-map-focus-ring": "#9be15d",
-        } as React.CSSProperties}
+        style={
+          {
+            "--nordic-map-control-bg": "#1f2a1f",
+            "--nordic-map-control-border": "#3b4f3b",
+            "--nordic-map-focus-ring": "#9be15d",
+          } as React.CSSProperties
+        }
       />
     </div>
   );

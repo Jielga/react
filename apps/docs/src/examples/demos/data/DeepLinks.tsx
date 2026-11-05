@@ -16,7 +16,10 @@ const columns = employeeColumns.map((column) =>
   "accessorKey" in column && column.accessorKey === "location"
     ? {
         ...column,
-        meta: { ...column.meta, filter: { ...column.meta?.filter, url: false } },
+        meta: {
+          ...column.meta,
+          filter: { ...column.meta?.filter, url: false },
+        },
       }
     : column,
 );

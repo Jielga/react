@@ -1,5 +1,9 @@
 import { Stack, Text } from "@mantine/core";
-import { loadSwedenCounties, NordicMap, swedenOsmSource } from "@jielga/nordic-map";
+import {
+  loadSwedenCounties,
+  NordicMap,
+  swedenOsmSource,
+} from "@jielga/nordic-map";
 import type { MapArea } from "@jielga/nordic-map";
 import { useEffect, useState } from "react";
 import { countyPopulation } from "../../data/countyPopulation.ts";

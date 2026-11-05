@@ -43,17 +43,35 @@ export function ZoomControls({
 }: ZoomControlsProps) {
   return (
     <div className={classes.controls}>
-      <button type="button" className={classes.button} aria-label={zoomInLabel} disabled={!canZoomIn} onClick={onZoomIn}>
+      <button
+        type="button"
+        className={classes.button}
+        aria-label={zoomInLabel}
+        disabled={!canZoomIn}
+        onClick={onZoomIn}
+      >
         <Icon>
           <path d="M12 5v14M5 12h14" />
         </Icon>
       </button>
-      <button type="button" className={classes.button} aria-label={zoomOutLabel} disabled={!canZoomOut} onClick={onZoomOut}>
+      <button
+        type="button"
+        className={classes.button}
+        aria-label={zoomOutLabel}
+        disabled={!canZoomOut}
+        onClick={onZoomOut}
+      >
         <Icon>
           <path d="M5 12h14" />
         </Icon>
       </button>
-      <button type="button" className={classes.button} aria-label={resetLabel} disabled={!canZoomOut} onClick={onReset}>
+      <button
+        type="button"
+        className={classes.button}
+        aria-label={resetLabel}
+        disabled={!canZoomOut}
+        onClick={onReset}
+      >
         <Icon>
           <path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" />
           <path d="M9 12h6" />

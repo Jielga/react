@@ -22,7 +22,10 @@ export function readStoredAreas(): EditorArea[] {
 
 export function writeStoredAreas(areas: EditorArea[]) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, exportAreas({ areas, format: "json", decimals: STORED_DECIMALS }));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      exportAreas({ areas, format: "json", decimals: STORED_DECIMALS }),
+    );
   } catch {
     // Storage may be full or blocked. The editor still works, it only forgets on reload.
   }
@@ -45,7 +48,12 @@ export function useStoredAreas(): EditorArea[] {
   return areas;
 }
 
-export type MapLayerSettings = { places: boolean; roads: boolean; roadLabels: boolean; border: boolean };
+export type MapLayerSettings = {
+  places: boolean;
+  roads: boolean;
+  roadLabels: boolean;
+  border: boolean;
+};
 
 export type EditorSettings = {
   layers: MapLayerSettings;
@@ -69,12 +77,18 @@ function flag(value: unknown, fallback: boolean): boolean {
 /** The stored settings, each one checked, so a setting the editor no longer knows falls back to its default */
 function readSettings(): EditorSettings {
   try {
-    const stored: unknown = JSON.parse(window.localStorage.getItem(SETTINGS_KEY) ?? "null");
+    const stored: unknown = JSON.parse(
+      window.localStorage.getItem(SETTINGS_KEY) ?? "null",
+    );
     if (typeof stored !== "object" || stored === null) {
       return DEFAULT_SETTINGS;
     }
-    const { layers, reference, snapping } = stored as Partial<Record<keyof EditorSettings, unknown>>;
-    const storedLayers = (typeof layers === "object" && layers !== null ? layers : {}) as Partial<Record<keyof MapLayerSettings, unknown>>;
+    const { layers, reference, snapping } = stored as Partial<
+      Record<keyof EditorSettings, unknown>
+    >;
+    const storedLayers = (
+      typeof layers === "object" && layers !== null ? layers : {}
+    ) as Partial<Record<keyof MapLayerSettings, unknown>>;
     const defaults = DEFAULT_SETTINGS.layers;
     return {
       layers: {
@@ -83,7 +97,12 @@ function readSettings(): EditorSettings {
         roadLabels: flag(storedLayers.roadLabels, defaults.roadLabels),
         border: flag(storedLayers.border, defaults.border),
       },
-      reference: reference === "counties" || reference === "municipalities" || reference === "none" ? reference : DEFAULT_SETTINGS.reference,
+      reference:
+        reference === "counties" ||
+        reference === "municipalities" ||
+        reference === "none"
+          ? reference
+          : DEFAULT_SETTINGS.reference,
       snapping: flag(snapping, DEFAULT_SETTINGS.snapping),
     };
   } catch {
@@ -92,7 +111,10 @@ function readSettings(): EditorSettings {
 }
 
 /** The editor's switches and layer settings, kept in local storage */
-export function useEditorSettings(): [EditorSettings, (next: EditorSettings) => void] {
+export function useEditorSettings(): [
+  EditorSettings,
+  (next: EditorSettings) => void,
+] {
   const [settings, setSettings] = useState(readSettings);
   const update = (next: EditorSettings) => {
     setSettings(next);

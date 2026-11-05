@@ -3,11 +3,22 @@ import type { NordicMapProps } from "../../../../packages/nordic-map/src/index.t
 import { isBoolean } from "../useStoredState.ts";
 
 /** The map layers a reader can turn off in every demo on the docs pages */
-export type DemoMapSettings = { roads: boolean; roadLabels: boolean; places: boolean };
+export type DemoMapSettings = {
+  roads: boolean;
+  roadLabels: boolean;
+  places: boolean;
+};
 
-export const DEMO_MAP_DEFAULTS: DemoMapSettings = { roads: true, roadLabels: true, places: true };
+export const DEMO_MAP_DEFAULTS: DemoMapSettings = {
+  roads: true,
+  roadLabels: true,
+  places: true,
+};
 
-export const DEMO_MAP_SWITCHES: { key: keyof DemoMapSettings; label: string }[] = [
+export const DEMO_MAP_SWITCHES: {
+  key: keyof DemoMapSettings;
+  label: string;
+}[] = [
   { key: "roads", label: "Roads" },
   { key: "roadLabels", label: "Road signs" },
   { key: "places", label: "Places" },
@@ -17,11 +28,17 @@ export function isDemoMapSettings(value: unknown): value is DemoMapSettings {
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  const { roads, roadLabels, places } = value as Record<keyof DemoMapSettings, unknown>;
+  const { roads, roadLabels, places } = value as Record<
+    keyof DemoMapSettings,
+    unknown
+  >;
   return isBoolean(roads) && isBoolean(roadLabels) && isBoolean(places);
 }
 
-export type SettingsContext = { settings: DemoMapSettings; setSettings: (next: DemoMapSettings) => void };
+export type SettingsContext = {
+  settings: DemoMapSettings;
+  setSettings: (next: DemoMapSettings) => void;
+};
 
 export const Settings = createContext<SettingsContext | null>(null);
 
@@ -50,7 +67,10 @@ export function demoMapLayerProps<T>({
 }: {
   settings: DemoMapSettings;
   props: NordicMapProps<T>;
-}): Pick<NordicMapProps<T>, "showRoads" | "showRoadLabels" | "showPlaceLabels"> {
+}): Pick<
+  NordicMapProps<T>,
+  "showRoads" | "showRoadLabels" | "showPlaceLabels"
+> {
   return {
     showRoads: props.showRoads ?? settings.roads,
     showRoadLabels: props.showRoadLabels ?? settings.roadLabels,

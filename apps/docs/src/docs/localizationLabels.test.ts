@@ -8,7 +8,10 @@ import labelsReferenceMd from "../../../../packages/tmdatagrid/skills/appearance
 // key added, renamed or reworded in labels.ts fails here until both tables
 // follow.
 const FILES = [
-  { path: "packages/tmdatagrid/docs/localization.md", markdown: localizationMd },
+  {
+    path: "packages/tmdatagrid/docs/localization.md",
+    markdown: localizationMd,
+  },
   {
     path: "packages/tmdatagrid/skills/appearance/references/labels.md",
     markdown: labelsReferenceMd,
@@ -99,7 +102,9 @@ describe.each(FILES)("the label key table in $path", ({ path, markdown }) => {
     const problems = rows.flatMap(({ keyCell }) => {
       const key = unwrapKey(keyCell);
       if (key === null) {
-        return [`${path}: the key cell ${keyCell} is not one key in backticks.`];
+        return [
+          `${path}: the key cell ${keyCell} is not one key in backticks.`,
+        ];
       }
       return LABEL_KEYS.has(key)
         ? []

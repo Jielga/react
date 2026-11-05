@@ -9,10 +9,7 @@ import {
 const ROWS = ["1", "2", "3", "4", "5"];
 const COLUMNS = ["id", "name", "age", "city"];
 
-const bounds = (
-  anchor: [string, string],
-  focus: [string, string],
-) =>
+const bounds = (anchor: [string, string], focus: [string, string]) =>
   resolveRangeBounds({
     range: {
       anchor: { rowId: anchor[0], columnId: anchor[1] },
@@ -102,12 +99,14 @@ describe("boundsEdges", () => {
   });
 
   it("marks all four for a range of one cell", () => {
-    expect(boundsEdges({ top: 2, bottom: 2, left: 2, right: 2 }, 2, 2)).toEqual({
-      top: true,
-      bottom: true,
-      left: true,
-      right: true,
-    });
+    expect(boundsEdges({ top: 2, bottom: 2, left: 2, right: 2 }, 2, 2)).toEqual(
+      {
+        top: true,
+        bottom: true,
+        left: true,
+        right: true,
+      },
+    );
   });
 
   it("has nothing to say about a cell outside the rectangle", () => {
@@ -130,5 +129,4 @@ describe("boundsEdges", () => {
     expect(isWithinBounds(bounds, 1, 1)).toBe(false);
     expect(boundsEdges(bounds, 1, 1, 5)).toBeNull();
   });
-
 });

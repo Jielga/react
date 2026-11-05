@@ -1,5 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { clampCamera, homeCamera, panBy, sameCamera, zoomAround } from "./camera.ts";
+import {
+  clampCamera,
+  homeCamera,
+  panBy,
+  sameCamera,
+  zoomAround,
+} from "./camera.ts";
 import type { Camera, Frame, Point } from "./camera.ts";
 
 type Animation =
@@ -7,7 +13,13 @@ type Animation =
   | { kind: "zoom"; targetK: number; anchor: Point }
   /** Keeps a released pan moving and slows it down. Velocity in pixels per millisecond. */
   | { kind: "fling"; velocity: Point }
-  | { kind: "tween"; from: Camera; to: Camera; startTime: number; duration: number };
+  | {
+      kind: "tween";
+      from: Camera;
+      to: Camera;
+      startTime: number;
+      duration: number;
+    };
 
 /** How fast a wheel zoom catches up with its target, in milliseconds */
 const ZOOM_EASING_MS = 80;
@@ -46,10 +58,15 @@ export type CameraControls = {
  */
 export function useCamera(frame: Frame | null): CameraControls {
   const [stored, setStored] = useState<Camera | null>(null);
-  const camera = frame ? clampCamera({ camera: stored ?? homeCamera(frame), frame }) : null;
+  const camera = frame
+    ? clampCamera({ camera: stored ?? homeCamera(frame), frame })
+    : null;
 
   // Animations run between renders, so they read the newest camera and frame from here
-  const latest = useRef<{ camera: Camera | null; frame: Frame | null }>({ camera, frame });
+  const latest = useRef<{ camera: Camera | null; frame: Frame | null }>({
+    camera,
+    frame,
+  });
   useLayoutEffect(() => {
     latest.current = { camera, frame };
   });
@@ -85,22 +102,42 @@ export function useCamera(frame: Frame | null): CameraControls {
     let next: Camera;
     let done: boolean;
     if (current.kind === "zoom") {
-      const logK = lerp(Math.log(from.k), Math.log(current.targetK), 1 - Math.exp(-dt / ZOOM_EASING_MS));
+      const logK = lerp(
+        Math.log(from.k),
+        Math.log(current.targetK),
+        1 - Math.exp(-dt / ZOOM_EASING_MS),
+      );
       done = Math.abs(Math.log(current.targetK) - logK) < 0.002;
-      next = zoomAround({ camera: from, frame: currentFrame, anchor: current.anchor, k: done ? current.targetK : Math.exp(logK) });
+      next = zoomAround({
+        camera: from,
+        frame: currentFrame,
+        anchor: current.anchor,
+        k: done ? current.targetK : Math.exp(logK),
+      });
     } else if (current.kind === "fling") {
       const [vx, vy] = current.velocity;
-      next = panBy({ camera: from, frame: currentFrame, delta: [vx * dt, vy * dt] });
+      next = panBy({
+        camera: from,
+        frame: currentFrame,
+        delta: [vx * dt, vy * dt],
+      });
       const decay = Math.exp(-dt / FLING_DECAY_MS);
       current.velocity = [vx * decay, vy * decay];
       // Also stop when the map edge blocks the movement
-      done = Math.hypot(vx, vy) * decay < FLING_MIN_SPEED || sameCamera(next, from);
+      done =
+        Math.hypot(vx, vy) * decay < FLING_MIN_SPEED || sameCamera(next, from);
     } else {
-      const progress = clamp((time - current.startTime) / current.duration, 0, 1);
+      const progress = clamp(
+        (time - current.startTime) / current.duration,
+        0,
+        1,
+      );
       const eased = 1 - (1 - progress) ** 3;
       next = clampCamera({
         camera: {
-          k: Math.exp(lerp(Math.log(current.from.k), Math.log(current.to.k), eased)),
+          k: Math.exp(
+            lerp(Math.log(current.from.k), Math.log(current.to.k), eased),
+          ),
           center: [
             lerp(current.from.center[0], current.to.center[0], eased),
             lerp(current.from.center[1], current.to.center[1], eased),
@@ -142,7 +179,12 @@ export function useCamera(frame: Frame | null): CameraControls {
       stop();
       const { camera: from, frame: currentFrame } = latest.current;
       if (from && currentFrame) {
-        commit(clampCamera({ camera: change(from, currentFrame), frame: currentFrame }));
+        commit(
+          clampCamera({
+            camera: change(from, currentFrame),
+            frame: currentFrame,
+          }),
+        );
       }
     },
     zoomSmooth: ({ anchor, factor }) => {
@@ -155,7 +197,11 @@ export function useCamera(frame: Frame | null): CameraControls {
       if (running?.kind !== "zoom") {
         stop();
       }
-      start({ kind: "zoom", targetK: clamp(baseK * factor, 1, currentFrame.maxZoom), anchor });
+      start({
+        kind: "zoom",
+        targetK: clamp(baseK * factor, 1, currentFrame.maxZoom),
+        anchor,
+      });
     },
     fling: (velocity) => {
       stop();
@@ -169,12 +215,21 @@ export function useCamera(frame: Frame | null): CameraControls {
       if (!from || !currentFrame) {
         return;
       }
-      const target = clampCamera({ camera: to(currentFrame), frame: currentFrame });
+      const target = clampCamera({
+        camera: to(currentFrame),
+        frame: currentFrame,
+      });
       if (duration <= 0) {
         commit(target);
         return;
       }
-      start({ kind: "tween", from, to: target, startTime: performance.now(), duration });
+      start({
+        kind: "tween",
+        from,
+        to: target,
+        startTime: performance.now(),
+        duration,
+      });
     },
     stop,
   };

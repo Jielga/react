@@ -24,8 +24,13 @@ test("every docs page renders without errors", async ({ page }) => {
 
 test("every heading links to itself", async ({ page }) => {
   await page.goto("/docs/columns");
-  const heading = page.getByRole("heading", { level: 2, name: "The column helper" });
-  const anchor = heading.getByRole("link", { name: 'Link to "The column helper"' });
+  const heading = page.getByRole("heading", {
+    level: 2,
+    name: "The column helper",
+  });
+  const anchor = heading.getByRole("link", {
+    name: 'Link to "The column helper"',
+  });
 
   // Out of sight until the heading is hovered.
   await expect(anchor).toHaveCSS("opacity", "0");
@@ -40,18 +45,29 @@ test("every heading links to itself", async ({ page }) => {
 test("search finds the section that explains a symbol", async ({ page }) => {
   await page.goto("/docs/sorting");
   await page.getByRole("button", { name: "Search the documentation" }).click();
-  await page.getByPlaceholder("Search the documentation…").fill("createTMDataGridColumnHelper");
+  await page
+    .getByPlaceholder("Search the documentation…")
+    .fill("createTMDataGridColumnHelper");
   await page.getByRole("button", { name: /^The column helper/ }).click();
 
   await expect(page).toHaveURL(/\/docs\/columns#the-column-helper$/);
-  await expect(page.getByRole("heading", { level: 2, name: "The column helper" })).toBeInViewport();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "The column helper" }),
+  ).toBeInViewport();
 });
 
-test("a search hit on a reference row shows where it landed", async ({ page }) => {
+test("a search hit on a reference row shows where it landed", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Search the documentation" }).click();
-  await page.getByPlaceholder("Search the documentation…").fill("--dg-font-size");
-  await page.getByRole("button", { name: /^--dg-font-size/ }).first().click();
+  await page
+    .getByPlaceholder("Search the documentation…")
+    .fill("--dg-font-size");
+  await page
+    .getByRole("button", { name: /^--dg-font-size/ })
+    .first()
+    .click();
 
   await expect(page).toHaveURL(/\/docs\/styling#ref-dg-font-size$/);
   await expect(page.locator("#ref-dg-font-size")).toBeInViewport();
@@ -60,6 +76,8 @@ test("a search hit on a reference row shows where it landed", async ({ page }) =
   );
   await expect(page.locator('nav a[aria-current="page"]')).toBeInViewport();
   await expect(
-    page.getByRole("list", { name: "On this page" }).getByRole("link", { name: "CSS variables" }),
+    page
+      .getByRole("list", { name: "On this page" })
+      .getByRole("link", { name: "CSS variables" }),
   ).toHaveAttribute("data-active", "true");
 });

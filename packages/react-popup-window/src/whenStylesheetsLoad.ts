@@ -14,40 +14,42 @@ export function whenStylesheetsLoad(
   timeoutMs: number,
   callback: () => void,
 ): () => void {
-  const pending = links.filter((link) => link.sheet === null && applies(link))
+  const pending = links.filter((link) => link.sheet === null && applies(link));
   if (pending.length === 0) {
-    callback()
-    return () => {}
+    callback();
+    return () => {};
   }
 
-  let remaining = pending.length
+  let remaining = pending.length;
   const settle = () => {
-    remaining--
-    if (remaining === 0) finish()
-  }
+    remaining--;
+    if (remaining === 0) finish();
+  };
   const stop = () => {
-    window.clearTimeout(timeout)
+    window.clearTimeout(timeout);
     for (const link of pending) {
-      link.removeEventListener('load', settle)
-      link.removeEventListener('error', settle)
+      link.removeEventListener("load", settle);
+      link.removeEventListener("error", settle);
     }
-  }
+  };
   const finish = () => {
-    stop()
-    callback()
-  }
+    stop();
+    callback();
+  };
 
   for (const link of pending) {
-    link.addEventListener('load', settle)
+    link.addEventListener("load", settle);
     // A broken stylesheet must not keep the popup blank.
-    link.addEventListener('error', settle)
+    link.addEventListener("error", settle);
   }
-  const timeout = window.setTimeout(finish, timeoutMs)
-  return stop
+  const timeout = window.setTimeout(finish, timeoutMs);
+  return stop;
 }
 
 function applies(link: HTMLLinkElement): boolean {
-  if (/\balternate\b/i.test(link.rel)) return false
-  const view = link.ownerDocument.defaultView
-  return !link.media || !view?.matchMedia || view.matchMedia(link.media).matches
+  if (/\balternate\b/i.test(link.rel)) return false;
+  const view = link.ownerDocument.defaultView;
+  return (
+    !link.media || !view?.matchMedia || view.matchMedia(link.media).matches
+  );
 }

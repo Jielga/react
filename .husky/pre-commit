@@ -5,6 +5,7 @@
 
 # Cheapest first, so an obvious failure comes back fast.
 bun run lint
+bun run format:check
 node scripts/intent.mjs validate
 bun run typecheck
 node scripts/check-changeset.mjs

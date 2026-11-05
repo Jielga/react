@@ -118,7 +118,11 @@ describe("filters.surface", () => {
 
   it("places the sidebar on the side and at the width it is given", () => {
     renderGridUi({
-      filters: { surface: "sidebar", sidebarSide: "left", sidebarWidth: "20rem" },
+      filters: {
+        surface: "sidebar",
+        sidebarSide: "left",
+        sidebarWidth: "20rem",
+      },
     });
 
     const sidebar = part("filter-sidebar");
@@ -227,7 +231,10 @@ describe("filters.inHeader", () => {
       helper.accessor("id", { header: "ID", meta: { type: "number" } }),
       helper.accessor("age", {
         header: "Age",
-        meta: { type: "number", filter: { operators: ["greaterThan", "lessThan"] } },
+        meta: {
+          type: "number",
+          filter: { operators: ["greaterThan", "lessThan"] },
+        },
       }),
     ]);
   })();
@@ -257,7 +264,9 @@ describe("filters.inHeader", () => {
     // empty one leaves no entry in columnFilters behind.
     await user.clear(input);
     expect(gridRowCount()).toBe(testRows.length);
-    expect(queryPart("filter-pill", { columnId: "id" })).not.toBeInTheDocument();
+    expect(
+      queryPart("filter-pill", { columnId: "id" }),
+    ).not.toBeInTheDocument();
   });
 
   it("offers only meta.filter.operators from the funnel, and opens on the first of them", async () => {
@@ -294,9 +303,7 @@ describe("filters.inHeader", () => {
       "40",
     );
 
-    expect(gridRowCount()).toBe(
-      testRows.filter((row) => row.age > 40).length,
-    );
+    expect(gridRowCount()).toBe(testRows.filter((row) => row.age > 40).length);
   });
 
   it("leaves a non-filterable column's header cell empty", () => {
@@ -316,11 +323,11 @@ describe("filters.inHeader", () => {
       "Anna",
     );
     // The filled-in control is the indicator now.
-    expect(queryPart("header-filter", { columnId: "name" })).not.toBeInTheDocument();
+    expect(
+      queryPart("header-filter", { columnId: "name" }),
+    ).not.toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: "Name column menu" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Name column menu" }));
     expect(
       screen.queryByRole("menuitem", { name: "Filter" }),
     ).not.toBeInTheDocument();
@@ -334,7 +341,9 @@ describe("filters.inHeader", () => {
       testRows.length + 2,
     );
     expect(
-      document.querySelector('[data-dg-part="row"]')?.getAttribute("aria-rowindex"),
+      document
+        .querySelector('[data-dg-part="row"]')
+        ?.getAttribute("aria-rowindex"),
     ).toBe("3");
   });
 
@@ -347,9 +356,9 @@ describe("filters.inHeader", () => {
     const user = userEvent.setup();
     renderHeaderFilters();
 
-    const input = part("header-filter-cell", { columnId: "name" }).querySelector(
-      "input",
-    )!;
+    const input = part("header-filter-cell", {
+      columnId: "name",
+    }).querySelector("input")!;
     // A lone space narrows nothing, but dropping the filter for it would take
     // the character straight back out of the input.
     await user.type(input, " ");

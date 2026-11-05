@@ -139,7 +139,8 @@ export function resolveRowSelectionClick<TData extends RowData>({
   const index = rows.findIndex((row) => row.id === rowId);
   const clickedRow = rows[index];
   // Clicked row is not in the displayed set - nothing sensible to resolve.
-  if (index === -1 || clickedRow === undefined) return { selection, anchorRowId };
+  if (index === -1 || clickedRow === undefined)
+    return { selection, anchorRowId };
 
   const targets = getSelectableRowIds(clickedRow);
   // Nothing selectable under this gesture: a row the predicate refuses, or a
@@ -169,9 +170,7 @@ export function resolveRowSelectionClick<TData extends RowData>({
   }
 
   const anchorIndex =
-    anchorRowId === null
-      ? -1
-      : rows.findIndex((row) => row.id === anchorRowId);
+    anchorRowId === null ? -1 : rows.findIndex((row) => row.id === anchorRowId);
 
   // A range needs a pivot that is still on screen. When the anchor has been
   // filtered or paged away, fall through and treat this as a fresh click.

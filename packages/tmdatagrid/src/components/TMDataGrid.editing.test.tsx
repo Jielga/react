@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -87,8 +93,7 @@ describe("cell editing", () => {
 
   // This grid has no checkbox lane, so its columns start at cell 0:
   // [Name, Age, Note].
-  const editorInput = () =>
-    screen.getByRole("textbox", { name: "Edit Name" });
+  const editorInput = () => screen.getByRole("textbox", { name: "Edit Name" });
 
   it("opens on double-click, commits on Enter with the diff", async () => {
     const user = userEvent.setup();
@@ -217,7 +222,9 @@ describe("cell editing", () => {
     // keeps the invalid state and nothing else.
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Too short");
     expect(editorInput()).toHaveAttribute("aria-invalid", "true");
-    expect(cellAt(0, 0).querySelector(".mantine-InputWrapper-error")).toBeNull();
+    expect(
+      cellAt(0, 0).querySelector(".mantine-InputWrapper-error"),
+    ).toBeNull();
     expect(commits.length).toBe(0);
     // Still editing - the invalid cell holds the edit.
     expect(editorInput()).toBeInTheDocument();
@@ -303,9 +310,7 @@ describe("cell editing", () => {
 
     await waitFor(() => expect(commits.length).toBe(1));
     // Age is next; Note is `edit.enabled: false` and is skipped from Age.
-    await waitFor(() =>
-      expect(document.activeElement).toBe(cellAt(0, 1)),
-    );
+    await waitFor(() => expect(document.activeElement).toBe(cellAt(0, 1)));
   });
 
   it("never opens on a column that opted out", async () => {
@@ -411,7 +416,9 @@ describe("cell editing", () => {
 
     // Name and Age both open; Note (edit.enabled: false) does not.
     const name = screen.getByRole("textbox", { name: "Edit Name" });
-    expect(screen.getByRole("textbox", { name: "Edit Age" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Edit Age" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: "Edit Note" }),
     ).not.toBeInTheDocument();
@@ -488,19 +495,25 @@ describe("cell editing", () => {
 
   it("row mode puts the caret in the cell the gesture named, not on the cell", async () => {
     const user = userEvent.setup();
-    renderWithMantine(<EditGrid editing={{ mode: "row", onCommit: () => {} }} />);
+    renderWithMantine(
+      <EditGrid editing={{ mode: "row", onCommit: () => {} }} />,
+    );
 
     // The whole row opens, and Age - the cell double-clicked - holds the
     // caret. The focused-cell ring lands on the same cell, so it has nothing
     // to pull the caret back to.
     await user.dblClick(cellAt(0, 1));
-    expect(screen.getByRole("textbox", { name: "Edit Name" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Edit Name" }),
+    ).toBeInTheDocument();
     expect(document.activeElement).toBe(
       screen.getByRole("textbox", { name: "Edit Age" }),
     );
 
     // The pencil names no column, so the row's first editable cell takes it.
-    await user.click(within(bodyRows()[1]!).getByRole("button", { name: "Edit row" }));
+    await user.click(
+      within(bodyRows()[1]!).getByRole("button", { name: "Edit row" }),
+    );
     expect(document.activeElement).toBe(
       within(bodyRows()[1]!).getByRole("textbox", { name: "Edit Name" }),
     );
@@ -510,7 +523,9 @@ describe("cell editing", () => {
 
   it("places the caret from the keyboard's open gestures too", async () => {
     const user = userEvent.setup();
-    renderWithMantine(<EditGrid editing={{ mode: "row", onCommit: () => {} }} />);
+    renderWithMantine(
+      <EditGrid editing={{ mode: "row", onCommit: () => {} }} />,
+    );
 
     // Enter on the cell cursor's cell, not the row's first.
     await user.click(cellAt(0, 1));
@@ -676,8 +691,12 @@ describe("cell editing", () => {
 
     // Two rows open, then the caret moved by hand into the first row's Age -
     // the second row is still the one `active` names.
-    await user.click(within(bodyRows()[0]!).getByRole("button", { name: "Edit row" }));
-    await user.click(within(bodyRows()[1]!).getByRole("button", { name: "Edit row" }));
+    await user.click(
+      within(bodyRows()[0]!).getByRole("button", { name: "Edit row" }),
+    );
+    await user.click(
+      within(bodyRows()[1]!).getByRole("button", { name: "Edit row" }),
+    );
     const firstAge = within(bodyRows()[0]!).getByRole("textbox", {
       name: "Edit Age",
     });
@@ -730,7 +749,9 @@ describe("cell editing", () => {
           rowValidators: {
             onSubmit: z
               .object({ name: z.string(), age: z.number() })
-              .refine((row) => row.age < 100, { message: "Nobody is that old" }),
+              .refine((row) => row.age < 100, {
+                message: "Nobody is that old",
+              }),
           },
           onCommit: (args) => void commits.push(args),
         }}
@@ -747,7 +768,9 @@ describe("cell editing", () => {
 
     expect(commits.length).toBe(0);
     // Still editing, and the pathless message rides the Save's tooltip.
-    expect(screen.getByRole("textbox", { name: "Edit Age" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Edit Age" }),
+    ).toBeInTheDocument();
     await user.hover(screen.getByRole("button", { name: "Save row" }));
     expect(await screen.findByText("Nobody is that old")).toBeInTheDocument();
   });
@@ -818,7 +841,9 @@ describe("cell editing", () => {
     expect(adds.length).toBe(0);
     // Still an entry row - a refused add is not a decision - and the
     // pathless message rides the ✓'s tooltip, as it rides the Save's.
-    expect(part("entry-row", { rowId: "__new__1" })).not.toHaveAttribute("data-committed");
+    expect(part("entry-row", { rowId: "__new__1" })).not.toHaveAttribute(
+      "data-committed",
+    );
     await user.hover(part("confirm-new-row", { rowId: "__new__1" }));
     expect(await screen.findByText("Nobody is that old")).toBeInTheDocument();
   });
@@ -827,7 +852,10 @@ describe("cell editing", () => {
     const user = userEvent.setup();
     const adds: unknown[] = [];
     renderWithMantine(
-      <EntryRuleGrid path={["age"]} onRowAdd={(args) => void adds.push(args)} />,
+      <EntryRuleGrid
+        path={["age"]}
+        onRowAdd={(args) => void adds.push(args)}
+      />,
     );
 
     await user.click(screen.getByRole("button", { name: "add" }));
@@ -921,7 +949,12 @@ describe("cell editing", () => {
     ]);
   })();
 
-  const entryDefaults = (): Employee => ({ id: 0, name: "", age: 20, note: "" });
+  const entryDefaults = (): Employee => ({
+    id: 0,
+    name: "",
+    age: 20,
+    note: "",
+  });
 
   /** Opens an entry row and types a name into it, stopping short of the ✓. */
   async function typeIntoEntryRow(user: UserEvent, name: string) {
@@ -1024,16 +1057,17 @@ describe("cell editing", () => {
 
     await user.dblClick(cellAt(0, 0));
     await user.clear(screen.getByRole("textbox", { name: "Edit Name" }));
-    await user.type(screen.getByRole("textbox", { name: "Edit Name" }), "Annika");
+    await user.type(
+      screen.getByRole("textbox", { name: "Edit Name" }),
+      "Annika",
+    );
     // Leaving the cell decides the row under `"cell"`: dirty, and parked.
     await user.click(cellAt(1, 1));
     expect(row()).toHaveAttribute("data-dirty", "true");
     expect(row()).toHaveAttribute("data-draft", "true");
 
     await user.click(screen.getByRole("button", { name: "Save 1 row" }));
-    await waitFor(() =>
-      expect(row()).not.toHaveAttribute("data-draft"),
-    );
+    await waitFor(() => expect(row()).not.toHaveAttribute("data-draft"));
   });
 
   it("parks drafts on Enter and saves them through DraftActions", async () => {
@@ -1341,7 +1375,9 @@ describe("cell editing", () => {
     expect(
       within(entryRow).getByRole("textbox", { name: "Edit Name" }),
     ).toHaveValue("Ny Person");
-    expect(queryPart("row-state", { rowId: "__new__1" })).not.toBeInTheDocument();
+    expect(
+      queryPart("row-state", { rowId: "__new__1" }),
+    ).not.toBeInTheDocument();
   });
 
   it("discards a confirmed entry row from the lane", async () => {
@@ -1354,13 +1390,17 @@ describe("cell editing", () => {
     await user.click(part("discard-new-row", { rowId: "__new__1" }));
 
     expect(queryPart("row", { rowId: "__new__1" })).not.toBeInTheDocument();
-    expect(queryPart("entry-row", { rowId: "__new__1" })).not.toBeInTheDocument();
+    expect(
+      queryPart("entry-row", { rowId: "__new__1" }),
+    ).not.toBeInTheDocument();
   });
 
   /** A draft grid whose api the test holds, for the sorts and the reads. */
   function renderDraftGrid(props: Parameters<typeof DraftGrid>[0] = {}) {
     let api: TMDataGridApi<Employee> | null = null;
-    renderWithMantine(<DraftGrid {...props} onReady={(next) => (api = next)} />);
+    renderWithMantine(
+      <DraftGrid {...props} onReady={(next) => (api = next)} />,
+    );
     if (api === null) throw new Error("grid never rendered");
     return api as TMDataGridApi<Employee>;
   }
@@ -1409,7 +1449,10 @@ describe("cell editing", () => {
     expect(
       screen.getByRole("textbox", { name: "Edit Age" }),
     ).toBeInTheDocument();
-    expect(part("row", { rowId: "1" })).toHaveAttribute("aria-rowindex", placed);
+    expect(part("row", { rowId: "1" })).toHaveAttribute(
+      "aria-rowindex",
+      placed,
+    );
 
     await user.clear(screen.getByRole("textbox", { name: "Edit Age" }));
     await user.type(screen.getByRole("textbox", { name: "Edit Age" }), "50");
@@ -1417,7 +1460,10 @@ describe("cell editing", () => {
 
     // Committed afresh, on values the name half of which never changed.
     expect(renderedRowIds()).toEqual(["2", "1"]);
-    expect(part("row", { rowId: "1" })).toHaveAttribute("aria-rowindex", placed);
+    expect(part("row", { rowId: "1" })).toHaveAttribute(
+      "aria-rowindex",
+      placed,
+    );
   });
 
   it("sorts a committed entry row in with the body", async () => {
@@ -1507,7 +1553,8 @@ describe("cell editing", () => {
     const own = new Set<object>(editRows);
     const getRowId = vi.fn((row: Employee) => {
       if (!own.has(row)) throw new Error("getRowId saw a record it never gave");
-      if (row.id === undefined) throw new Error("getRowId saw a row with no id");
+      if (row.id === undefined)
+        throw new Error("getRowId saw a row with no id");
       return String(row.id);
     });
     let api: TMDataGridApi<Employee> | null = null;
@@ -1624,7 +1671,9 @@ describe("cell editing", () => {
     expect(saved.deleted).toEqual(["2"]);
     // The entered row is gone from the body and the mark is cleared.
     expect(queryPart("row", { rowId: "__new__1" })).not.toBeInTheDocument();
-    expect(queryPart("entry-row", { rowId: "__new__1" })).not.toBeInTheDocument();
+    expect(
+      queryPart("entry-row", { rowId: "__new__1" }),
+    ).not.toBeInTheDocument();
     expect(secondRow()).not.toHaveAttribute("data-deleted", "true");
   });
 
@@ -1652,7 +1701,9 @@ describe("cell editing", () => {
     );
 
     // Save counts the deletion only, and says the row is still being edited.
-    expect(part("open-rows-note")).toHaveTextContent("1 row still being edited");
+    expect(part("open-rows-note")).toHaveTextContent(
+      "1 row still being edited",
+    );
     await user.click(screen.getByRole("button", { name: "Save 1 row" }));
     await waitFor(() => expect(saves.length).toBe(1));
     expect(saves[0]?.created).toEqual([]);
@@ -1660,7 +1711,9 @@ describe("cell editing", () => {
 
     // The undecided row is untouched: still open, still holding what was
     // typed, ready to be finished.
-    expect(part("entry-row", { rowId: "__new__1" })).not.toHaveAttribute("data-committed");
+    expect(part("entry-row", { rowId: "__new__1" })).not.toHaveAttribute(
+      "data-committed",
+    );
     expect(
       within(part("entry-row", { rowId: "__new__1" })).getByRole("textbox", {
         name: "Edit Name",
@@ -1700,13 +1753,13 @@ describe("cell editing", () => {
 
     await user.click(screen.getByRole("button", { name: "add" }));
     const entryRow = part("entry-row", { rowId: "__new__1" });
-    await user.click(
-      within(entryRow).getByRole("button", { name: "Add row" }),
-    );
+    await user.click(within(entryRow).getByRole("button", { name: "Add row" }));
 
     await waitFor(() => expect(adds.length).toBe(1));
     expect(adds[0]).toMatchObject({ value: { name: "Ny" } });
-    expect(queryPart("entry-row", { rowId: "__new__1" })).not.toBeInTheDocument();
+    expect(
+      queryPart("entry-row", { rowId: "__new__1" }),
+    ).not.toBeInTheDocument();
   });
 
   it("seeds the entry row's editors from addRow's argument", async () => {

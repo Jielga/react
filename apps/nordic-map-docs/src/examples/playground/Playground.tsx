@@ -13,8 +13,16 @@ import {
   useComputedColorScheme,
 } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { loadSwedenCounties, NordicMap, swedenOsmSource } from "@jielga/nordic-map";
-import type { MapArea, NordicMapHandle, SelectionMode } from "@jielga/nordic-map";
+import {
+  loadSwedenCounties,
+  NordicMap,
+  swedenOsmSource,
+} from "@jielga/nordic-map";
+import type {
+  MapArea,
+  NordicMapHandle,
+  SelectionMode,
+} from "@jielga/nordic-map";
 import { toMapAreas } from "../../editor/areaFiles.ts";
 import { boundsOfParts } from "../../editor/editorModel.ts";
 import type { EditorArea } from "../../editor/editorModel.ts";
@@ -25,7 +33,11 @@ import { CustomAreasControl } from "./CustomAreasControl.tsx";
 import { LayerControl } from "./LayerControl.tsx";
 import { toVisibility } from "./layerSetting.ts";
 import { isBoolean, isNumber, useStoredState } from "../../useStoredState.ts";
-import { isLayerSetting, isPickedColors, isSelectionMode } from "./playgroundSettings.ts";
+import {
+  isLayerSetting,
+  isPickedColors,
+  isSelectionMode,
+} from "./playgroundSettings.ts";
 import type { LayerSetting } from "./layerSetting.ts";
 import { darkColors, lightColors } from "./mapColors.ts";
 import type { MapColors } from "./mapColors.ts";
@@ -34,7 +46,13 @@ import type { MapColors } from "./mapColors.ts";
 const SHOWN_DECIMALS = 9;
 
 /** The areas as MapAreas, with ids under `prefix` so areas from two sources never share an id */
-function shownAreas({ areas, prefix }: { areas: EditorArea[]; prefix: string }): MapArea[] {
+function shownAreas({
+  areas,
+  prefix,
+}: {
+  areas: EditorArea[];
+  prefix: string;
+}): MapArea[] {
   return toMapAreas({ areas, decimals: SHOWN_DECIMALS }).map((area) => {
     return { ...area, id: `${prefix}:${area.id}` };
   });
@@ -54,35 +72,92 @@ function cityLabel(id: string): string {
 /** Every layer, color and pin option of the map, behind switches */
 export function Playground() {
   // Read on the first render, so a dark page does not start with the light colors
-  const colorScheme = useComputedColorScheme("light", { getInitialValueInEffect: false });
+  const colorScheme = useComputedColorScheme("light", {
+    getInitialValueInEffect: false,
+  });
   const [selected, setSelected] = useState<string[]>([]);
   const [zoom, setZoom] = useState(1);
-  const [border, setBorder] = useStoredState({ key: "playground:border", initial: allZooms, isValid: isLayerSetting });
-  const [borderWidth, setBorderWidth] = useStoredState({ key: "playground:borderWidth", initial: 1, isValid: isNumber });
-  const [roads, setRoads] = useStoredState({ key: "playground:roads", initial: allZooms, isValid: isLayerSetting });
-  const [roadLabels, setRoadLabels] = useStoredState({ key: "playground:roadLabels", initial: allZooms, isValid: isLayerSetting });
-  const [places, setPlaces] = useStoredState({ key: "playground:places", initial: allZooms, isValid: isLayerSetting });
-  const [pins, setPins] = useStoredState({ key: "playground:pins", initial: allZooms, isValid: isLayerSetting });
-  const [pinLabels, setPinLabels] = useStoredState({ key: "playground:pinLabels", initial: pinLabelZooms, isValid: isLayerSetting });
-  const [cluster, setCluster] = useStoredState({ key: "playground:cluster", initial: false, isValid: isBoolean });
-  const [selectionMode, setSelectionMode] = useStoredState<SelectionMode>({ key: "playground:selectionMode", initial: "multiple", isValid: isSelectionMode });
-  const [selectByArea, setSelectByArea] = useStoredState({ key: "playground:selectByArea", initial: false, isValid: isBoolean });
-  const [showCounties, setShowCounties] = useStoredState({ key: "playground:counties", initial: false, isValid: isBoolean });
+  const [border, setBorder] = useStoredState({
+    key: "playground:border",
+    initial: allZooms,
+    isValid: isLayerSetting,
+  });
+  const [borderWidth, setBorderWidth] = useStoredState({
+    key: "playground:borderWidth",
+    initial: 1,
+    isValid: isNumber,
+  });
+  const [roads, setRoads] = useStoredState({
+    key: "playground:roads",
+    initial: allZooms,
+    isValid: isLayerSetting,
+  });
+  const [roadLabels, setRoadLabels] = useStoredState({
+    key: "playground:roadLabels",
+    initial: allZooms,
+    isValid: isLayerSetting,
+  });
+  const [places, setPlaces] = useStoredState({
+    key: "playground:places",
+    initial: allZooms,
+    isValid: isLayerSetting,
+  });
+  const [pins, setPins] = useStoredState({
+    key: "playground:pins",
+    initial: allZooms,
+    isValid: isLayerSetting,
+  });
+  const [pinLabels, setPinLabels] = useStoredState({
+    key: "playground:pinLabels",
+    initial: pinLabelZooms,
+    isValid: isLayerSetting,
+  });
+  const [cluster, setCluster] = useStoredState({
+    key: "playground:cluster",
+    initial: false,
+    isValid: isBoolean,
+  });
+  const [selectionMode, setSelectionMode] = useStoredState<SelectionMode>({
+    key: "playground:selectionMode",
+    initial: "multiple",
+    isValid: isSelectionMode,
+  });
+  const [selectByArea, setSelectByArea] = useStoredState({
+    key: "playground:selectByArea",
+    initial: false,
+    isValid: isBoolean,
+  });
+  const [showCounties, setShowCounties] = useStoredState({
+    key: "playground:counties",
+    initial: false,
+    isValid: isBoolean,
+  });
   const [counties, setCounties] = useState<MapArea[]>([]);
   const storedAreas = useStoredAreas();
-  const [showStored, setShowStored] = useStoredState({ key: "playground:myAreas", initial: false, isValid: isBoolean });
+  const [showStored, setShowStored] = useStoredState({
+    key: "playground:myAreas",
+    initial: false,
+    isValid: isBoolean,
+  });
   const [imported, setImported] = useState<EditorArea[]>([]);
   const map = useRef<NordicMapHandle>(null);
   const areas = useMemo(() => {
     return [
       ...(showCounties ? counties : []),
-      ...(showStored ? shownAreas({ areas: storedAreas, prefix: "editor" }) : []),
+      ...(showStored
+        ? shownAreas({ areas: storedAreas, prefix: "editor" })
+        : []),
       ...shownAreas({ areas: imported, prefix: "import" }),
     ];
   }, [showCounties, counties, showStored, storedAreas, imported]);
   // The map follows the site's light or dark scheme until colors are picked here
-  const [pickedColors, setPickedColors] = useStoredState<MapColors | null>({ key: "playground:colors", initial: null, isValid: isPickedColors });
-  const colors = pickedColors ?? (colorScheme === "dark" ? darkColors : lightColors);
+  const [pickedColors, setPickedColors] = useStoredState<MapColors | null>({
+    key: "playground:colors",
+    initial: null,
+    isValid: isPickedColors,
+  });
+  const colors =
+    pickedColors ?? (colorScheme === "dark" ? darkColors : lightColors);
 
   useEffect(() => {
     if (!showCounties || counties.length > 0) {
@@ -102,7 +177,12 @@ export function Playground() {
   return (
     <Box h="100%" style={{ overflowY: "auto" }}>
       <Group align="flex-start" gap="xl" wrap="wrap" p="lg">
-        <Box h="calc(100vh - 120px)" mih={520} miw={320} style={{ flex: "1 1 420px" }}>
+        <Box
+          h="calc(100vh - 120px)"
+          mih={520}
+          miw={320}
+          style={{ flex: "1 1 420px" }}
+        >
           <NordicMap
             ref={map}
             source={swedenOsmSource}
@@ -142,7 +222,11 @@ export function Playground() {
             </Tabs.List>
 
             <Tabs.Panel value="layers" pt="md">
-              <LayerControl label="Swedish coast and border" value={border} onChange={setBorder} />
+              <LayerControl
+                label="Swedish coast and border"
+                value={border}
+                onChange={setBorder}
+              />
               <Stack gap={4} pb="lg">
                 <Text size="sm">Border width: {borderWidth} px</Text>
                 <Slider
@@ -159,8 +243,16 @@ export function Playground() {
                 />
               </Stack>
               <LayerControl label="Roads" value={roads} onChange={setRoads} />
-              <LayerControl label="Road signs" value={roadLabels} onChange={setRoadLabels} />
-              <LayerControl label="Place names" value={places} onChange={setPlaces} />
+              <LayerControl
+                label="Road signs"
+                value={roadLabels}
+                onChange={setRoadLabels}
+              />
+              <LayerControl
+                label="Place names"
+                value={places}
+                onChange={setPlaces}
+              />
               <Switch
                 size="sm"
                 label="Counties"
@@ -193,7 +285,11 @@ export function Playground() {
 
             <Tabs.Panel value="pins" pt="md">
               <LayerControl label="Pins" value={pins} onChange={setPins} />
-              <LayerControl label="Pin labels" value={pinLabels} onChange={setPinLabels} />
+              <LayerControl
+                label="Pin labels"
+                value={pinLabels}
+                onChange={setPinLabels}
+              />
               <Stack gap="sm" pb="lg">
                 <Switch
                   size="sm"
@@ -271,11 +367,25 @@ export function Playground() {
 
             <Tabs.Panel value="help" pt="md">
               <List size="sm" spacing={4}>
-                <List.Item>Drag a box to select pins. Shift, Ctrl or Cmd + drag adds to the selection.</List.Item>
-                <List.Item>Click a pin to toggle it. Click the empty map to clear.</List.Item>
-                <List.Item>Mouse wheel, trackpad pinch or two fingers to zoom, up to 50 times.</List.Item>
-                <List.Item>Right mouse drag, Space + drag or two fingers to pan. Let go while moving and the map glides.</List.Item>
-                <List.Item>Keyboard: + and - zoom, arrow keys pan, 0 shows the whole map, Tab moves through the pins.</List.Item>
+                <List.Item>
+                  Drag a box to select pins. Shift, Ctrl or Cmd + drag adds to
+                  the selection.
+                </List.Item>
+                <List.Item>
+                  Click a pin to toggle it. Click the empty map to clear.
+                </List.Item>
+                <List.Item>
+                  Mouse wheel, trackpad pinch or two fingers to zoom, up to 50
+                  times.
+                </List.Item>
+                <List.Item>
+                  Right mouse drag, Space + drag or two fingers to pan. Let go
+                  while moving and the map glides.
+                </List.Item>
+                <List.Item>
+                  Keyboard: + and - zoom, arrow keys pan, 0 shows the whole map,
+                  Tab moves through the pins.
+                </List.Item>
               </List>
             </Tabs.Panel>
           </Tabs>

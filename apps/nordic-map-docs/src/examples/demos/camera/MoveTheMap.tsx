@@ -35,7 +35,12 @@ export function MoveTheMap() {
           size="compact-sm"
           variant="default"
           onClick={() => {
-            map.current?.fitBounds({ west: 18.1, south: 56.9, east: 19.4, north: 58.0 });
+            map.current?.fitBounds({
+              west: 18.1,
+              south: 56.9,
+              east: 19.4,
+              north: 58.0,
+            });
           }}
         >
           Show Gotland
@@ -56,7 +61,13 @@ export function MoveTheMap() {
           : "Loading"}
       </Text>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <NordicMap ref={map} source={swedenOsmSource} label="Cities" pins={cities} onViewChange={setView} />
+        <NordicMap
+          ref={map}
+          source={swedenOsmSource}
+          label="Cities"
+          pins={cities}
+          onViewChange={setView}
+        />
       </div>
     </Stack>
   );

@@ -40,8 +40,15 @@ const columns = helper.columns([
     meta: { type: "number" },
   }),
   helper.accessor((row) => row.email.toLowerCase(), { header: "No id" }),
-  helper.accessor("id", { header: "ID", enableColumnFilter: false, enableSorting: false }),
-  helper.accessor("email", { header: "Email", meta: { filter: { url: false } } }),
+  helper.accessor("id", {
+    header: "ID",
+    enableColumnFilter: false,
+    enableSorting: false,
+  }),
+  helper.accessor("email", {
+    header: "Email",
+    meta: { filter: { url: false } },
+  }),
   helper.group({
     id: "group",
     header: "Group",
@@ -84,9 +91,15 @@ describe("createTMDataGridUrlState - payload", () => {
 
   it("cuts a date column's timestamp to the day the date controls write", () => {
     expect(
-      people.payload({ filters: { hired: { operator: "before", value: "2024-05-06T23:00:00Z" } } }),
+      people.payload({
+        filters: {
+          hired: { operator: "before", value: "2024-05-06T23:00:00Z" },
+        },
+      }),
     ).toEqual({
-      columnFilters: [{ id: "hired", value: { operator: "before", value: "2024-05-06" } }],
+      columnFilters: [
+        { id: "hired", value: { operator: "before", value: "2024-05-06" } },
+      ],
     });
   });
 
@@ -109,7 +122,9 @@ describe("createTMDataGridUrlState - payload", () => {
 
   it("returns undefined for an input that sets nothing", () => {
     expect(people.payload({})).toBeUndefined();
-    expect(people.payload({ filters: {}, sorting: [], globalFilter: "" })).toBeUndefined();
+    expect(
+      people.payload({ filters: {}, sorting: [], globalFilter: "" }),
+    ).toBeUndefined();
     expect(people.search({})).toEqual({ people: undefined });
     expect(people.searchParams({}).toString()).toBe("");
   });
@@ -120,9 +135,10 @@ describe("createTMDataGridUrlState - payload", () => {
       columns,
       slices: ["columnFilters"],
     });
-    const untyped = { sorting: [{ id: "name" }], globalFilter: "x" } as Parameters<
-      typeof filtersOnly.payload
-    >[0];
+    const untyped = {
+      sorting: [{ id: "name" }],
+      globalFilter: "x",
+    } as Parameters<typeof filtersOnly.payload>[0];
     expect(filtersOnly.payload(untyped)).toBeUndefined();
   });
 });
@@ -130,13 +146,19 @@ describe("createTMDataGridUrlState - payload", () => {
 describe("createTMDataGridUrlState - links", () => {
   it("names the param urlKey takes: a bare key, or a tuple when slices are given", () => {
     expect(people.urlKey).toBe("people");
-    const subset = createTMDataGridUrlState({ key: "s", columns, slices: ["sorting"] });
+    const subset = createTMDataGridUrlState({
+      key: "s",
+      columns,
+      slices: ["sorting"],
+    });
     expect(subset.urlKey).toEqual(["s", ["sorting"]]);
     expect(subset.persist()).toEqual({ urlKey: ["s", ["sorting"]] });
   });
 
   it("builds a router search object and plain search params", () => {
-    const input = { filters: { name: { operator: "equals", value: "Anna" } } } as const;
+    const input = {
+      filters: { name: { operator: "equals", value: "Anna" } },
+    } as const;
     expect(people.search(input)).toEqual({ people: people.payload(input) });
     expect(people.searchParams(input).get("people")).toBe(
       JSON.stringify(people.payload(input)),
@@ -148,7 +170,9 @@ describe("createTMDataGridUrlState - links", () => {
 
   it("validates a route search: an object is kept, anything else dropped", () => {
     const payload = { sorting: [{ id: "name", desc: false }] };
-    expect(people.validateSearch({ people: payload, other: 1 })).toEqual({ people: payload });
+    expect(people.validateSearch({ people: payload, other: 1 })).toEqual({
+      people: payload,
+    });
     expect(people.validateSearch({ people: "text" })).toEqual({});
     expect(people.validateSearch({ people: [] })).toEqual({});
     expect(people.validateSearch({})).toEqual({});
@@ -174,7 +198,9 @@ describe("createTMDataGridUrlState - persist(storage)", () => {
   });
 
   it("passes a value the router left as text through unchanged", () => {
-    const { urlStorage } = people.persist(storageOver({ people: '{"globalFilter":"x"}' }));
+    const { urlStorage } = people.persist(
+      storageOver({ people: '{"globalFilter":"x"}' }),
+    );
     expect(urlStorage?.get("people")).toBe('{"globalFilter":"x"}');
   });
 
@@ -182,7 +208,9 @@ describe("createTMDataGridUrlState - persist(storage)", () => {
     const storage = storageOver({});
     const { urlStorage } = people.persist(storage);
     urlStorage?.set("people", '{"globalFilter":"x"}');
-    expect(storage.set).toHaveBeenLastCalledWith("people", { globalFilter: "x" });
+    expect(storage.set).toHaveBeenLastCalledWith("people", {
+      globalFilter: "x",
+    });
     urlStorage?.set("people", null);
     expect(storage.set).toHaveBeenLastCalledWith("people", undefined);
   });
@@ -222,7 +250,9 @@ describe("createTMDataGridUrlState - with the grid", () => {
     act(() => {
       vi.advanceTimersByTime(250);
     });
-    expect(search.rows).toEqual(rows.payload({ sorting: [{ id: "age", desc: true }] }));
+    expect(search.rows).toEqual(
+      rows.payload({ sorting: [{ id: "age", desc: true }] }),
+    );
   });
 });
 
@@ -247,30 +277,49 @@ describe("createTMDataGridUrlState - what a link may name", () => {
   });
 
   it("rejects what the grid's columns do not offer", () => {
-    // @ts-expect-error - a field of the row with no column
-    people.payload({ filters: { phone: { operator: "contains", value: "1" } } });
+    people.payload({
+      // @ts-expect-error - a field of the row with no column
+      filters: { phone: { operator: "contains", value: "1" } },
+    });
     // @ts-expect-error - enableColumnFilter: false
     people.payload({ filters: { id: { operator: "equals", value: 1 } } });
-    // @ts-expect-error - meta.filter.url: false
-    people.payload({ filters: { email: { operator: "contains", value: "a" } } });
-    // @ts-expect-error - the dotted key's id has an underscore
-    people.payload({ filters: { "address.city": { operator: "contains", value: "a" } } });
-    // @ts-expect-error - an accessor function without an id cannot be named
-    people.payload({ filters: { "No id": { operator: "contains", value: "a" } } });
-    // @ts-expect-error - "contains" is not a select operator
-    people.payload({ filters: { status: { operator: "contains", value: "A" } } });
+    people.payload({
+      // @ts-expect-error - meta.filter.url: false
+      filters: { email: { operator: "contains", value: "a" } },
+    });
+    people.payload({
+      // @ts-expect-error - the dotted key's id has an underscore
+      filters: { "address.city": { operator: "contains", value: "a" } },
+    });
+    people.payload({
+      // @ts-expect-error - an accessor function without an id cannot be named
+      filters: { "No id": { operator: "contains", value: "a" } },
+    });
+    people.payload({
+      // @ts-expect-error - "contains" is not a select operator
+      filters: { status: { operator: "contains", value: "A" } },
+    });
     // @ts-expect-error - meta.filter.operators offers only between and greaterThan
     people.payload({ filters: { salary: { operator: "lessThan", value: 1 } } });
-    // @ts-expect-error - not one of the status values
-    people.payload({ filters: { status: { operator: "isAnyOf", value: ["Retired"] } } });
-    // @ts-expect-error - a number column takes a number
-    people.payload({ filters: { salary: { operator: "greaterThan", value: "1" } } });
+    people.payload({
+      // @ts-expect-error - not one of the status values
+      filters: { status: { operator: "isAnyOf", value: ["Retired"] } },
+    });
+    people.payload({
+      // @ts-expect-error - a number column takes a number
+      filters: { salary: { operator: "greaterThan", value: "1" } },
+    });
     // @ts-expect-error - a valueless operator takes no value
     people.payload({ filters: { name: { operator: "isEmpty", value: "x" } } });
     // @ts-expect-error - enableSorting: false
     people.payload({ sorting: [{ id: "id" }] });
+    const sortingOnly = createTMDataGridUrlState({
+      key: "f",
+      columns,
+      slices: ["sorting"],
+    });
     // @ts-expect-error - a slice the definition does not carry
-    createTMDataGridUrlState({ key: "f", columns, slices: ["sorting"] }).payload({ globalFilter: "x" });
+    sortingOnly.payload({ globalFilter: "x" });
     expect(true).toBe(true);
   });
 
@@ -279,14 +328,18 @@ describe("createTMDataGridUrlState - what a link may name", () => {
       key: "u",
       columns: [{ accessorKey: "name", header: "Name" }],
     });
-    // @ts-expect-error - a plain column definition carries no column info
-    untyped.payload({ filters: { name: { operator: "contains", value: "a" } } });
+    untyped.payload({
+      // @ts-expect-error - a plain column definition carries no column info
+      filters: { name: { operator: "contains", value: "a" } },
+    });
     expect(untyped.payload({})).toBeUndefined();
   });
 
   it("types the grid's TestRow columns too", () => {
     const typed = createTMDataGridUrlState({ key: "t", columns: testColumns });
-    typed.payload({ filters: { age: { operator: "between", value: [20, 30] } } });
+    typed.payload({
+      filters: { age: { operator: "between", value: [20, 30] } },
+    });
     // @ts-expect-error - "age" is a number column
     typed.payload({ filters: { age: { operator: "contains", value: "2" } } });
     const row: TestRow | undefined = undefined;

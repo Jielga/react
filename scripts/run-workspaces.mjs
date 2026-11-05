@@ -33,7 +33,10 @@ export function runOrder(packages, { script, folder }) {
   const selected = packages
     .filter((pkg) => {
       const dir = pkg.relativeDir.replaceAll("\\", "/");
-      return dir.startsWith(`${folder}/`) && pkg.packageJson.scripts?.[script] !== undefined;
+      return (
+        dir.startsWith(`${folder}/`) &&
+        pkg.packageJson.scripts?.[script] !== undefined
+      );
     })
     .sort((a, b) => a.relativeDir.localeCompare(b.relativeDir));
   const byName = new Map(selected.map((pkg) => [pkg.packageJson.name, pkg]));
@@ -45,7 +48,9 @@ export function runOrder(packages, { script, folder }) {
     const name = pkg.packageJson.name;
     if (state.get(name) === "done") return;
     if (state.get(name) === "visiting") {
-      throw new Error(`Workspace dependency cycle: ${[...path, name].join(" -> ")}`);
+      throw new Error(
+        `Workspace dependency cycle: ${[...path, name].join(" -> ")}`,
+      );
     }
     state.set(name, "visiting");
     for (const dependency of workspaceDependencies(pkg, names)) {
@@ -72,7 +77,10 @@ async function main() {
   }
   for (const pkg of order) {
     console.log(`\n> ${pkg.packageJson.name}: bun run ${script}`);
-    const result = spawnSync("bun", ["run", script], { cwd: pkg.dir, stdio: "inherit" });
+    const result = spawnSync("bun", ["run", script], {
+      cwd: pkg.dir,
+      stdio: "inherit",
+    });
     if (result.status !== 0) {
       console.error(`${pkg.packageJson.name}: "${script}" failed`);
       process.exit(result.status ?? 1);

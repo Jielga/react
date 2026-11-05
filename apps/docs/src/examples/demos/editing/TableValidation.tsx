@@ -40,8 +40,7 @@ export function TableValidation() {
       setLines((previous) =>
         previous.map(
           (line) =>
-            updated.find((row) => row.rowId === String(line.id))?.value ??
-            line,
+            updated.find((row) => row.rowId === String(line.id))?.value ?? line,
         ),
       );
     },

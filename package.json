@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "workspaces": {
-    "packages": ["packages/*", "apps/*"],
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
     "catalog": {
       "@babel/core": "^7.29.7",
       "@mantine/code-highlight": "^9.4.2",
@@ -53,6 +56,8 @@
     "build:lib": "node scripts/run-workspaces.mjs build packages",
     "build:docs": "node scripts/run-workspaces.mjs build apps",
     "lint": "oxlint",
+    "format": "prettier --write --end-of-line auto --log-level warn .",
+    "format:check": "prettier --check --end-of-line auto .",
     "typecheck": "tsc -b",
     "check:skills": "node scripts/intent.mjs validate",
     "test": "vitest run",
@@ -74,6 +79,7 @@
     "husky": "^9.1.7",
     "jsdom": "catalog:",
     "oxlint": "^1.69.0",
+    "prettier": "^3.9.10",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

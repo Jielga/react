@@ -14,7 +14,10 @@ describe("splitDemoFences", () => {
 
     expect(segments).toEqual([
       { kind: "prose", markdown: "Before.\n" },
-      { kind: "demo", demo: expect.objectContaining({ file: "rows/Grouping.tsx" }) },
+      {
+        kind: "demo",
+        demo: expect.objectContaining({ file: "rows/Grouping.tsx" }),
+      },
       { kind: "prose", markdown: "\nAfter." },
     ]);
   });

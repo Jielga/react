@@ -45,7 +45,9 @@ describe("the tree column", () => {
 
     // Present as a column (it has to hold its place in the leaf order), but
     // not rendered.
-    expect(erased(result.current).table.getColumn(GROUP_COLUMN_ID)).toBeDefined();
+    expect(
+      erased(result.current).table.getColumn(GROUP_COLUMN_ID),
+    ).toBeDefined();
     expect(visibleColumnIds(result.current)).not.toContain(GROUP_COLUMN_ID);
   });
 
@@ -101,14 +103,18 @@ describe("grouped columns", () => {
   it("are removed on the second grouping too, not just the first", () => {
     const { result, api } = groupedGrid("city");
 
-    expect(api.table.getAllLeafColumns().map((c) => c.id)).not.toContain("city");
+    expect(api.table.getAllLeafColumns().map((c) => c.id)).not.toContain(
+      "city",
+    );
 
     act(() => {
       api.table.setGrouping(["city", "name"]);
     });
 
     // The source of truth and what the grid renders from have to agree.
-    expect(api.table.getAllLeafColumns().map((c) => c.id)).not.toContain("name");
+    expect(api.table.getAllLeafColumns().map((c) => c.id)).not.toContain(
+      "name",
+    );
     expect(visibleColumnIds(result.current)).not.toContain("name");
   });
 
@@ -180,7 +186,9 @@ describe("group rows", () => {
     const rows = displayed(api);
     // Depth 0 cities, depth 1 names inside them, depth 2 the data rows.
     expect(rows.filter((row) => row.depth === 0)).toHaveLength(3);
-    expect(rows.some((row) => row.depth === 1 && row.getIsGrouped())).toBe(true);
+    expect(rows.some((row) => row.depth === 1 && row.getIsGrouped())).toBe(
+      true,
+    );
     expect(rows.filter((row) => !row.getIsGrouped())).toHaveLength(12);
   });
 });
@@ -382,16 +390,20 @@ describe("the group label", () => {
   it("writes a boolean group through the boolean labels", () => {
     renderWithMantine(<LabelGrid groupBy="active" />);
 
-    expect(part("group-toggle", { rowId: "active:true" })).toHaveTextContent("Ja");
-    expect(part("group-toggle", { rowId: "active:false" })).toHaveAccessibleName(
-      "Expandera Nej",
+    expect(part("group-toggle", { rowId: "active:true" })).toHaveTextContent(
+      "Ja",
     );
+    expect(
+      part("group-toggle", { rowId: "active:false" }),
+    ).toHaveAccessibleName("Expandera Nej");
   });
 
   it("writes a select group as its option's label", () => {
     renderWithMantine(<LabelGrid groupBy="status" />);
 
-    expect(part("group-toggle", { rowId: "status:leave" })).toHaveTextContent("Ledig");
+    expect(part("group-toggle", { rowId: "status:leave" })).toHaveTextContent(
+      "Ledig",
+    );
   });
 
   it("writes a date group as a date", () => {
@@ -405,6 +417,8 @@ describe("the group label", () => {
   it("writes a null group as the blank label", () => {
     renderWithMantine(<LabelGrid groupBy="note" />);
 
-    expect(part("group-toggle", { rowId: "note:null" })).toHaveTextContent("(Tomt)");
+    expect(part("group-toggle", { rowId: "note:null" })).toHaveTextContent(
+      "(Tomt)",
+    );
   });
 });

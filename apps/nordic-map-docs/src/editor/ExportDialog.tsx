@@ -1,4 +1,16 @@
-import { Alert, Button, CopyButton, Group, Loader, Modal, SegmentedControl, Stack, Switch, Text, Textarea } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  CopyButton,
+  Group,
+  Loader,
+  Modal,
+  SegmentedControl,
+  Stack,
+  Switch,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { IconCheck, IconCopy, IconDownload } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { loadSwedenCounties } from "@jielga/nordic-map";
@@ -8,7 +20,9 @@ import { partsFromGeometry } from "./editorModel.ts";
 import type { EditorArea, Part } from "./editorModel.ts";
 import { clipParts } from "./shapeOps.ts";
 
-type Clipped = { source: EditorArea[]; areas: EditorArea[]; atSea: string[] } | { source: EditorArea[]; error: string };
+type Clipped =
+  | { source: EditorArea[]; areas: EditorArea[]; atSea: string[] }
+  | { source: EditorArea[]; error: string };
 
 function download({ text, fileName }: { text: string; fileName: string }) {
   const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
@@ -19,7 +33,13 @@ function download({ text, fileName }: { text: string; fileName: string }) {
   URL.revokeObjectURL(url);
 }
 
-function clipToLand({ areas, land }: { areas: EditorArea[]; land: Part[][] }): Clipped {
+function clipToLand({
+  areas,
+  land,
+}: {
+  areas: EditorArea[];
+  land: Part[][];
+}): Clipped {
   try {
     const atSea: string[] = [];
     const clipped = areas.flatMap((area) => {
@@ -35,12 +55,23 @@ function clipToLand({ areas, land }: { areas: EditorArea[]; land: Part[][] }): C
     });
     return { source: areas, areas: clipped, atSea };
   } catch (error) {
-    return { source: areas, error: `Could not clip the areas: ${error instanceof Error ? error.message : String(error)}` };
+    return {
+      source: areas,
+      error: `Could not clip the areas: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
 /** The areas as a TypeScript module, MapArea JSON or GeoJSON, to copy or download */
-export function ExportDialog({ opened, onClose, areas }: { opened: boolean; onClose: () => void; areas: EditorArea[] }) {
+export function ExportDialog({
+  opened,
+  onClose,
+  areas,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  areas: EditorArea[];
+}) {
   const [format, setFormat] = useState<ExportFormat>("typescript");
   const [clip, setClip] = useState(false);
   const [clipped, setClipped] = useState<Clipped | null>(null);
@@ -62,7 +93,10 @@ export function ExportDialog({ opened, onClose, areas }: { opened: boolean; onCl
       },
       (reason: unknown) => {
         if (!cancelled) {
-          setClipped({ source: areas, error: `Could not load the land: ${reason instanceof Error ? reason.message : String(reason)}` });
+          setClipped({
+            source: areas,
+            error: `Could not load the land: ${reason instanceof Error ? reason.message : String(reason)}`,
+          });
         }
       },
     );
@@ -72,7 +106,11 @@ export function ExportDialog({ opened, onClose, areas }: { opened: boolean; onCl
   }, [opened, clip, areas]);
 
   const current = clip && clipped?.source === areas ? clipped : null;
-  const exported = clip ? (current && "areas" in current ? current.areas : null) : areas;
+  const exported = clip
+    ? current && "areas" in current
+      ? current.areas
+      : null
+    : areas;
   const text = exported ? exportAreas({ areas: exported, format }) : "";
   const empty = areas.filter((area) => {
     return area.parts.length === 0;
@@ -107,12 +145,20 @@ export function ExportDialog({ opened, onClose, areas }: { opened: boolean; onCl
           }}
         />
         {empty.length > 0 && (
-          <Alert color="gray">Left out, because they have no shape: {empty.map((area) => area.label || area.id).join(", ")}</Alert>
+          <Alert color="gray">
+            Left out, because they have no shape:{" "}
+            {empty.map((area) => area.label || area.id).join(", ")}
+          </Alert>
         )}
         {current && "atSea" in current && current.atSea.length > 0 && (
-          <Alert color="yellow">Left out, because they lie entirely outside the land: {current.atSea.join(", ")}</Alert>
+          <Alert color="yellow">
+            Left out, because they lie entirely outside the land:{" "}
+            {current.atSea.join(", ")}
+          </Alert>
         )}
-        {current && "error" in current && <Alert color="red">{current.error}</Alert>}
+        {current && "error" in current && (
+          <Alert color="red">{current.error}</Alert>
+        )}
         {clip && !current ? (
           <Group gap="xs">
             <Loader size="sm" />
@@ -124,14 +170,28 @@ export function ExportDialog({ opened, onClose, areas }: { opened: boolean; onCl
             value={text}
             readOnly
             rows={16}
-            styles={{ input: { fontFamily: "var(--mantine-font-family-monospace)", fontSize: 12, whiteSpace: "pre", overflowWrap: "normal" } }}
+            styles={{
+              input: {
+                fontFamily: "var(--mantine-font-family-monospace)",
+                fontSize: 12,
+                whiteSpace: "pre",
+                overflowWrap: "normal",
+              },
+            }}
           />
         )}
         <Group justify="flex-end">
           <CopyButton value={text}>
             {({ copied, copy }) => {
               return (
-                <Button variant="default" leftSection={copied ? <IconCheck size={16} /> : <IconCopy size={16} />} onClick={copy} disabled={text === ""}>
+                <Button
+                  variant="default"
+                  leftSection={
+                    copied ? <IconCheck size={16} /> : <IconCopy size={16} />
+                  }
+                  onClick={copy}
+                  disabled={text === ""}
+                >
                   {copied ? "Copied" : "Copy"}
                 </Button>
               );

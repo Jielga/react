@@ -691,9 +691,7 @@ export type TMDataGridEditRowSnapshot<
  * the cells. A committed row has no form - it is data in the draft store -
  * so `getForm` returns `undefined` for it until `begin` reopens it.
  */
-export type TMDataGridEditApi<
-  TData extends RowData = TMDataGridRowData,
-> = {
+export type TMDataGridEditApi<TData extends RowData = TMDataGridRowData> = {
   /** The projection store - subscribe with `useSelector(edit.store, …)`. */
   store: Store<TMDataGridEditState>;
   /** Current snapshot, for reads outside React. */
@@ -896,7 +894,9 @@ function clearFormSourcedFieldErrors(form: TMDataGridRowEditForm): void {
 function sameValue(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((entry, i) => Object.is(entry, b[i]));
+    return (
+      a.length === b.length && a.every((entry, i) => Object.is(entry, b[i]))
+    );
   }
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime();
@@ -1507,7 +1507,7 @@ export function createEditEngine(
   };
 
   /** Runs `body` with the publish held: one render for the whole run. */
-  const held = async <T,>(body: () => Promise<T>): Promise<T> => {
+  const held = async <T>(body: () => Promise<T>): Promise<T> => {
     holdDepth += 1;
     try {
       return await body();
@@ -1518,7 +1518,7 @@ export function createEditEngine(
   };
 
   /** {@link held} for a synchronous run. */
-  const heldSync = <T,>(body: () => T): T => {
+  const heldSync = <T>(body: () => T): T => {
     holdDepth += 1;
     try {
       return body();
@@ -1701,8 +1701,7 @@ export function createEditEngine(
           } catch (error) {
             // A rejected save keeps the form open, the message on the row.
             entry.form.setErrorMap({
-              onSubmit:
-                error instanceof Error ? error.message : String(error),
+              onSubmit: error instanceof Error ? error.message : String(error),
             } as never);
           }
         },
@@ -1850,7 +1849,9 @@ export function createEditEngine(
       ([field, meta]) => {
         if (field === "") return [];
         const errors = (meta as { errors: ReadonlyArray<unknown> }).errors;
-        const message = hasAnyError(errors) ? firstErrorText(errors) : undefined;
+        const message = hasAnyError(errors)
+          ? firstErrorText(errors)
+          : undefined;
         if (message === undefined) return [];
         return [{ field, value: getBy(values, field), message }];
       },
@@ -2125,9 +2126,7 @@ export function createEditEngine(
       // validate side by side. Out to `onRowAdd`, one at a time and in
       // order, so the consumer sees the rows as the file had them.
       const results = getContext().draft
-        ? await Promise.all(
-            tempIds.map((tempId) => commitRow(tempId, "all")),
-          )
+        ? await Promise.all(tempIds.map((tempId) => commitRow(tempId, "all")))
         : [];
       if (!getContext().draft) {
         for (const tempId of tempIds) {
@@ -2203,8 +2202,7 @@ export function createEditEngine(
     const context = getContext();
     if (context.draft) {
       return (
-        context.onRowDelete !== undefined ||
-        context.onSaveDrafts !== undefined
+        context.onRowDelete !== undefined || context.onSaveDrafts !== undefined
       );
     }
     return context.onRowDelete !== undefined;

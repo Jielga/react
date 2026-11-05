@@ -13,11 +13,19 @@ export function HighlightedRow() {
     defaultHighlightedRowId: "3",
   });
 
-  const highlightedRowId = useSelector(grid.ui, (state) => state.highlightedRowId);
+  const highlightedRowId = useSelector(
+    grid.ui,
+    (state) => state.highlightedRowId,
+  );
   const employee = EMPLOYEES.find((row) => String(row.id) === highlightedRowId);
 
   return (
-    <Group align="stretch" gap="sm" wrap="nowrap" style={{ flex: 1, minHeight: 0 }}>
+    <Group
+      align="stretch"
+      gap="sm"
+      wrap="nowrap"
+      style={{ flex: 1, minHeight: 0 }}
+    >
       <TMDataGrid {...grid} style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
         <TMDataGrid.Table<Employee> />
       </TMDataGrid>

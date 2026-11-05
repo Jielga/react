@@ -22,10 +22,7 @@ import { EMPLOYEES, type Employee } from "../../data/employees";
  */
 const persist = {
   settingsKey: "tmdatagrid.demo.persistence.settings",
-  dataKey: [
-    "tmdatagrid.demo.persistence.data",
-    ["columnFilters", "sorting"],
-  ],
+  dataKey: ["tmdatagrid.demo.persistence.data", ["columnFilters", "sorting"]],
 } satisfies TMDataGridPersistence;
 
 export function Persistence() {

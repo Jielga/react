@@ -82,9 +82,7 @@ export function GroupCell<TData extends RowData>({
       <span className={classes.groupLabel}>{label}</span>
       {/* Data rows, not direct children and not `getLeafRows()`: a nested group
           counts the records under it, never the sub-groups in between. */}
-      <span className={classes.groupCount}>
-        ({dataRows.length})
-      </span>
+      <span className={classes.groupCount}>({dataRows.length})</span>
     </UnstyledButton>
   );
 }

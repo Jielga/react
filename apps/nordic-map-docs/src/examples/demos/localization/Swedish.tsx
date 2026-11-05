@@ -1,4 +1,8 @@
-import { NORDIC_MAP_LABELS_SV, NordicMap, swedenOsmSource } from "@jielga/nordic-map";
+import {
+  NORDIC_MAP_LABELS_SV,
+  NordicMap,
+  swedenOsmSource,
+} from "@jielga/nordic-map";
 import { cities } from "../../data/cities.ts";
 
 export function Swedish() {

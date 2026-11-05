@@ -186,7 +186,12 @@ describe("the select editor", () => {
     // No Enter - picking committed and closed the editor.
     await waitFor(() => expect(commits.length).toBe(1));
     expect(commits[0]?.changes).toEqual([
-      { columnId: "status", field: "status", previous: "Pending", next: "Paid" },
+      {
+        columnId: "status",
+        field: "status",
+        previous: "Pending",
+        next: "Paid",
+      },
     ]);
     expect(
       screen.queryByRole("combobox", { name: "Edit Status" }),
@@ -345,9 +350,10 @@ describe("mapping the value on its way in", () => {
 
   type CodeCommit = TMDataGridEditCommitArgs<Code>;
 
-  function renderCodeGrid(
-    columns: typeof upperColumns = upperColumns,
-  ): { container: HTMLElement; commits: Array<CodeCommit> } {
+  function renderCodeGrid(columns: typeof upperColumns = upperColumns): {
+    container: HTMLElement;
+    commits: Array<CodeCommit>;
+  } {
     const commits: Array<CodeCommit> = [];
     function CodeGrid() {
       const grid = useTMDataGrid<Code>({
@@ -473,7 +479,9 @@ describe("mapping the value on its way in", () => {
             editor: ({ field }) => (
               <input
                 aria-label="Bare Code"
-                value={typeof field.state.value === "string" ? field.state.value : ""}
+                value={
+                  typeof field.state.value === "string" ? field.state.value : ""
+                }
                 onChange={(event) => field.handleChange(event.target.value)}
               />
             ),

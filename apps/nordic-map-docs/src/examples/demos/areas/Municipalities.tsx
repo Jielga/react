@@ -1,5 +1,9 @@
 import { Stack, Text } from "@mantine/core";
-import { loadSwedenMunicipalities, NordicMap, swedenOsmSource } from "@jielga/nordic-map";
+import {
+  loadSwedenMunicipalities,
+  NordicMap,
+  swedenOsmSource,
+} from "@jielga/nordic-map";
 import type { MapArea } from "@jielga/nordic-map";
 import { useEffect, useState } from "react";
 
@@ -14,13 +18,18 @@ export function Municipalities() {
 
   // A picked municipality gets a fill of its own
   const areas = municipalities.map((area) => {
-    return picked.includes(area.id) ? { ...area, fill: "rgb(214 51 108 / 55%)" } : area;
+    return picked.includes(area.id)
+      ? { ...area, fill: "rgb(214 51 108 / 55%)" }
+      : area;
   });
 
   return (
     <Stack h="100%" gap="xs">
       <Text size="sm">
-        {hovered ? `${hovered.label} (${hovered.id})` : "Point at a municipality"} · {picked.length} picked
+        {hovered
+          ? `${hovered.label} (${hovered.id})`
+          : "Point at a municipality"}{" "}
+        · {picked.length} picked
       </Text>
       <div style={{ flex: 1, minHeight: 0 }}>
         <NordicMap

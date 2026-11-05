@@ -1,10 +1,6 @@
 import { act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import {
-  renderGrid,
-  testColumns,
-  type TestRow,
-} from "../../test/gridHarness";
+import { renderGrid, testColumns, type TestRow } from "../../test/gridHarness";
 
 /**
  * Names chosen so one needle separates the ranking tiers: against "sven",

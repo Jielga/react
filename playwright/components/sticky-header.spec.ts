@@ -10,9 +10,7 @@ async function boxOf(locator: Locator): Promise<Box> {
 }
 
 function isInside(inner: Box, outer: Box): boolean {
-  return (
-    inner.y >= outer.y && inner.y + inner.height <= outer.y + outer.height
-  );
+  return inner.y >= outer.y && inner.y + inner.height <= outer.y + outer.height;
 }
 
 test("keeps the header and the summary row on screen while the body scrolls", async ({

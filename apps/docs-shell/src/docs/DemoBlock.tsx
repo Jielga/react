@@ -1,4 +1,12 @@
-import { Box, Button, Collapse, Group, Paper, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Collapse,
+  Group,
+  Paper,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useState } from "react";
 import { CodeBlockTabs, type CodeBlockFile } from "./CodeBlock";
 import { useDocsSite } from "./DocsSite";
@@ -71,7 +79,12 @@ export function DemoBlock({ demo }: { demo: DemoBlockDemo }) {
     <Stack gap="xs">
       {/* On a docs page there is no title to sit opposite, so the button
           keeps the right edge on its own. */}
-      <Group justify={titled ? "space-between" : "flex-end"} align="flex-end" wrap="nowrap" gap="md">
+      <Group
+        justify={titled ? "space-between" : "flex-end"}
+        align="flex-end"
+        wrap="nowrap"
+        gap="md"
+      >
         {titled && (
           <Stack gap={2}>
             <Text fw={600}>{demo.title}</Text>

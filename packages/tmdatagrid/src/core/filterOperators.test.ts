@@ -84,13 +84,17 @@ describe("matchesFilter", () => {
       expect(match(day, "onOrBefore", "2026-07-15")).toBe(true);
       expect(match(day, "onOrAfter", "2026-07-15")).toBe(true);
       expect(match("2026-07-15", "before", "2026-07-16")).toBe(true);
-      expect(match("2026-07-15T09:30:00", "onOrAfter", "2026-07-15")).toBe(true);
+      expect(match("2026-07-15T09:30:00", "onOrAfter", "2026-07-15")).toBe(
+        true,
+      );
     });
 
     it("treats equals as day equality for a Date cell", () => {
       expect(match(new Date(2026, 6, 15), "equals", "2026-07-15")).toBe(true);
       expect(match(new Date(2026, 6, 15), "equals", "2026-07-16")).toBe(false);
-      expect(match(new Date(2026, 6, 15), "notEquals", "2026-07-16")).toBe(true);
+      expect(match(new Date(2026, 6, 15), "notEquals", "2026-07-16")).toBe(
+        true,
+      );
     });
 
     it("never matches an ordering operator on something that has no day", () => {
@@ -216,7 +220,9 @@ describe("isFilterActive", () => {
   });
 
   it("needs at least one spoken end of a between pair", () => {
-    expect(isFilterActive({ operator: "between", value: ["", ""] })).toBe(false);
+    expect(isFilterActive({ operator: "between", value: ["", ""] })).toBe(
+      false,
+    );
     expect(isFilterActive({ operator: "between", value: ["40", ""] })).toBe(
       true,
     );

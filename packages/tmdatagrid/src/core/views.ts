@@ -146,9 +146,7 @@ export type TMDataGridViewsApi = {
 const ownIds = (ids: ReadonlyArray<string> | undefined): string[] =>
   (ids ?? []).filter((id) => !isGeneratedColumn(id));
 
-const ownKeys = <T>(
-  record: Record<string, T> | undefined,
-): Record<string, T> =>
+const ownKeys = <T>(record: Record<string, T> | undefined): Record<string, T> =>
   Object.fromEntries(
     Object.entries(record ?? {}).filter(([id]) => !isGeneratedColumn(id)),
   );
@@ -244,9 +242,7 @@ export function isViewModified(
   }
   if (
     expected.columnSizing &&
-    own.some(
-      (id) => expected.columnSizing?.[id] !== state.columnSizing?.[id],
-    )
+    own.some((id) => expected.columnSizing?.[id] !== state.columnSizing?.[id])
   ) {
     return true;
   }
@@ -391,7 +387,8 @@ export function createLocalStorageViewStore(
 
   const write = (stored: TMDataGridStoredViews): void => {
     const storage = resolveStorageArea(storageMode);
-    if (storage === null) throw new Error("TMDataGrid: no storage to save views in");
+    if (storage === null)
+      throw new Error("TMDataGrid: no storage to save views in");
     storage.setItem(key, serialize(stored));
   };
 

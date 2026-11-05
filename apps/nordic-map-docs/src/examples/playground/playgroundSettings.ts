@@ -15,7 +15,12 @@ export function isLayerSetting(value: unknown): value is LayerSetting {
     return false;
   }
   const { enabled, range } = value as { enabled?: unknown; range?: unknown };
-  return isBoolean(enabled) && Array.isArray(range) && range.length === 2 && range.every(isNumber);
+  return (
+    isBoolean(enabled) &&
+    Array.isArray(range) &&
+    range.length === 2 &&
+    range.every(isNumber)
+  );
 }
 
 /** Picked colors, or null for the colors of the site's color scheme */

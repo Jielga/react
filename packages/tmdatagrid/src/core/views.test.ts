@@ -20,7 +20,11 @@ const view = (id: string, name: string): TMDataGridView => ({
 
 describe("captureViewState", () => {
   const state = {
-    columnVisibility: { age: false, [SELECT_COLUMN_ID]: true, [GROUP_COLUMN_ID]: false },
+    columnVisibility: {
+      age: false,
+      [SELECT_COLUMN_ID]: true,
+      [GROUP_COLUMN_ID]: false,
+    },
     columnSizing: { name: 200, [SELECT_COLUMN_ID]: 40 },
     columnOrder: [SELECT_COLUMN_ID, "city", "name"],
     columnPinning: { start: [SELECT_COLUMN_ID, "name"], end: [] },
@@ -96,12 +100,15 @@ describe("normalizeView", () => {
     ).toEqual({ columnPinning: { start: ["name"], end: [] } });
   });
 
-  it.each([null, "view", { name: "No id" }, { id: "a" }, { id: "a", name: "  " }])(
-    "rejects %j",
-    (value) => {
-      expect(normalizeView(value)).toBeNull();
-    },
-  );
+  it.each([
+    null,
+    "view",
+    { name: "No id" },
+    { id: "a" },
+    { id: "a", name: "  " },
+  ])("rejects %j", (value) => {
+    expect(normalizeView(value)).toBeNull();
+  });
 });
 
 describe("validateViewName", () => {
@@ -143,7 +150,10 @@ describe("createLocalStorageViewStore", () => {
   it("replaces a view saved under the same id", async () => {
     const store = createLocalStorageViewStore("views");
     await store.save(view("a", "Finance"));
-    await store.save({ ...view("a", "Finance"), state: { grouping: ["city"] } });
+    await store.save({
+      ...view("a", "Finance"),
+      state: { grouping: ["city"] },
+    });
     expect(await store.list()).toEqual([
       { ...view("a", "Finance"), state: { grouping: ["city"] } },
     ]);
@@ -168,7 +178,10 @@ describe("createLocalStorageViewStore", () => {
   it("drops a stored entry that is not a view and keeps the others", async () => {
     window.localStorage.setItem(
       "views",
-      JSON.stringify({ views: [{ id: 1 }, view("a", "Finance")], activeId: "a" }),
+      JSON.stringify({
+        views: [{ id: 1 }, view("a", "Finance")],
+        activeId: "a",
+      }),
     );
     const store = createLocalStorageViewStore("views");
     expect(await store.list()).toEqual([view("a", "Finance")]);

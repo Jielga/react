@@ -81,7 +81,10 @@ entries.sort((a, b) => {
 });
 
 const manifest = { entries };
-writeFileSync(join(site, "versions.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+writeFileSync(
+  join(site, "versions.json"),
+  `${JSON.stringify(manifest, null, 2)}\n`,
+);
 
 console.log(`versions.json: ${entries.length} entries`);
 for (const entry of entries) {

@@ -76,7 +76,11 @@ describe("publishedEntry", () => {
 describe("publishedOutput", () => {
   it("is the entries as one line of JSON", () => {
     const line = publishedOutput([
-      { name: "@jielga/tmdatagrid", version: "2.1.0", changelog: "packages/tmdatagrid/CHANGELOG.md" },
+      {
+        name: "@jielga/tmdatagrid",
+        version: "2.1.0",
+        changelog: "packages/tmdatagrid/CHANGELOG.md",
+      },
       { name: "@jielga/react-popup-window", version: "0.3.0", changelog: null },
     ]);
     expect(line).toBe(

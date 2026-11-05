@@ -1,4 +1,11 @@
-import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
@@ -6,14 +13,31 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import { boundsOfPoints, cameraForBounds, fitScale, homeCamera, panBy, pinchCamera, toMap, toScreen, zoomAround } from "./camera.ts";
+import {
+  boundsOfPoints,
+  cameraForBounds,
+  fitScale,
+  homeCamera,
+  panBy,
+  pinchCamera,
+  toMap,
+  toScreen,
+  zoomAround,
+} from "./camera.ts";
 import type { Camera, Frame, MapBounds, Point, Size } from "./camera.ts";
 import { hitArea, hitMarker, hitPath } from "./hitTest.ts";
 import { NORDIC_MAP_LABELS_EN } from "./labels.ts";
 import type { NordicMapLabels } from "./labels.ts";
 import { layerOpacity } from "./layerVisibility.ts";
 import type { LayerVisibility } from "./layerVisibility.ts";
-import type { ClusterOptions, MapArea, MapPath, MapPin, MapTooltipTarget, SelectionMode } from "./mapItems.ts";
+import type {
+  ClusterOptions,
+  MapArea,
+  MapPath,
+  MapPin,
+  MapTooltipTarget,
+  SelectionMode,
+} from "./mapItems.ts";
 import { createMapProjection, projectBox, viewBox } from "./mapProjection.ts";
 import { pinsInArea } from "./pinsInArea.ts";
 import { buildScene } from "./mapScene.ts";
@@ -58,7 +82,10 @@ export type CameraMoveOptions = {
  */
 export type NordicMapHandle = {
   /** Centers the map on a position, at `zoom` or at the current zoom */
-  flyTo: (target: { lat: number; lon: number; zoom?: number }, options?: CameraMoveOptions) => void;
+  flyTo: (
+    target: { lat: number; lon: number; zoom?: number },
+    options?: CameraMoveOptions,
+  ) => void;
   /** Shows an area as large as fits */
   fitBounds: (bounds: LonLatBox, options?: CameraMoveOptions) => void;
   /** Shows the pins with these ids, or every pin, as large as fits. A single pin shows at `maxZoom`. */
@@ -73,9 +100,15 @@ export type NordicMapHandle = {
    * The point on screen of a position, in CSS pixels from the map's top left corner. The point may lie outside
    * the view. Null while the map data is loading.
    */
-  project: (position: { lat: number; lon: number }) => { x: number; y: number } | null;
+  project: (position: {
+    lat: number;
+    lon: number;
+  }) => { x: number; y: number } | null;
   /** The position at a point on screen, given in CSS pixels from the map's top left corner. Null while the map data is loading. */
-  unproject: (point: { x: number; y: number }) => { lat: number; lon: number } | null;
+  unproject: (point: {
+    x: number;
+    y: number;
+  }) => { lat: number; lon: number } | null;
 };
 
 export type NordicMapProps<T = unknown> = {
@@ -165,7 +198,13 @@ type PanSample = { time: number; point: Point };
 type Gesture =
   | { kind: "select"; start: Point; additive: boolean }
   /** `primary` is a left button or one finger: if it barely moves, it is a click */
-  | { kind: "pan"; start: Point; last: Point; samples: PanSample[]; primary: boolean }
+  | {
+      kind: "pan";
+      start: Point;
+      last: Point;
+      samples: PanSample[];
+      primary: boolean;
+    }
   | { kind: "pinch"; start: Camera; startMid: Point; startDistance: number }
   // A pinch has ended but a finger is still down. Wait until all fingers are up.
   | { kind: "settling" };
@@ -238,7 +277,11 @@ const RECORD = "\u0001";
 function encodeButtons(buttons: MarkerButton[]): string {
   return buttons
     .map((button) => {
-      return [button.key, button.label, button.pressed === undefined ? "" : button.pressed ? "1" : "0"].join(FIELD);
+      return [
+        button.key,
+        button.label,
+        button.pressed === undefined ? "" : button.pressed ? "1" : "0",
+      ].join(FIELD);
     })
     .join(RECORD);
 }
@@ -249,11 +292,19 @@ function decodeButtons(encoded: string): MarkerButton[] {
   }
   return encoded.split(RECORD).map((record) => {
     const [key = "", label = "", pressed = ""] = record.split(FIELD);
-    return pressed === "" ? { key, label } : { key, label, pressed: pressed === "1" };
+    return pressed === ""
+      ? { key, label }
+      : { key, label, pressed: pressed === "1" };
   });
 }
 
-function defaultTooltip<T>({ target, labels }: { target: MapTooltipTarget<T>; labels: NordicMapLabels }): ReactNode {
+function defaultTooltip<T>({
+  target,
+  labels,
+}: {
+  target: MapTooltipTarget<T>;
+  labels: NordicMapLabels;
+}): ReactNode {
   switch (target.kind) {
     case "pin":
       return target.pin.label ?? null;
@@ -319,9 +370,15 @@ export function NordicMap<T = unknown>({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  const labels: NordicMapLabels = { ...NORDIC_MAP_LABELS_EN, ...labelsOverride };
+  const labels: NordicMapLabels = {
+    ...NORDIC_MAP_LABELS_EN,
+    ...labelsOverride,
+  };
   const scheme = useColorScheme(colorScheme);
-  const style: MapStyle = { ...(scheme === "dark" ? darkMapStyle : lightMapStyle), ...mapStyle };
+  const style: MapStyle = {
+    ...(scheme === "dark" ? darkMapStyle : lightMapStyle),
+    ...mapStyle,
+  };
 
   const [size, setSize] = useState<Size | null>(null);
   useLayoutEffect(() => {
@@ -332,7 +389,9 @@ export function NordicMap<T = unknown>({
     const measure = () => {
       const { width, height } = root.getBoundingClientRect();
       setSize((current) => {
-        return current?.width === width && current.height === height ? current : { width, height };
+        return current?.width === width && current.height === height
+          ? current
+          : { width, height };
       });
     };
     measure();
@@ -361,12 +420,20 @@ export function NordicMap<T = unknown>({
   // Every overview cell has settled, but none gave any land or border to fit the map to
   const failed = overview !== null && bounds === null;
   const frame = useMemo<Frame | null>(() => {
-    return size && size.width > 0 && size.height > 0 && bounds ? { size, bounds, padding, maxZoom } : null;
+    return size && size.width > 0 && size.height > 0 && bounds
+      ? { size, bounds, padding, maxZoom }
+      : null;
   }, [size, bounds, padding, maxZoom]);
 
   const cameraControls = useCamera(frame);
   const { camera } = cameraControls;
-  const cells = useDetailCells({ source, projection, camera, frame, overview: overview ?? noCells });
+  const cells = useDetailCells({
+    source,
+    projection,
+    camera,
+    frame,
+    overview: overview ?? noCells,
+  });
   const scene = useMemo(() => {
     return buildScene({ cells, contextCells: overview ?? noCells });
   }, [cells, overview]);
@@ -402,20 +469,32 @@ export function NordicMap<T = unknown>({
       return point ? [{ pin, point, order }] : [];
     });
   }, [pins, projection]);
-  const clusterRadius = cluster === false ? null : cluster === true ? DEFAULT_CLUSTER_RADIUS : (cluster.radius ?? DEFAULT_CLUSTER_RADIUS);
+  const clusterRadius =
+    cluster === false
+      ? null
+      : cluster === true
+        ? DEFAULT_CLUSTER_RADIUS
+        : (cluster.radius ?? DEFAULT_CLUSTER_RADIUS);
   // Clusters are built for zoom steps of a factor of √2, so they do not change on every frame of a zoom.
   // At the largest zoom every pin shows on its own, so a cluster of pins at one spot can still be opened.
-  const clusterStep = camera && frame && clusterRadius !== null && camera.k < frame.maxZoom ? Math.floor(Math.log2(camera.k) * 2) : null;
+  const clusterStep =
+    camera && frame && clusterRadius !== null && camera.k < frame.maxZoom
+      ? Math.floor(Math.log2(camera.k) * 2)
+      : null;
   const pixelsPerUnit = frame ? fitScale(frame) : 1;
   const markers = useMemo(() => {
     return buildMarkers({
       placed,
-      radius: clusterStep === null || clusterRadius === null ? null : clusterRadius / (pixelsPerUnit * 2 ** (clusterStep / 2)),
+      radius:
+        clusterStep === null || clusterRadius === null
+          ? null
+          : clusterRadius / (pixelsPerUnit * 2 ** (clusterStep / 2)),
     });
   }, [placed, clusterStep, clusterRadius, pixelsPerUnit]);
 
   const [innerSelected, setInnerSelected] = useState<string[]>(defaultSelected);
-  const currentSelection = selectionMode === "none" ? [] : (selected ?? innerSelected);
+  const currentSelection =
+    selectionMode === "none" ? [] : (selected ?? innerSelected);
   const selectedSet = new Set(currentSelection);
 
   const screenMarkers: ScreenMarker<T>[] =
@@ -431,14 +510,17 @@ export function NordicMap<T = unknown>({
             x,
             y,
             radius: markerRadius({ marker, pinRadius: style.pinRadius }),
-            selected: count === 0 ? "none" : count === members.length ? "all" : "some",
+            selected:
+              count === 0 ? "none" : count === members.length ? "all" : "some",
           };
         })
       : [];
   const visibleMarkers =
     pinsShown && frame
       ? screenMarkers.filter(({ x, y }) => {
-          return x >= 0 && x <= frame.size.width && y >= 0 && y <= frame.size.height;
+          return (
+            x >= 0 && x <= frame.size.width && y >= 0 && y <= frame.size.height
+          );
         })
       : [];
 
@@ -458,7 +540,8 @@ export function NordicMap<T = unknown>({
             return pin.id === highlighted;
           });
         })?.key ?? null);
-  const hoveredMarkerKey = hover?.kind === "marker" && pinsShown ? hover.key : null;
+  const hoveredMarkerKey =
+    hover?.kind === "marker" && pinsShown ? hover.key : null;
   const emphasizedKeys = new Set(
     [highlightedKey, hoveredMarkerKey, focusedKey].filter((key) => {
       return key !== null;
@@ -510,7 +593,13 @@ export function NordicMap<T = unknown>({
 
   // Camera moves asked for through the ref before the map was shown. The latest one runs once it is.
   const pendingMove = useRef<((frame: Frame) => Camera) | null>(null);
-  function moveCamera({ to, options }: { to: (frame: Frame) => Camera; options?: CameraMoveOptions }) {
+  function moveCamera({
+    to,
+    options,
+  }: {
+    to: (frame: Frame) => Camera;
+    options?: CameraMoveOptions;
+  }) {
     if (!camera) {
       pendingMove.current = to;
       return;
@@ -525,12 +614,22 @@ export function NordicMap<T = unknown>({
     }
   });
 
-  function fitPoints({ points, options }: { points: Point[]; options?: CameraMoveOptions }) {
+  function fitPoints({
+    points,
+    options,
+  }: {
+    points: Point[];
+    options?: CameraMoveOptions;
+  }) {
     const fit = boundsOfPoints(points);
     if (fit) {
       moveCamera({
         to: (currentFrame) => {
-          return cameraForBounds({ frame: currentFrame, bounds: fit, margin: FIT_MARGIN });
+          return cameraForBounds({
+            frame: currentFrame,
+            bounds: fit,
+            margin: FIT_MARGIN,
+          });
         },
         options,
       });
@@ -539,7 +638,10 @@ export function NordicMap<T = unknown>({
 
   function zoomCenter(factor: number) {
     if (frame) {
-      cameraControls.zoomSmooth({ anchor: [frame.size.width / 2, frame.size.height / 2], factor });
+      cameraControls.zoomSmooth({
+        anchor: [frame.size.width / 2, frame.size.height / 2],
+        factor,
+      });
     }
   }
 
@@ -549,7 +651,13 @@ export function NordicMap<T = unknown>({
     }
     const center = projection.invert(camera.center);
     const box = viewBox({ camera, frame, projection });
-    return center && box ? { zoom: camera.k, center: { lat: center[1], lon: center[0] }, bounds: box } : null;
+    return center && box
+      ? {
+          zoom: camera.k,
+          center: { lat: center[1], lon: center[0] },
+          bounds: box,
+        }
+      : null;
   }
 
   useImperativeHandle(ref, () => {
@@ -570,7 +678,11 @@ export function NordicMap<T = unknown>({
         if (fit) {
           moveCamera({
             to: (currentFrame) => {
-              return cameraForBounds({ frame: currentFrame, bounds: fit, margin: FIT_MARGIN });
+              return cameraForBounds({
+                frame: currentFrame,
+                bounds: fit,
+                margin: FIT_MARGIN,
+              });
             },
             options,
           });
@@ -614,7 +726,9 @@ export function NordicMap<T = unknown>({
         if (!camera || !frame) {
           return null;
         }
-        const lonLat = projection.invert(toMap({ camera, frame, point: [x, y] }));
+        const lonLat = projection.invert(
+          toMap({ camera, frame, point: [x, y] }),
+        );
         return lonLat ? { lat: lonLat[1], lon: lonLat[0] } : null;
       },
     };
@@ -626,7 +740,13 @@ export function NordicMap<T = unknown>({
    * Selects the pins inside an area. With `additive` they are added, or removed when they are all selected
    * already.
    */
-  function selectArea({ area, additive }: { area: MapArea; additive: boolean }) {
+  function selectArea({
+    area,
+    additive,
+  }: {
+    area: MapArea;
+    additive: boolean;
+  }) {
     const inside = pinsInArea(pins, area).map((pin) => {
       return pin.id;
     });
@@ -705,7 +825,13 @@ export function NordicMap<T = unknown>({
       }
     }
     if (opacity.areas > 0 && preparedAreas.length > 0) {
-      const area = hitArea({ context, areas: preparedAreas, camera, frame, point });
+      const area = hitArea({
+        context,
+        areas: preparedAreas,
+        camera,
+        frame,
+        point,
+      });
       if (area) {
         return { kind: "area", id: area.area.id, at: point };
       }
@@ -713,8 +839,22 @@ export function NordicMap<T = unknown>({
     return null;
   }
 
-  function handleClick({ point, additive, isTouch }: { point: Point; additive: boolean; isTouch: boolean }) {
-    const hit = pinsShown ? hitMarker({ markers: screenMarkers, point, slop: isTouch ? CLICK_SLOP.touch : CLICK_SLOP.mouse }) : null;
+  function handleClick({
+    point,
+    additive,
+    isTouch,
+  }: {
+    point: Point;
+    additive: boolean;
+    isTouch: boolean;
+  }) {
+    const hit = pinsShown
+      ? hitMarker({
+          markers: screenMarkers,
+          point,
+          slop: isTouch ? CLICK_SLOP.touch : CLICK_SLOP.mouse,
+        })
+      : null;
     if (hit) {
       activateMarker(hit.marker);
       return;
@@ -746,16 +886,29 @@ export function NordicMap<T = unknown>({
     }
     // A click that selected the pins of an area is not a click on the empty map
     const selectedByArea = shape?.kind === "area" && areaSelects;
-    if (selectionMode !== "none" && !additive && !selectedByArea && selectedSet.size > 0) {
+    if (
+      selectionMode !== "none" &&
+      !additive &&
+      !selectedByArea &&
+      selectedSet.size > 0
+    ) {
       commitSelection(new Set());
     }
   }
 
   function hoverAt(point: Point) {
-    const marker = pinsShown ? hitMarker({ markers: screenMarkers, point, slop: CLICK_SLOP.mouse }) : null;
-    const next: Hover | null = marker ? { kind: "marker", key: marker.marker.key } : hitShape(point);
+    const marker = pinsShown
+      ? hitMarker({ markers: screenMarkers, point, slop: CLICK_SLOP.mouse })
+      : null;
+    const next: Hover | null = marker
+      ? { kind: "marker", key: marker.marker.key }
+      : hitShape(point);
     setHover((current) => {
-      if (next?.kind === "marker" && current?.kind === "marker" && current.key === next.key) {
+      if (
+        next?.kind === "marker" &&
+        current?.kind === "marker" &&
+        current.key === next.key
+      ) {
         return current;
       }
       return current === null && next === null ? current : next;
@@ -771,7 +924,9 @@ export function NordicMap<T = unknown>({
 
   function localPoint(clientX: number, clientY: number): Point {
     const rect = overlayRef.current?.getBoundingClientRect();
-    return rect ? [clientX - rect.left, clientY - rect.top] : [clientX, clientY];
+    return rect
+      ? [clientX - rect.left, clientY - rect.top]
+      : [clientX, clientY];
   }
 
   function twoFingers(): [Point, Point] | null {
@@ -787,12 +942,22 @@ export function NordicMap<T = unknown>({
     if (event.ctrlKey) {
       // Trackpad pinch arrives as a wheel event with Ctrl. Its steps are small and frequent, so apply them directly.
       cameraControls.update((current, currentFrame) => {
-        return zoomAround({ camera: current, frame: currentFrame, anchor, k: current.k * Math.exp(-event.deltaY * 0.01) });
+        return zoomAround({
+          camera: current,
+          frame: currentFrame,
+          anchor,
+          k: current.k * Math.exp(-event.deltaY * 0.01),
+        });
       });
       return;
     }
     // deltaMode 1 is lines (Firefox), 2 is pages, 0 is pixels
-    const pixels = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
+    const pixels =
+      event.deltaMode === 1
+        ? event.deltaY * 16
+        : event.deltaMode === 2
+          ? event.deltaY * 400
+          : event.deltaY;
     cameraControls.zoomSmooth({ anchor, factor: Math.exp(-pixels * 0.0025) });
   };
   const wheelHandler = useRef(handleWheel);
@@ -813,8 +978,18 @@ export function NordicMap<T = unknown>({
     };
   }, []);
 
-  function startPan({ point, time, primary }: PanSample & { primary: boolean }) {
-    gesture.current = { kind: "pan", start: point, last: point, samples: [{ time, point }], primary };
+  function startPan({
+    point,
+    time,
+    primary,
+  }: PanSample & { primary: boolean }) {
+    gesture.current = {
+      kind: "pan",
+      start: point,
+      last: point,
+      samples: [{ time, point }],
+      primary,
+    };
     setPanning(true);
   }
 
@@ -856,7 +1031,11 @@ export function NordicMap<T = unknown>({
       return;
     }
     if (selectionMode === "multiple" && pinsShown) {
-      gesture.current = { kind: "select", start: point, additive: event.shiftKey || event.ctrlKey || event.metaKey };
+      gesture.current = {
+        kind: "select",
+        start: point,
+        additive: event.shiftKey || event.ctrlKey || event.metaKey,
+      };
       setDrag({ from: point, to: point });
       return;
     }
@@ -890,7 +1069,10 @@ export function NordicMap<T = unknown>({
         });
       }
     } else if (current?.kind === "pan") {
-      const delta: Point = [point[0] - current.last[0], point[1] - current.last[1]];
+      const delta: Point = [
+        point[0] - current.last[0],
+        point[1] - current.last[1],
+      ];
       current.last = point;
       const now = event.timeStamp;
       current.samples = [
@@ -909,7 +1091,13 @@ export function NordicMap<T = unknown>({
     }
   }
 
-  function endPan({ current, now }: { current: Extract<Gesture, { kind: "pan" }>; now: number }) {
+  function endPan({
+    current,
+    now,
+  }: {
+    current: Extract<Gesture, { kind: "pan" }>;
+    now: number;
+  }) {
     setPanning(false);
     const recent = current.samples.filter((sample) => {
       return now - sample.time <= FLING_WINDOW_MS;
@@ -919,7 +1107,10 @@ export function NordicMap<T = unknown>({
     if (first && last && last.time > first.time) {
       const elapsed = last.time - first.time;
       // The map moves with the pointer, so the glide continues the pointer's direction
-      cameraControls.fling([(last.point[0] - first.point[0]) / elapsed, (last.point[1] - first.point[1]) / elapsed]);
+      cameraControls.fling([
+        (last.point[0] - first.point[0]) / elapsed,
+        (last.point[1] - first.point[1]) / elapsed,
+      ]);
     }
   }
 
@@ -932,7 +1123,8 @@ export function NordicMap<T = unknown>({
       return;
     }
     if (current.kind === "pinch" || current.kind === "settling") {
-      gesture.current = pointers.current.size === 0 ? null : { kind: "settling" };
+      gesture.current =
+        pointers.current.size === 0 ? null : { kind: "settling" };
       return;
     }
     gesture.current = null;
@@ -1060,7 +1252,8 @@ export function NordicMap<T = unknown>({
       return {
         key: marker.key,
         label: marker.pin.label ?? marker.pin.id,
-        pressed: selectionMode === "none" ? undefined : markerSelected === "all",
+        pressed:
+          selectionMode === "none" ? undefined : markerSelected === "all",
       };
     }),
   );
@@ -1069,8 +1262,11 @@ export function NordicMap<T = unknown>({
   }, [buttonsKey]);
 
   // The pin and area under the pointer or the keyboard focus, for the hover callbacks and the tooltip
-  const activeMarker = (focusedKey === null ? undefined : markerByKey.get(focusedKey)) ?? (hoveredMarkerKey === null ? undefined : markerByKey.get(hoveredMarkerKey));
-  const activePin = activeMarker?.marker.kind === "pin" ? activeMarker.marker.pin : null;
+  const activeMarker =
+    (focusedKey === null ? undefined : markerByKey.get(focusedKey)) ??
+    (hoveredMarkerKey === null ? undefined : markerByKey.get(hoveredMarkerKey));
+  const activePin =
+    activeMarker?.marker.kind === "pin" ? activeMarker.marker.pin : null;
   const hoveredArea =
     hover?.kind === "area"
       ? (areas.find((area) => {
@@ -1104,29 +1300,51 @@ export function NordicMap<T = unknown>({
   const viewX = camera?.center[0];
   const viewY = camera?.center[1];
   useEffect(() => {
-    if (!onViewChange || viewK === undefined || viewX === undefined || viewY === undefined || !frame) {
+    if (
+      !onViewChange ||
+      viewK === undefined ||
+      viewX === undefined ||
+      viewY === undefined ||
+      !frame
+    ) {
       return;
     }
     const viewCamera: Camera = { k: viewK, center: [viewX, viewY] };
     const center = projection.invert(viewCamera.center);
     const box = viewBox({ camera: viewCamera, frame, projection });
     if (center && box) {
-      onViewChange({ zoom: viewK, center: { lat: center[1], lon: center[0] }, bounds: box });
+      onViewChange({
+        zoom: viewK,
+        center: { lat: center[1], lon: center[0] },
+        bounds: box,
+      });
     }
   }, [viewK, viewX, viewY, frame, projection, onViewChange]);
 
-  let tooltip: { target: MapTooltipTarget<T>; x: number; y: number } | null = null;
+  let tooltip: { target: MapTooltipTarget<T>; x: number; y: number } | null =
+    null;
   if (activeMarker && opacity.pins > 0) {
     const { marker, x, y, radius } = activeMarker;
     tooltip = {
-      target: marker.kind === "pin" ? { kind: "pin", pin: marker.pin } : { kind: "cluster", pins: marker.pins },
+      target:
+        marker.kind === "pin"
+          ? { kind: "pin", pin: marker.pin }
+          : { kind: "cluster", pins: marker.pins },
       x,
       y: y - radius,
     };
   } else if (hover?.kind === "area" && hoveredArea) {
-    tooltip = { target: { kind: "area", area: hoveredArea }, x: hover.at[0], y: hover.at[1] };
+    tooltip = {
+      target: { kind: "area", area: hoveredArea },
+      x: hover.at[0],
+      y: hover.at[1],
+    };
   } else if (hover?.kind === "path" && hoveredPath) {
-    tooltip = { target: { kind: "path", path: hoveredPath }, x: hover.at[0], y: hover.at[1] };
+    tooltip = {
+      target: { kind: "path", path: hoveredPath },
+      x: hover.at[0],
+      y: hover.at[1],
+    };
   }
   const tooltipContent = tooltip
     ? renderTooltip
@@ -1200,13 +1418,22 @@ export function NordicMap<T = unknown>({
         )}
       </div>
 
-      {tooltip && tooltipContent !== null && tooltipContent !== undefined && tooltipContent !== "" && (
-        <MapTooltip x={tooltip.x} y={tooltip.y} below={tooltip.y < 48}>
-          {tooltipContent}
-        </MapTooltip>
-      )}
+      {tooltip &&
+        tooltipContent !== null &&
+        tooltipContent !== undefined &&
+        tooltipContent !== "" && (
+          <MapTooltip x={tooltip.x} y={tooltip.y} below={tooltip.y < 48}>
+            {tooltipContent}
+          </MapTooltip>
+        )}
 
-      {!camera && <MapStatus failed={failed} loadingLabel={labels.loading} errorText={labels.loadError} />}
+      {!camera && (
+        <MapStatus
+          failed={failed}
+          loadingLabel={labels.loading}
+          errorText={labels.loadError}
+        />
+      )}
 
       {source.attribution && (
         <div className={classes.attribution}>

@@ -1,4 +1,12 @@
-import { Badge, Group, Kbd, Modal, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Badge,
+  Group,
+  Kbd,
+  Modal,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import classes from "./DocsSearch.module.css";
@@ -63,7 +71,8 @@ export function DocsSearch({
     // changes; a hit on the page already open needs it done here.
     void navigate({ to: entry.to, hash: entry.hash }).then(() => {
       const { hash } = entry;
-      if (hash && document.getElementById(hash)) window.location.replace(`#${hash}`);
+      if (hash && document.getElementById(hash))
+        window.location.replace(`#${hash}`);
     });
   };
 

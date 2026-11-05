@@ -30,12 +30,7 @@ export type TMDataGridFilterValue = {
 };
 
 export type TMDataGridColumnType =
-  | "string"
-  | "number"
-  | "boolean"
-  | "date"
-  | "select"
-  | "multiSelect";
+  "string" | "number" | "boolean" | "date" | "select" | "multiSelect";
 
 export type TMDataGridFilterOperator =
   | "contains"
@@ -57,26 +52,27 @@ export type TMDataGridFilterOperator =
   | "isEmpty"
   | "isNotEmpty";
 
-export const FILTER_OPERATOR_LABELS: Record<TMDataGridFilterOperator, string> = {
-  contains: "contains",
-  equals: "equals",
-  notEquals: "does not equal",
-  startsWith: "starts with",
-  endsWith: "ends with",
-  greaterThan: "is greater than",
-  greaterThanOrEqual: "is greater than or equal to",
-  lessThan: "is less than",
-  lessThanOrEqual: "is less than or equal to",
-  between: "is between",
-  before: "is before",
-  after: "is after",
-  onOrBefore: "is on or before",
-  onOrAfter: "is on or after",
-  isAnyOf: "is any of",
-  isNoneOf: "is none of",
-  isEmpty: "is empty",
-  isNotEmpty: "is not empty",
-};
+export const FILTER_OPERATOR_LABELS: Record<TMDataGridFilterOperator, string> =
+  {
+    contains: "contains",
+    equals: "equals",
+    notEquals: "does not equal",
+    startsWith: "starts with",
+    endsWith: "ends with",
+    greaterThan: "is greater than",
+    greaterThanOrEqual: "is greater than or equal to",
+    lessThan: "is less than",
+    lessThanOrEqual: "is less than or equal to",
+    between: "is between",
+    before: "is before",
+    after: "is after",
+    onOrBefore: "is on or before",
+    onOrAfter: "is on or after",
+    isAnyOf: "is any of",
+    isNoneOf: "is none of",
+    isEmpty: "is empty",
+    isNotEmpty: "is not empty",
+  };
 
 const STRING_OPERATORS = [
   "contains",
@@ -193,7 +189,9 @@ export function getDefaultOperator(
   return DEFAULT_OPERATOR_BY_TYPE[type];
 }
 
-export function operatorNeedsValue(operator: TMDataGridFilterOperator): boolean {
+export function operatorNeedsValue(
+  operator: TMDataGridFilterOperator,
+): boolean {
   return !VALUELESS_OPERATORS.includes(operator);
 }
 
@@ -499,9 +497,13 @@ export function matchesFilter(
     case "contains":
       return cellText.includes(needle);
     case "equals":
-      return compareNumeric ? numericCell === numericFilter : cellText === needle;
+      return compareNumeric
+        ? numericCell === numericFilter
+        : cellText === needle;
     case "notEquals":
-      return compareNumeric ? numericCell !== numericFilter : cellText !== needle;
+      return compareNumeric
+        ? numericCell !== numericFilter
+        : cellText !== needle;
     case "startsWith":
       return cellText.startsWith(needle);
     case "endsWith":

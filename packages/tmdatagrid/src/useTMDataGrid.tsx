@@ -127,10 +127,7 @@ import {
   type TMDataGridFeatureFlags,
   type TMDataGridSelectionMode,
 } from "./core/capabilities";
-import {
-  isSameCell,
-  type TMDataGridCellPosition,
-} from "./core/cellNavigation";
+import { isSameCell, type TMDataGridCellPosition } from "./core/cellNavigation";
 import {
   findFrozenStateSlices,
   stabilizeControlledState,
@@ -150,10 +147,7 @@ import {
   type TMDataGridViewsApi,
   type TMDataGridViewsOptions,
 } from "./core/views";
-import {
-  withPageReset,
-  type TMDataGridQueryTable,
-} from "./core/pageReset";
+import { withPageReset, type TMDataGridQueryTable } from "./core/pageReset";
 import type { TMDataGridCellRange } from "./core/cellRange";
 import type {
   TMDataGridAccessorColumnId,
@@ -400,11 +394,11 @@ type WithRowTypedMeta<TDef, TData extends RowData> = TDef extends unknown
 export type TMDataGridColumnHelper<TData extends RowData> = {
   accessor: <
     TAccessor extends AccessorFn<TData> | DeepKeys<TData>,
-    TValue extends TAccessor extends AccessorFn<TData, infer TReturn>
+    TValue extends (TAccessor extends AccessorFn<TData, infer TReturn>
       ? TReturn
       : TAccessor extends DeepKeys<TData>
         ? DeepValue<TData, TAccessor>
-        : never,
+        : never),
     const TId extends string = never,
     TType extends TMDataGridColumnType = "string",
     TOperator extends TMDataGridFilterOperator = TMDataGridFilterOperator,
@@ -441,7 +435,10 @@ export type TMDataGridColumnHelper<TData extends RowData> = {
     }>;
   columns: ColumnHelper<TMDataGridFeatures, TData>["columns"];
   display: (
-    column: WithRowTypedMeta<DisplayColumnDef<TMDataGridFeatures, TData>, TData>,
+    column: WithRowTypedMeta<
+      DisplayColumnDef<TMDataGridFeatures, TData>,
+      TData
+    >,
   ) => DisplayColumnDef<TMDataGridFeatures, TData, unknown>;
   /** A header group. Carries the column info of every column under it. */
   group: <
@@ -929,357 +926,357 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
         >;
       }
   ) & {
-  /**
-   * Restore and persist table state across mounts. Two storage keys, because
-   * the two kinds of state have different lifetimes, and a URL search param
-   * for the data slices a link should carry - see {@link TMDataGridPersistence}.
-   *
-   * Keep the object referentially stable (module scope or `useMemo`); it is a
-   * dependency of the subscription that writes back.
-   */
-  persist?: TMDataGridPersistence;
-  /**
-   * Saved views: named layouts the user switches between, from presets in
-   * code and, unless `allowUserViews` is `false`, views of their own kept in
-   * `store`. A view holds the settings slices only - visibility, widths,
-   * order, pinning and grouping. See {@link TMDataGridViewsOptions}.
-   *
-   * The `store` must be referentially stable; it is a dependency of the load.
-   */
-  views?: TMDataGridViewsOptions;
-  /**
-   * Overrides for the grid's strings - menu items, panels, the pager, and
-   * every `aria-label`. Any subset, merged over the English defaults; a full
-   * Swedish dictionary ships as `TMDATAGRID_LABELS_SV`.
-   *
-   * ```tsx
-   * useTMDataGrid({ data, columns, labels: TMDATAGRID_LABELS_SV });
-   * useTMDataGrid({ data, columns, labels: { noResults: "Inga rader" } });
-   * ```
-   *
-   * Keep the object referentially stable (module scope or `useMemo`) - the
-   * chrome re-renders when its identity changes.
-   */
-  labels?: TMDataGridLabelsOverride;
-  /**
-   * Header drag-and-drop and the move items in the column menu. Defaults to
-   * `true`.
-   *
-   * The one feature switch the grid defines itself: TanStack's
-   * `columnOrderingFeature` ships state and APIs but no `enable` option, since
-   * reordering is entirely a matter of interface.
-   */
-  enableColumnOrdering?: boolean;
-  /**
-   * Client-side pagination and the built-in `TMDataGrid.Footer` pager.
-   * Defaults to `false`: the grid renders every filtered row and relies on
-   * virtualization.
-   *
-   * The second grid-defined switch (TanStack defines no `enablePagination`
-   * option). `manualPagination: true` implies it - a server-paged grid needs
-   * no extra flag.
-   */
-  enablePagination?: boolean;
-  /**
-   * Sends the grid back to the first page whenever the query changes - a
-   * column filter, the quick search, the sort or the grouping. On by
-   * default. TanStack's own `autoResetPageIndex` is switched off by the
-   * grid: it fires on any change to the `data` array, which under
-   * `editing.draft` is every commit.
-   *
-   * Server-side, `pageIndex` is a position in a result set the grid does not
-   * own: narrowing the query leaves it pointing past the last page, and the
-   * next request comes back empty. The reset is applied in the same event as
-   * the change, so one request goes out, for the first page of the new query.
-   */
-  resetPageOnQueryChange?: boolean;
-  /**
-   * The row-number gutter: a generated lane, outermost left, numbering the
-   * rows of the current view - sorted, filtered, continuing across pages,
-   * with group rows unnumbered. Off by default.
-   */
-  enableRowNumbers?: boolean;
-  /**
-   * Where the grid puts its filter controls - a popup over the rows, a sidebar
-   * beside them, controls in the header row, or nowhere at all so you place
-   * `TMDataGrid.FilterPanel` yourself.
-   *
-   * ```tsx
-   * useTMDataGrid({ data, columns, filters: { surface: "sidebar", inHeader: true } });
-   * ```
-   *
-   * Defaults to `{ surface: "popup" }` - the floating panel the grid has
-   * always shown. See {@link TMDataGridFiltersOptions}.
-   *
-   * Read field by field, so a literal is fine here - unlike `labels` or
-   * `persist`, this one does not have to be referentially stable.
-   */
-  filters?: TMDataGridFiltersOptions;
-  /**
-   * How the grid exports: the file format, the file name and whether the
-   * column labels go in as the first row. Defaults to `csvExcelFormat()`,
-   * `"export"` and `true`. See {@link TMDataGridExportOptions}.
-   *
-   * ```tsx
-   * useTMDataGrid({ data, columns, exportOptions: { format: csvFormat(), fileName: "employees" } });
-   * ```
-   *
-   * Read field by field like `filters`, so a literal is fine. A `format`
-   * built inline is rebuilt every render, which costs nothing but a small
-   * object; keep it at module scope when that bothers you.
-   */
-  exportOptions?: TMDataGridExportOptions;
-  /**
-   * Whether the grid offers file downloads. `false` takes the download item
-   * and its Include headers toggle out of the cell-range menu, renders
-   * `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected` as nothing,
-   * and makes `useTMDataGridExport`'s `exportAll` and `exportSelected` do
-   * nothing, with its `canDownload` reporting `false`. Defaults to `true`.
-   *
-   * Copy and Ctrl+C are not affected; {@link mapExportData} changes or
-   * cancels them. `exportGrid` still downloads, since only your own code
-   * calls it.
-   */
-  enableDownload?: boolean;
-  /**
-   * Changes what every export of the grid writes, to a file or the clipboard.
-   * Receives the data after `meta.exportValue` and before the format, with
-   * `{ target, rows }` naming the export, and returns the data to write, or
-   * `null` to cancel the export.
-   *
-   * ```tsx
-   * useTMDataGrid({
-   *   data,
-   *   columns,
-   *   // Mask the email column on the clipboard; files keep it.
-   *   mapExportData: (data, { target }) => {
-   *     const email = data.columnIds.indexOf("email");
-   *     if (target !== "clipboard" || email === -1) return data;
-   *     const rows = data.rows.map((row) =>
-   *       row.map((value, index) => (index === email ? "***" : value)),
-   *     );
-   *     return { ...data, rows };
-   *   },
-   * });
-   * ```
-   *
-   * Runs for Ctrl+C, the cell-range menu, the `TMDataGrid.Menu.Export*`
-   * items, `useTMDataGridExport` and `exportGrid`. Synchronous, because the
-   * clipboard write has to stay inside the user's gesture.
-   */
-  mapExportData?: TMDataGridExportDataMapper;
-  /**
-   * How the quick search (`TMDataGrid.Search`) matches. `"fuzzy"` - the
-   * default - forgives typos and skipped characters, and while it is the
-   * only thing narrowing the grid (no sort, no grouping) the rows order by
-   * match quality, best first. `"contains"` is plain substring matching.
-   * An explicit `globalFilterFn` overrides both.
-   */
-  quickSearchMode?: TMDataGridQuickSearchMode;
-  /**
-   * When the sorted order follows the values. `"live"` - the default -
-   * re-sorts on every change, so an edited row moves to its new place as
-   * soon as the edit lands. `"frozen"` sorts once, when the sort is applied,
-   * and holds that order through edits, refetches and filter changes, until
-   * it is taken again: a header click, any sort item in the column menu
-   * (Sort again included), the header's Sort again button, a grouping
-   * change, `setSorting` with a different sort, or `sortAgain()`.
-   * `setSorting` with the sort that is already set keeps the held order.
-   *
-   * Requires `getRowId`: rows are held by id. A row holds its place while it
-   * stays in `data`. No effect under `manualSorting`, where the server owns
-   * the order.
-   */
-  sortMode?: TMDataGridSortMode;
-  /**
-   * Highlights the matched text in cells while a contains-family column
-   * filter or the quick search is active. Default-rendered cells only - a
-   * column with its own `cell` renderer opts out by existing; a fuzzy
-   * typo-match with no contiguous occurrence shows no highlight. Off by
-   * default.
-   */
-  enableMatchHighlighting?: boolean;
-  /**
-   * How rows are selected. Defaults to `"checkbox"`.
-   *
-   * | Mode | Checkbox column | Row click |
-   * | ---- | --------------- | --------- |
-   * | `"checkbox"` | yes, multi-select | nothing |
-   * | `"row"` | no | multi-selects, Ctrl/Shift modifiers |
-   * | `"checkboxAndHighlight"` | yes, multi-select | highlights one row |
-   * | `"highlight"` | no | highlights one row, no selection at all |
-   *
-   * One option rather than two, so the combination that cannot work - a click
-   * that both toggles a multi-selection and moves the highlight - is not
-   * expressible.
-   *
-   * The first two write to TanStack's `rowSelection`. The highlight is separate
-   * state, which is what lets `"checkboxAndHighlight"` run both at once: tick
-   * rows for a bulk action, click one to open its detail panel. See
-   * `defaultHighlightedRowId` / `onHighlightedRowChange`.
-   *
-   * `enableRowSelection` still gates the selection half, predicate form
-   * included; under `"highlight"` there is nothing for it to gate.
-   */
-  selectionMode?: TMDataGridSelectionMode;
-  /**
-   * Give selected rows the highlight background. Defaults to `true` under
-   * `selectionMode: "row"`, where the highlight is the only feedback a click
-   * gives, and `false` under `"checkbox"`, where the box already shows it.
-   *
-   * The colour is the `--dg-row-selected-bg` CSS variable, so it can be changed
-   * without turning the flag on or off:
-   *
-   * ```tsx
-   * <TMDataGrid
-   *   {...grid}
-   *   style={{ "--dg-row-selected-bg": "var(--mantine-color-blue-0)" }}
-   * />
-   * ```
-   */
-  showSelectedBackground?: boolean;
-  /**
-   * The row that starts out highlighted, under a `selectionMode` that has a
-   * highlight. Read once on mount, like `initialState`.
-   *
-   * The grid never persists the highlighted row. Pair this with
-   * {@link onHighlightedRowChange} and keep it wherever it belongs - for a
-   * detail panel that is usually the route, which gets you a shareable link and
-   * a working back button as well as surviving a reload:
-   *
-   * ```tsx
-   * const { rowId } = useParams();
-   * useTMDataGrid({
-   *   selectionMode: "highlight",
-   *   defaultHighlightedRowId: rowId,
-   *   onHighlightedRowChange: (id) => navigate(id ? `/employees/${id}` : "/employees"),
-   * });
-   * ```
-   */
-  defaultHighlightedRowId?: string | null;
-  /**
-   * Called with the newly highlighted row id, or `null` when it is cleared.
-   * Fires for `ui.actions.setHighlightedRow` too, not only for clicks.
-   */
-  onHighlightedRowChange?: (rowId: string | null) => void;
-  /**
-   * How cells are selected. Defaults to `"none"`.
-   *
-   * | Mode | What it gives |
-   * | ---- | ------------- |
-   * | `"none"` | nothing; the body's tab stop stays on the row |
-   * | `"single"` | one focused cell, moved with the arrow keys |
-   * | `"range"` | as `"single"`, plus a rectangle of cells |
-   *
-   * Under either live mode:
-   *
-   * | Key | Moves to |
-   * | --- | --- |
-   * | Arrows | the neighbouring cell, clamped at the edges |
-   * | PageUp / PageDown | one viewport of rows |
-   * | Home / End | first / last cell of the row |
-   * | Ctrl+Home / Ctrl+End | first / last cell of the grid |
-   * | Enter or F2 | into the cell - the checkbox, link or button it holds |
-   * | Escape | back out to the cell |
-   * | Space | selects the row, as it does in row-selection mode |
-   *
-   * And under `"range"`, additionally:
-   *
-   * | Gesture | Does |
-   * | ------- | ---- |
-   * | Drag across cells | selects the rectangle they span |
-   * | Shift+click, Shift+arrows | extends the rectangle from its anchor |
-   * | Ctrl+C | copies it as tab-separated text - paste lands in Excel's cells |
-   * | Right-click inside it | offers the CSV export, headers optional |
-   *
-   * Off, nothing about the body changes. On, three things do: the body's tab
-   * stop moves from the row to a cell, so the whole grid is one Tab stop; the
-   * grid reports itself as a `grid` of `gridcell`s rather than a `table` of
-   * `cell`s, which is what tells a screen reader the arrow keys are live; and
-   * the cells take `data-focused` / `data-selected` for the ring and the tint.
-   *
-   * The state is `ui.state.focusedCell` and `ui.state.cellRange`, and moving it
-   * is `ui.actions.setFocusedCell` / `setCellRange` - so a consumer can put the
-   * keyboard on a cell, or follow it:
-   *
-   * ```tsx
-   * const grid = useTMDataGrid({
-   *   data,
-   *   columns,
-   *   cellSelection: "range",
-   *   onFocusedCellChange: (cell) => setStatus(cell?.columnId ?? ""),
-   * });
-   * ```
-   *
-   * Ids rather than a row/column index pair, so sorting, filtering and column
-   * reordering move the selection with the cells instead of leaving it over
-   * whatever slid into those positions.
-   */
-  cellSelection?: TMDataGridCellSelectionMode;
-  /**
-   * Called with the newly focused cell, or `null` when it is cleared. Fires for
-   * `ui.actions.setFocusedCell` too, not only for keys and clicks.
-   */
-  onFocusedCellChange?: (cell: TMDataGridCellPosition | null) => void;
-  /**
-   * Renders a panel underneath an expanded row, spanning every column. Setting
-   * it is what turns row details on.
-   *
-   * Which rows are open is TanStack's own `expanded` state, so opening one is
-   * `row.toggleExpanded()` from wherever suits - a chevron in a cell, a button
-   * in the context menu, a double-click:
-   *
-   * ```tsx
-   * const grid = useTMDataGrid({
-   *   data,
-   *   columns,
-   *   renderDetails: ({ row }) => <EmployeeCard employee={row.original} />,
-   * });
-   * ```
-   *
-   * The panel is as tall as what it renders - see {@link renderDetailsEstHeight}
-   * for what the virtualizer assumes before it has measured one.
-   *
-   * Group rows are left out: expanding one opens its children, and a panel there
-   * would be about an arbitrary one of them. The same reason they sit out
-   * `onRowClick`.
-   *
-   * Row details and `selectionMode: "highlight"` are two answers to the same
-   * question. Details keep the record in place and in context, which suits a few
-   * fields or an action strip; a highlight-driven side panel has room for more
-   * and survives scrolling. Nothing stops a grid from doing both.
-   */
-  renderDetails?: TMDataGridDetailsRenderer<TData>;
-  /**
-   * What the virtualizer assumes an unmeasured detail panel is worth, in px.
-   * Defaults to 160.
-   *
-   * An estimate, not a height: every mounted row is measured, so the real one
-   * takes over as soon as the panel is on screen. It keeps the scrollbar
-   * accurate for panels that open off screen, such as restored `expanded`
-   * state. An approximate value is enough.
-   */
-  renderDetailsEstHeight?: number;
-  /**
-   * Which edge the details lane sits on. Defaults to `"left"`.
-   *
-   * `"left"` pins the chevron after the row number, checkbox and tree lanes,
-   * before every column of yours. `"right"` pins it after every column of
-   * yours, inside the edit lane, so the chevron closes the row the way an
-   * accordion's does. On either edge it stays a structural lane: the user
-   * cannot move, hide or unpin it.
-   */
-  detailsColumnPosition?: "left" | "right";
-  /**
-   * Rows the virtualizer keeps mounted above and below the viewport. Defaults
-   * to 6.
-   *
-   * Raise it to trade memory for a scroll that stays painted - fast wheel or
-   * touch flings can outrun the virtualizer and flash blank rows, and a larger
-   * buffer covers the gap. Lower it when rows are expensive to render.
-   */
-  overscan?: number;
-};
+    /**
+     * Restore and persist table state across mounts. Two storage keys, because
+     * the two kinds of state have different lifetimes, and a URL search param
+     * for the data slices a link should carry - see {@link TMDataGridPersistence}.
+     *
+     * Keep the object referentially stable (module scope or `useMemo`); it is a
+     * dependency of the subscription that writes back.
+     */
+    persist?: TMDataGridPersistence;
+    /**
+     * Saved views: named layouts the user switches between, from presets in
+     * code and, unless `allowUserViews` is `false`, views of their own kept in
+     * `store`. A view holds the settings slices only - visibility, widths,
+     * order, pinning and grouping. See {@link TMDataGridViewsOptions}.
+     *
+     * The `store` must be referentially stable; it is a dependency of the load.
+     */
+    views?: TMDataGridViewsOptions;
+    /**
+     * Overrides for the grid's strings - menu items, panels, the pager, and
+     * every `aria-label`. Any subset, merged over the English defaults; a full
+     * Swedish dictionary ships as `TMDATAGRID_LABELS_SV`.
+     *
+     * ```tsx
+     * useTMDataGrid({ data, columns, labels: TMDATAGRID_LABELS_SV });
+     * useTMDataGrid({ data, columns, labels: { noResults: "Inga rader" } });
+     * ```
+     *
+     * Keep the object referentially stable (module scope or `useMemo`) - the
+     * chrome re-renders when its identity changes.
+     */
+    labels?: TMDataGridLabelsOverride;
+    /**
+     * Header drag-and-drop and the move items in the column menu. Defaults to
+     * `true`.
+     *
+     * The one feature switch the grid defines itself: TanStack's
+     * `columnOrderingFeature` ships state and APIs but no `enable` option, since
+     * reordering is entirely a matter of interface.
+     */
+    enableColumnOrdering?: boolean;
+    /**
+     * Client-side pagination and the built-in `TMDataGrid.Footer` pager.
+     * Defaults to `false`: the grid renders every filtered row and relies on
+     * virtualization.
+     *
+     * The second grid-defined switch (TanStack defines no `enablePagination`
+     * option). `manualPagination: true` implies it - a server-paged grid needs
+     * no extra flag.
+     */
+    enablePagination?: boolean;
+    /**
+     * Sends the grid back to the first page whenever the query changes - a
+     * column filter, the quick search, the sort or the grouping. On by
+     * default. TanStack's own `autoResetPageIndex` is switched off by the
+     * grid: it fires on any change to the `data` array, which under
+     * `editing.draft` is every commit.
+     *
+     * Server-side, `pageIndex` is a position in a result set the grid does not
+     * own: narrowing the query leaves it pointing past the last page, and the
+     * next request comes back empty. The reset is applied in the same event as
+     * the change, so one request goes out, for the first page of the new query.
+     */
+    resetPageOnQueryChange?: boolean;
+    /**
+     * The row-number gutter: a generated lane, outermost left, numbering the
+     * rows of the current view - sorted, filtered, continuing across pages,
+     * with group rows unnumbered. Off by default.
+     */
+    enableRowNumbers?: boolean;
+    /**
+     * Where the grid puts its filter controls - a popup over the rows, a sidebar
+     * beside them, controls in the header row, or nowhere at all so you place
+     * `TMDataGrid.FilterPanel` yourself.
+     *
+     * ```tsx
+     * useTMDataGrid({ data, columns, filters: { surface: "sidebar", inHeader: true } });
+     * ```
+     *
+     * Defaults to `{ surface: "popup" }` - the floating panel the grid has
+     * always shown. See {@link TMDataGridFiltersOptions}.
+     *
+     * Read field by field, so a literal is fine here - unlike `labels` or
+     * `persist`, this one does not have to be referentially stable.
+     */
+    filters?: TMDataGridFiltersOptions;
+    /**
+     * How the grid exports: the file format, the file name and whether the
+     * column labels go in as the first row. Defaults to `csvExcelFormat()`,
+     * `"export"` and `true`. See {@link TMDataGridExportOptions}.
+     *
+     * ```tsx
+     * useTMDataGrid({ data, columns, exportOptions: { format: csvFormat(), fileName: "employees" } });
+     * ```
+     *
+     * Read field by field like `filters`, so a literal is fine. A `format`
+     * built inline is rebuilt every render, which costs nothing but a small
+     * object; keep it at module scope when that bothers you.
+     */
+    exportOptions?: TMDataGridExportOptions;
+    /**
+     * Whether the grid offers file downloads. `false` takes the download item
+     * and its Include headers toggle out of the cell-range menu, renders
+     * `TMDataGrid.Menu.Export` and `TMDataGrid.Menu.ExportSelected` as nothing,
+     * and makes `useTMDataGridExport`'s `exportAll` and `exportSelected` do
+     * nothing, with its `canDownload` reporting `false`. Defaults to `true`.
+     *
+     * Copy and Ctrl+C are not affected; {@link mapExportData} changes or
+     * cancels them. `exportGrid` still downloads, since only your own code
+     * calls it.
+     */
+    enableDownload?: boolean;
+    /**
+     * Changes what every export of the grid writes, to a file or the clipboard.
+     * Receives the data after `meta.exportValue` and before the format, with
+     * `{ target, rows }` naming the export, and returns the data to write, or
+     * `null` to cancel the export.
+     *
+     * ```tsx
+     * useTMDataGrid({
+     *   data,
+     *   columns,
+     *   // Mask the email column on the clipboard; files keep it.
+     *   mapExportData: (data, { target }) => {
+     *     const email = data.columnIds.indexOf("email");
+     *     if (target !== "clipboard" || email === -1) return data;
+     *     const rows = data.rows.map((row) =>
+     *       row.map((value, index) => (index === email ? "***" : value)),
+     *     );
+     *     return { ...data, rows };
+     *   },
+     * });
+     * ```
+     *
+     * Runs for Ctrl+C, the cell-range menu, the `TMDataGrid.Menu.Export*`
+     * items, `useTMDataGridExport` and `exportGrid`. Synchronous, because the
+     * clipboard write has to stay inside the user's gesture.
+     */
+    mapExportData?: TMDataGridExportDataMapper;
+    /**
+     * How the quick search (`TMDataGrid.Search`) matches. `"fuzzy"` - the
+     * default - forgives typos and skipped characters, and while it is the
+     * only thing narrowing the grid (no sort, no grouping) the rows order by
+     * match quality, best first. `"contains"` is plain substring matching.
+     * An explicit `globalFilterFn` overrides both.
+     */
+    quickSearchMode?: TMDataGridQuickSearchMode;
+    /**
+     * When the sorted order follows the values. `"live"` - the default -
+     * re-sorts on every change, so an edited row moves to its new place as
+     * soon as the edit lands. `"frozen"` sorts once, when the sort is applied,
+     * and holds that order through edits, refetches and filter changes, until
+     * it is taken again: a header click, any sort item in the column menu
+     * (Sort again included), the header's Sort again button, a grouping
+     * change, `setSorting` with a different sort, or `sortAgain()`.
+     * `setSorting` with the sort that is already set keeps the held order.
+     *
+     * Requires `getRowId`: rows are held by id. A row holds its place while it
+     * stays in `data`. No effect under `manualSorting`, where the server owns
+     * the order.
+     */
+    sortMode?: TMDataGridSortMode;
+    /**
+     * Highlights the matched text in cells while a contains-family column
+     * filter or the quick search is active. Default-rendered cells only - a
+     * column with its own `cell` renderer opts out by existing; a fuzzy
+     * typo-match with no contiguous occurrence shows no highlight. Off by
+     * default.
+     */
+    enableMatchHighlighting?: boolean;
+    /**
+     * How rows are selected. Defaults to `"checkbox"`.
+     *
+     * | Mode | Checkbox column | Row click |
+     * | ---- | --------------- | --------- |
+     * | `"checkbox"` | yes, multi-select | nothing |
+     * | `"row"` | no | multi-selects, Ctrl/Shift modifiers |
+     * | `"checkboxAndHighlight"` | yes, multi-select | highlights one row |
+     * | `"highlight"` | no | highlights one row, no selection at all |
+     *
+     * One option rather than two, so the combination that cannot work - a click
+     * that both toggles a multi-selection and moves the highlight - is not
+     * expressible.
+     *
+     * The first two write to TanStack's `rowSelection`. The highlight is separate
+     * state, which is what lets `"checkboxAndHighlight"` run both at once: tick
+     * rows for a bulk action, click one to open its detail panel. See
+     * `defaultHighlightedRowId` / `onHighlightedRowChange`.
+     *
+     * `enableRowSelection` still gates the selection half, predicate form
+     * included; under `"highlight"` there is nothing for it to gate.
+     */
+    selectionMode?: TMDataGridSelectionMode;
+    /**
+     * Give selected rows the highlight background. Defaults to `true` under
+     * `selectionMode: "row"`, where the highlight is the only feedback a click
+     * gives, and `false` under `"checkbox"`, where the box already shows it.
+     *
+     * The colour is the `--dg-row-selected-bg` CSS variable, so it can be changed
+     * without turning the flag on or off:
+     *
+     * ```tsx
+     * <TMDataGrid
+     *   {...grid}
+     *   style={{ "--dg-row-selected-bg": "var(--mantine-color-blue-0)" }}
+     * />
+     * ```
+     */
+    showSelectedBackground?: boolean;
+    /**
+     * The row that starts out highlighted, under a `selectionMode` that has a
+     * highlight. Read once on mount, like `initialState`.
+     *
+     * The grid never persists the highlighted row. Pair this with
+     * {@link onHighlightedRowChange} and keep it wherever it belongs - for a
+     * detail panel that is usually the route, which gets you a shareable link and
+     * a working back button as well as surviving a reload:
+     *
+     * ```tsx
+     * const { rowId } = useParams();
+     * useTMDataGrid({
+     *   selectionMode: "highlight",
+     *   defaultHighlightedRowId: rowId,
+     *   onHighlightedRowChange: (id) => navigate(id ? `/employees/${id}` : "/employees"),
+     * });
+     * ```
+     */
+    defaultHighlightedRowId?: string | null;
+    /**
+     * Called with the newly highlighted row id, or `null` when it is cleared.
+     * Fires for `ui.actions.setHighlightedRow` too, not only for clicks.
+     */
+    onHighlightedRowChange?: (rowId: string | null) => void;
+    /**
+     * How cells are selected. Defaults to `"none"`.
+     *
+     * | Mode | What it gives |
+     * | ---- | ------------- |
+     * | `"none"` | nothing; the body's tab stop stays on the row |
+     * | `"single"` | one focused cell, moved with the arrow keys |
+     * | `"range"` | as `"single"`, plus a rectangle of cells |
+     *
+     * Under either live mode:
+     *
+     * | Key | Moves to |
+     * | --- | --- |
+     * | Arrows | the neighbouring cell, clamped at the edges |
+     * | PageUp / PageDown | one viewport of rows |
+     * | Home / End | first / last cell of the row |
+     * | Ctrl+Home / Ctrl+End | first / last cell of the grid |
+     * | Enter or F2 | into the cell - the checkbox, link or button it holds |
+     * | Escape | back out to the cell |
+     * | Space | selects the row, as it does in row-selection mode |
+     *
+     * And under `"range"`, additionally:
+     *
+     * | Gesture | Does |
+     * | ------- | ---- |
+     * | Drag across cells | selects the rectangle they span |
+     * | Shift+click, Shift+arrows | extends the rectangle from its anchor |
+     * | Ctrl+C | copies it as tab-separated text - paste lands in Excel's cells |
+     * | Right-click inside it | offers the CSV export, headers optional |
+     *
+     * Off, nothing about the body changes. On, three things do: the body's tab
+     * stop moves from the row to a cell, so the whole grid is one Tab stop; the
+     * grid reports itself as a `grid` of `gridcell`s rather than a `table` of
+     * `cell`s, which is what tells a screen reader the arrow keys are live; and
+     * the cells take `data-focused` / `data-selected` for the ring and the tint.
+     *
+     * The state is `ui.state.focusedCell` and `ui.state.cellRange`, and moving it
+     * is `ui.actions.setFocusedCell` / `setCellRange` - so a consumer can put the
+     * keyboard on a cell, or follow it:
+     *
+     * ```tsx
+     * const grid = useTMDataGrid({
+     *   data,
+     *   columns,
+     *   cellSelection: "range",
+     *   onFocusedCellChange: (cell) => setStatus(cell?.columnId ?? ""),
+     * });
+     * ```
+     *
+     * Ids rather than a row/column index pair, so sorting, filtering and column
+     * reordering move the selection with the cells instead of leaving it over
+     * whatever slid into those positions.
+     */
+    cellSelection?: TMDataGridCellSelectionMode;
+    /**
+     * Called with the newly focused cell, or `null` when it is cleared. Fires for
+     * `ui.actions.setFocusedCell` too, not only for keys and clicks.
+     */
+    onFocusedCellChange?: (cell: TMDataGridCellPosition | null) => void;
+    /**
+     * Renders a panel underneath an expanded row, spanning every column. Setting
+     * it is what turns row details on.
+     *
+     * Which rows are open is TanStack's own `expanded` state, so opening one is
+     * `row.toggleExpanded()` from wherever suits - a chevron in a cell, a button
+     * in the context menu, a double-click:
+     *
+     * ```tsx
+     * const grid = useTMDataGrid({
+     *   data,
+     *   columns,
+     *   renderDetails: ({ row }) => <EmployeeCard employee={row.original} />,
+     * });
+     * ```
+     *
+     * The panel is as tall as what it renders - see {@link renderDetailsEstHeight}
+     * for what the virtualizer assumes before it has measured one.
+     *
+     * Group rows are left out: expanding one opens its children, and a panel there
+     * would be about an arbitrary one of them. The same reason they sit out
+     * `onRowClick`.
+     *
+     * Row details and `selectionMode: "highlight"` are two answers to the same
+     * question. Details keep the record in place and in context, which suits a few
+     * fields or an action strip; a highlight-driven side panel has room for more
+     * and survives scrolling. Nothing stops a grid from doing both.
+     */
+    renderDetails?: TMDataGridDetailsRenderer<TData>;
+    /**
+     * What the virtualizer assumes an unmeasured detail panel is worth, in px.
+     * Defaults to 160.
+     *
+     * An estimate, not a height: every mounted row is measured, so the real one
+     * takes over as soon as the panel is on screen. It keeps the scrollbar
+     * accurate for panels that open off screen, such as restored `expanded`
+     * state. An approximate value is enough.
+     */
+    renderDetailsEstHeight?: number;
+    /**
+     * Which edge the details lane sits on. Defaults to `"left"`.
+     *
+     * `"left"` pins the chevron after the row number, checkbox and tree lanes,
+     * before every column of yours. `"right"` pins it after every column of
+     * yours, inside the edit lane, so the chevron closes the row the way an
+     * accordion's does. On either edge it stays a structural lane: the user
+     * cannot move, hide or unpin it.
+     */
+    detailsColumnPosition?: "left" | "right";
+    /**
+     * Rows the virtualizer keeps mounted above and below the viewport. Defaults
+     * to 6.
+     *
+     * Raise it to trade memory for a scroll that stays painted - fast wheel or
+     * touch flings can outrun the virtualizer and flash blank rows, and a larger
+     * buffer covers the gap. Lower it when rows are expensive to render.
+     */
+    overscan?: number;
+  };
 
 type TMDataGridColumnDef<TData extends RowData> = ColumnDef<
   TMDataGridFeatures,
@@ -1542,7 +1539,9 @@ export function useTMDataGrid<TData extends RowData>({
       ...(selectColumnEnabled
         ? [createSelectColumn<TData>(selectColumnLabel)]
         : []),
-      ...(groupColumnEnabled ? [createGroupColumn<TData>(groupColumnLabel)] : []),
+      ...(groupColumnEnabled
+        ? [createGroupColumn<TData>(groupColumnLabel)]
+        : []),
       ...(detailsColumnPosition === "left" ? detailsColumn : []),
       ...base,
       ...(detailsColumnPosition === "right" ? detailsColumn : []),
@@ -1661,9 +1660,8 @@ export function useTMDataGrid<TData extends RowData>({
   // identity, so a `state` object built in the consumer's render body would
   // cause an infinite render loop. Unchanged slices are forwarded with the
   // previous render's identity instead - see controlledState.ts.
-  const controlledStateRef = useRef<Partial<TableState<TMDataGridFeatures>>>(
-    undefined,
-  );
+  const controlledStateRef =
+    useRef<Partial<TableState<TMDataGridFeatures>>>(undefined);
   // Exception: the grouping workaround below republishes `columnOrder` and
   // `columnVisibility` with unchanged contents and a new identity to repair
   // table-core's missing memo deps - the exact write stabilization cancels.
@@ -1831,148 +1829,153 @@ export function useTMDataGrid<TData extends RowData>({
   // the render body, and publishing from there makes React warn about the
   // consumer's component - see controlledStateSync.ts.
   beginControlledStateSync();
-  const table = useTable({
-    // The grid paints a running drag itself, one style write per frame - see
-    // the resize preview in TMDataGridTable - and takes the width into state
-    // once, when the pointer is released. `"onChange"` publishes a width on
-    // every pointer move instead, which re-renders the grid for each of them.
-    columnResizeMode: "onEnd",
-    // TanStack resets both whenever the `data` array's identity changes, and
-    // the rows as shown are a new array on every draft commit (see `shown`),
-    // so a commit on page 3 would land on page 1 with every details panel
-    // closed. Off here; the page reset the grid does want - on a query
-    // change - is its own, below. A consumer's explicit option still wins.
-    autoResetExpanded: false,
-    autoResetPageIndex: false,
-    enableSorting: true,
-    enableColumnResizing: true,
-    // The quick search's matcher. Fuzzy by default (Q4); `"contains"` keeps
-    // plain substring matching, and an explicit `globalFilterFn` in the
-    // options below overrides both - which also switches the rank ordering
-    // off, since it keys off this exact name.
-    globalFilterFn:
-      options.quickSearchMode === "contains"
-        ? "includesString"
-        : "tmDataGridFuzzy",
-    // Which columns the quick search reads - TanStack's rule, computed once
-    // per data change instead of once per call. See columnCanQuickSearch.
-    getColumnCanGlobalFilter: columnCanQuickSearch,
-    // Grouping by a column takes it out of the grid, the way AG Grid does it:
-    // its values have moved into the tree column, so leaving it in place would
-    // show every row the same value it was grouped under. Overridable - pass
-    // `"reorder"` to keep the column and have it moved to the front instead.
-    groupedColumnMode: "remove",
-    ...options,
-    // The query slices, wrapped so a change also takes the grid back to the
-    // first page - see pageReset.ts. Spread conditionally: the keys carry a
-    // `makeStateUpdater` default, and an explicit `undefined` would overwrite
-    // it and leave the slice unwritable.
-    ...(resetPage
-      ? {
-          onColumnFiltersChange: withPageReset(
-            "columnFilters",
-            options.onColumnFiltersChange as never,
-            getQueryTable,
-          ) as TableOptions<
-            TMDataGridFeatures,
-            TData
-          >["onColumnFiltersChange"],
-          onGlobalFilterChange: withPageReset(
-            "globalFilter",
-            options.onGlobalFilterChange as never,
-            getQueryTable,
-          ) as TableOptions<TMDataGridFeatures, TData>["onGlobalFilterChange"],
-          onSortingChange: withPageReset(
-            "sorting",
-            options.onSortingChange as never,
-            getQueryTable,
-          ) as TableOptions<TMDataGridFeatures, TData>["onSortingChange"],
-          onGroupingChange: withPageReset(
-            "grouping",
-            options.onGroupingChange as never,
-            getQueryTable,
-          ) as TableOptions<TMDataGridFeatures, TData>["onGroupingChange"],
-        }
-      : {}),
-    defaultColumn,
-    // The rows as shown - see `shown` above. The consumer's own array passes
-    // through untouched while nothing is committed.
-    data: shown.rows,
-    getRowId: shownGetRowId,
-    // Row details ride on `expanded`, the same state the tree uses - but a data
-    // row answers `getCanExpand()` false, since TanStack's fallback is
-    // `subRows.length > 0`, so under `renderDetails` every row can expand.
-    // A consumer's own predicate decides the data rows, never a group row:
-    // TanStack builds a group row on its first child's record, and since 9.2
-    // `toggleExpanded` refuses a row that cannot expand - so a predicate
-    // rejecting that record would leave the group's chevron dead.
-    ...(renderDetails !== undefined || options.getRowCanExpand !== undefined
-      ? {
-          getRowCanExpand: (row: Row<TMDataGridFeatures, TData>) =>
-            row.getIsGrouped() ||
-            (options.getRowCanExpand?.(row) ?? true),
-        }
-      : {}),
-    // Always a predicate, never the passthrough: TanStack defaults the option
-    // to `true` once the feature is registered, and the grid's default is off.
-    // Group rows never pin - TanStack builds one on its first child's record,
-    // so a pinned group would drag an arbitrary data row's identity to the
-    // edge. The consumer's own predicate still decides the data rows.
-    enableRowPinning: (row: Row<TMDataGridFeatures, TData>) =>
-      !row.getIsGrouped() &&
-      (typeof options.enableRowPinning === "function"
-        ? options.enableRowPinning(row)
-        : options.enableRowPinning === true),
-    // A deletion-marked row is not selectable: it is on its way out, and a
-    // bulk action over the selection must not see it. TanStack reads the
-    // predicate on every call, so the mark is checked live against the
-    // engine. Only under `editing.draft`, the one place marks exist; the
-    // consumer's own option keeps the final say, predicate form included.
-    ...(editDraft
-      ? {
-          enableRowSelection: (row: Row<TMDataGridFeatures, TData>) =>
-            !engine.isRowDeleted(row.id) &&
-            (typeof options.enableRowSelection === "function"
-              ? options.enableRowSelection(row)
-              : options.enableRowSelection !== false),
-        }
-      : {}),
-    features: tmDataGridFeatures,
-    columns: columns as TableOptions<TMDataGridFeatures, TData>["columns"],
-    // The stabilized controlled state; `undefined` when nothing is controlled.
-    state: controlledState,
-    initialState: {
-      ...options.initialState,
-      ...startingViewState,
-      ...persistedState,
-      columnVisibility: {
-        ...withoutControlColumnVisibility({
-          ...options.initialState?.columnVisibility,
-          ...startingViewState.columnVisibility,
-          ...persistedState.columnVisibility,
+  const table = useTable(
+    {
+      // The grid paints a running drag itself, one style write per frame - see
+      // the resize preview in TMDataGridTable - and takes the width into state
+      // once, when the pointer is released. `"onChange"` publishes a width on
+      // every pointer move instead, which re-renders the grid for each of them.
+      columnResizeMode: "onEnd",
+      // TanStack resets both whenever the `data` array's identity changes, and
+      // the rows as shown are a new array on every draft commit (see `shown`),
+      // so a commit on page 3 would land on page 1 with every details panel
+      // closed. Off here; the page reset the grid does want - on a query
+      // change - is its own, below. A consumer's explicit option still wins.
+      autoResetExpanded: false,
+      autoResetPageIndex: false,
+      enableSorting: true,
+      enableColumnResizing: true,
+      // The quick search's matcher. Fuzzy by default (Q4); `"contains"` keeps
+      // plain substring matching, and an explicit `globalFilterFn` in the
+      // options below overrides both - which also switches the rank ordering
+      // off, since it keys off this exact name.
+      globalFilterFn:
+        options.quickSearchMode === "contains"
+          ? "includesString"
+          : "tmDataGridFuzzy",
+      // Which columns the quick search reads - TanStack's rule, computed once
+      // per data change instead of once per call. See columnCanQuickSearch.
+      getColumnCanGlobalFilter: columnCanQuickSearch,
+      // Grouping by a column takes it out of the grid, the way AG Grid does it:
+      // its values have moved into the tree column, so leaving it in place would
+      // show every row the same value it was grouped under. Overridable - pass
+      // `"reorder"` to keep the column and have it moved to the front instead.
+      groupedColumnMode: "remove",
+      ...options,
+      // The query slices, wrapped so a change also takes the grid back to the
+      // first page - see pageReset.ts. Spread conditionally: the keys carry a
+      // `makeStateUpdater` default, and an explicit `undefined` would overwrite
+      // it and leave the slice unwritable.
+      ...(resetPage
+        ? {
+            onColumnFiltersChange: withPageReset(
+              "columnFilters",
+              options.onColumnFiltersChange as never,
+              getQueryTable,
+            ) as TableOptions<
+              TMDataGridFeatures,
+              TData
+            >["onColumnFiltersChange"],
+            onGlobalFilterChange: withPageReset(
+              "globalFilter",
+              options.onGlobalFilterChange as never,
+              getQueryTable,
+            ) as TableOptions<
+              TMDataGridFeatures,
+              TData
+            >["onGlobalFilterChange"],
+            onSortingChange: withPageReset(
+              "sorting",
+              options.onSortingChange as never,
+              getQueryTable,
+            ) as TableOptions<TMDataGridFeatures, TData>["onSortingChange"],
+            onGroupingChange: withPageReset(
+              "grouping",
+              options.onGroupingChange as never,
+              getQueryTable,
+            ) as TableOptions<TMDataGridFeatures, TData>["onGroupingChange"],
+          }
+        : {}),
+      defaultColumn,
+      // The rows as shown - see `shown` above. The consumer's own array passes
+      // through untouched while nothing is committed.
+      data: shown.rows,
+      getRowId: shownGetRowId,
+      // Row details ride on `expanded`, the same state the tree uses - but a data
+      // row answers `getCanExpand()` false, since TanStack's fallback is
+      // `subRows.length > 0`, so under `renderDetails` every row can expand.
+      // A consumer's own predicate decides the data rows, never a group row:
+      // TanStack builds a group row on its first child's record, and since 9.2
+      // `toggleExpanded` refuses a row that cannot expand - so a predicate
+      // rejecting that record would leave the group's chevron dead.
+      ...(renderDetails !== undefined || options.getRowCanExpand !== undefined
+        ? {
+            getRowCanExpand: (row: Row<TMDataGridFeatures, TData>) =>
+              row.getIsGrouped() || (options.getRowCanExpand?.(row) ?? true),
+          }
+        : {}),
+      // Always a predicate, never the passthrough: TanStack defaults the option
+      // to `true` once the feature is registered, and the grid's default is off.
+      // Group rows never pin - TanStack builds one on its first child's record,
+      // so a pinned group would drag an arbitrary data row's identity to the
+      // edge. The consumer's own predicate still decides the data rows.
+      enableRowPinning: (row: Row<TMDataGridFeatures, TData>) =>
+        !row.getIsGrouped() &&
+        (typeof options.enableRowPinning === "function"
+          ? options.enableRowPinning(row)
+          : options.enableRowPinning === true),
+      // A deletion-marked row is not selectable: it is on its way out, and a
+      // bulk action over the selection must not see it. TanStack reads the
+      // predicate on every call, so the mark is checked live against the
+      // engine. Only under `editing.draft`, the one place marks exist; the
+      // consumer's own option keeps the final say, predicate form included.
+      ...(editDraft
+        ? {
+            enableRowSelection: (row: Row<TMDataGridFeatures, TData>) =>
+              !engine.isRowDeleted(row.id) &&
+              (typeof options.enableRowSelection === "function"
+                ? options.enableRowSelection(row)
+                : options.enableRowSelection !== false),
+          }
+        : {}),
+      features: tmDataGridFeatures,
+      columns: columns as TableOptions<TMDataGridFeatures, TData>["columns"],
+      // The stabilized controlled state; `undefined` when nothing is controlled.
+      state: controlledState,
+      initialState: {
+        ...options.initialState,
+        ...startingViewState,
+        ...persistedState,
+        columnVisibility: {
+          ...withoutControlColumnVisibility({
+            ...options.initialState?.columnVisibility,
+            ...startingViewState.columnVisibility,
+            ...persistedState.columnVisibility,
+          }),
+          // Last word, because the tree column's visibility is not a user setting
+          // - it tracks the grouping state. See the effect below.
+          ...(groupColumnEnabled
+            ? { [GROUP_COLUMN_ID]: initialGrouping.length > 0 }
+            : {}),
+        },
+        columnPinning: structuralPinning({
+          start:
+            persistedState.columnPinning?.start ??
+            startingViewState.columnPinning?.start ??
+            options.initialState?.columnPinning?.start,
+          end:
+            persistedState.columnPinning?.end ??
+            startingViewState.columnPinning?.end ??
+            options.initialState?.columnPinning?.end,
         }),
-        // Last word, because the tree column's visibility is not a user setting
-        // - it tracks the grouping state. See the effect below.
-        ...(groupColumnEnabled
-          ? { [GROUP_COLUMN_ID]: initialGrouping.length > 0 }
-          : {}),
-      },
-      columnPinning: structuralPinning({
-        start:
-          persistedState.columnPinning?.start ??
-          startingViewState.columnPinning?.start ??
-          options.initialState?.columnPinning?.start,
-        end:
-          persistedState.columnPinning?.end ??
-          startingViewState.columnPinning?.end ??
-          options.initialState?.columnPinning?.end,
-      }),
-      pagination: {
-        ...startingPagination(options.initialState),
-        ...persistedState.pagination,
+        pagination: {
+          ...startingPagination(options.initialState),
+          ...persistedState.pagination,
+        },
       },
     },
-  }, selectSettledState);
+    selectSettledState,
+  );
   endControlledStateSync();
   tableRef.current = table as unknown as TMDataGridTable<TData>;
   deferControlledStateSyncPublishes(table.store);
@@ -1983,8 +1986,8 @@ export function useTMDataGrid<TData extends RowData>({
     editMode: editMode ?? "cell",
     draft: editDraft,
     rowValidators: editing?.rowValidators,
-    tableValidators: editing?.tableValidators as
-      TMDataGridEditEngineContext["tableValidators"],
+    tableValidators:
+      editing?.tableValidators as TMDataGridEditEngineContext["tableValidators"],
     editableColumnIds: editing?.columns,
     isRowEditable:
       editing?.isRowEditable as TMDataGridEditEngineContext["isRowEditable"],
@@ -2124,7 +2127,7 @@ export function useTMDataGrid<TData extends RowData>({
     // `undefined`.
     if (
       table.store.state.columnVisibility?.[GROUP_COLUMN_ID] !==
-      (previousGrouping.length > 0)
+      previousGrouping.length > 0
     ) {
       table.setColumnVisibility((old) => ({
         ...old,
@@ -2204,7 +2207,10 @@ export function useTMDataGrid<TData extends RowData>({
     const subscription = tableStore.subscribe((state) => {
       pending = state;
       if (timeout !== undefined) clearTimeout(timeout);
-      timeout = setTimeout(() => flush({ writeUrl: true }), PERSIST_DEBOUNCE_MS);
+      timeout = setTimeout(
+        () => flush({ writeUrl: true }),
+        PERSIST_DEBOUNCE_MS,
+      );
     });
 
     return () => {

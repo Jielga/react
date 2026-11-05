@@ -16,7 +16,13 @@ export function SearchButton() {
       >
         Search the docs
       </Button>
-      <ActionIcon variant="default" size="lg" hiddenFrom="sm" onClick={spotlight.open} aria-label="Search the docs">
+      <ActionIcon
+        variant="default"
+        size="lg"
+        hiddenFrom="sm"
+        onClick={spotlight.open}
+        aria-label="Search the docs"
+      >
         <IconSearch size={18} stroke={1.5} />
       </ActionIcon>
     </>

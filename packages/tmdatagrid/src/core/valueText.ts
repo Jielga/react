@@ -24,7 +24,11 @@ export type TMDataGridValueTextOptions = {
  */
 export function formatValueText(
   value: unknown,
-  { type, options, labels = BOOLEAN_LABELS_EN }: TMDataGridValueTextOptions = {},
+  {
+    type,
+    options,
+    labels = BOOLEAN_LABELS_EN,
+  }: TMDataGridValueTextOptions = {},
 ): string {
   if (Array.isArray(value)) {
     return value

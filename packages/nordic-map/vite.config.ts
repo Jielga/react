@@ -30,14 +30,14 @@ function emitLayerStylesheet(): Plugin {
  * second copy of the runtime. The runtime dependencies stay external too, so
  * the consumer's bundler deduplicates them.
  */
-const EXTERNAL = [
-  /^react($|\/)/,
-  /^react-dom($|\/)/,
-  /^d3-geo$/,
-];
+const EXTERNAL = [/^react($|\/)/, /^react-dom($|\/)/, /^d3-geo$/];
 
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), emitLayerStylesheet()],
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    emitLayerStylesheet(),
+  ],
   // Asset URLs relative to the module that names them, so they resolve
   // wherever the consumer's bundler puts the package.
   base: "./",
@@ -64,7 +64,11 @@ export default defineConfig({
         // which the consumer's bundler copies in turn, so the data loads from
         // their own origin.
         assetFileNames: (asset) => {
-          if (asset.names.some((name) => name.startsWith("sweden-") && name.endsWith(".json"))) {
+          if (
+            asset.names.some(
+              (name) => name.startsWith("sweden-") && name.endsWith(".json"),
+            )
+          ) {
             return "regions/[name][extname]";
           }
           return asset.names.some((name) => name.endsWith(".json"))

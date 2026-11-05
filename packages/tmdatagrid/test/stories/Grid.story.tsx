@@ -24,13 +24,7 @@ const FRAME_STYLE: CSSProperties = {
   height: 400,
 };
 
-function Frame({
-  width,
-  children,
-}: {
-  width?: number;
-  children: ReactNode;
-}) {
+function Frame({ width, children }: { width?: number; children: ReactNode }) {
   return <div style={{ ...FRAME_STYLE, width }}>{children}</div>;
 }
 
@@ -106,7 +100,10 @@ const pinnedColumns = pinnedHelper.columns([
   pinnedHelper.accessor("team", { header: "Team", minSize: COLUMN_WIDTH }),
   pinnedHelper.accessor("role", { header: "Role", minSize: COLUMN_WIDTH }),
   pinnedHelper.accessor("office", { header: "Office", minSize: COLUMN_WIDTH }),
-  pinnedHelper.accessor("country", { header: "Country", minSize: COLUMN_WIDTH }),
+  pinnedHelper.accessor("country", {
+    header: "Country",
+    minSize: COLUMN_WIDTH,
+  }),
   pinnedHelper.accessor("status", { header: "Status", minSize: COLUMN_WIDTH }),
 ]);
 

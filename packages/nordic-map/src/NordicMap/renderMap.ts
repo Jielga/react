@@ -37,10 +37,28 @@ const roadClassStyle: Record<RoadClass, { width: number; opacity: number }> = {
   regional: { width: 0.6, opacity: 0.55 },
 };
 
-const placeStyle: Record<PlaceClass, { font: string; opacity: number; dot: number; height: number }> = {
-  city: { font: "600 12px system-ui, sans-serif", opacity: 0.9, dot: 3, height: 15 },
-  town: { font: "500 12px system-ui, sans-serif", opacity: 0.8, dot: 2.5, height: 14 },
-  village: { font: "400 11px system-ui, sans-serif", opacity: 0.7, dot: 2, height: 13 },
+const placeStyle: Record<
+  PlaceClass,
+  { font: string; opacity: number; dot: number; height: number }
+> = {
+  city: {
+    font: "600 12px system-ui, sans-serif",
+    opacity: 0.9,
+    dot: 3,
+    height: 15,
+  },
+  town: {
+    font: "500 12px system-ui, sans-serif",
+    opacity: 0.8,
+    dot: 2.5,
+    height: 14,
+  },
+  village: {
+    font: "400 11px system-ui, sans-serif",
+    opacity: 0.7,
+    dot: 2,
+    height: 13,
+  },
 };
 
 const PIN_LABEL_FONT = "700 12px system-ui, sans-serif";
@@ -63,7 +81,12 @@ function shieldWidth(text: string): number {
 }
 
 function grow(box: Box, by: number): Box {
-  return { left: box.left - by, top: box.top - by, right: box.right + by, bottom: box.bottom + by };
+  return {
+    left: box.left - by,
+    top: box.top - by,
+    right: box.right + by,
+    bottom: box.bottom + by,
+  };
 }
 
 /** Text widths by font and text. Measuring is slow next to drawing, and the same names repeat every frame. */
@@ -108,7 +131,17 @@ function drawHaloText({
 }
 
 /** Green shield with white text, like Swedish E-road signs */
-function drawShield({ context, text, x, y }: { context: CanvasRenderingContext2D; text: string; x: number; y: number }) {
+function drawShield({
+  context,
+  text,
+  x,
+  y,
+}: {
+  context: CanvasRenderingContext2D;
+  text: string;
+  x: number;
+  y: number;
+}) {
   const width = shieldWidth(text);
   const height = SHIELD_HEIGHT;
   context.beginPath();
@@ -142,16 +175,46 @@ function placeBeside({
 }): PlacedText | null {
   const offset = radius + PIN_LABEL_OFFSET;
   const candidates: PlacedText[] = [
-    { box: { left: x + offset, top: y - height / 2, right: x + offset + width, bottom: y + height / 2 }, x: x + offset, y, align: "left" },
-    { box: { left: x - offset - width, top: y - height / 2, right: x - offset, bottom: y + height / 2 }, x: x - offset, y, align: "right" },
     {
-      box: { left: x - width / 2, top: y - offset - height, right: x + width / 2, bottom: y - offset },
+      box: {
+        left: x + offset,
+        top: y - height / 2,
+        right: x + offset + width,
+        bottom: y + height / 2,
+      },
+      x: x + offset,
+      y,
+      align: "left",
+    },
+    {
+      box: {
+        left: x - offset - width,
+        top: y - height / 2,
+        right: x - offset,
+        bottom: y + height / 2,
+      },
+      x: x - offset,
+      y,
+      align: "right",
+    },
+    {
+      box: {
+        left: x - width / 2,
+        top: y - offset - height,
+        right: x + width / 2,
+        bottom: y - offset,
+      },
       x,
       y: y - offset - height / 2,
       align: "center",
     },
     {
-      box: { left: x - width / 2, top: y + offset, right: x + width / 2, bottom: y + offset + height },
+      box: {
+        left: x - width / 2,
+        top: y + offset,
+        right: x + width / 2,
+        bottom: y + offset + height,
+      },
       x,
       y: y + offset + height / 2,
       align: "center",
@@ -188,7 +251,8 @@ function drawMarker<T>({
       context.stroke();
     }
     circle(radius);
-    context.fillStyle = selected === "all" ? style.pinSelected : (marker.pin.color ?? style.pin);
+    context.fillStyle =
+      selected === "all" ? style.pinSelected : (marker.pin.color ?? style.pin);
     context.fill();
     context.strokeStyle = style.pinStroke;
     context.stroke();
@@ -274,7 +338,14 @@ export function renderMap<T>({
 
   const scale = scaleOf({ camera, frame });
   const [originX, originY] = toScreen({ camera, frame, point: [0, 0] });
-  context.setTransform(ratio * scale, 0, 0, ratio * scale, ratio * originX, ratio * originY);
+  context.setTransform(
+    ratio * scale,
+    0,
+    0,
+    ratio * scale,
+    ratio * originX,
+    ratio * originY,
+  );
   context.lineJoin = "round";
   context.lineCap = "round";
 
@@ -298,8 +369,18 @@ export function renderMap<T>({
     maxX: (width - originX) / scale,
     maxY: (height - originY) / scale,
   };
-  const inView = (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => {
-    return bounds.maxX >= view.minX && bounds.minX <= view.maxX && bounds.maxY >= view.minY && bounds.minY <= view.maxY;
+  const inView = (bounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  }) => {
+    return (
+      bounds.maxX >= view.minX &&
+      bounds.minX <= view.maxX &&
+      bounds.maxY >= view.minY &&
+      bounds.minY <= view.maxY
+    );
   };
 
   fill(scene.contextLand, style.contextLand);
@@ -336,7 +417,8 @@ export function renderMap<T>({
 
   if (opacity.roads > 0) {
     for (const road of scene.roads) {
-      const { width: roadWidth, opacity: roadOpacity } = roadClassStyle[road.roadClass];
+      const { width: roadWidth, opacity: roadOpacity } =
+        roadClassStyle[road.roadClass];
       context.globalAlpha = roadOpacity * opacity.roads;
       stroke(road.path, style.road, style.roadWidth * roadWidth);
     }
@@ -363,12 +445,25 @@ export function renderMap<T>({
   context.textBaseline = "middle";
   const placer = createLabelPlacer();
   const onScreen = (x: number, y: number, margin: number) => {
-    return x >= -margin && x <= width + margin && y >= -margin && y <= height + margin;
+    return (
+      x >= -margin &&
+      x <= width + margin &&
+      y >= -margin &&
+      y <= height + margin
+    );
   };
 
-  const shownMarkers = opacity.pins > 0 ? markers.filter((item) => onScreen(item.x, item.y, item.radius + 8)) : [];
+  const shownMarkers =
+    opacity.pins > 0
+      ? markers.filter((item) => onScreen(item.x, item.y, item.radius + 8))
+      : [];
   for (const { x, y, radius } of shownMarkers) {
-    placer.add({ left: x - radius - 2, top: y - radius - 2, right: x + radius + 2, bottom: y + radius + 2 });
+    placer.add({
+      left: x - radius - 2,
+      top: y - radius - 2,
+      right: x + radius + 2,
+      bottom: y + radius + 2,
+    });
   }
 
   const pinLabelOpacity = Math.min(opacity.pins, opacity.pinLabels);
@@ -381,8 +476,20 @@ export function renderMap<T>({
         if (item.marker.kind !== "pin" || !item.marker.pin.label) {
           return [];
         }
-        const rank = emphasizedKeys.has(item.marker.key) ? 0 : item.selected === "all" ? 1 : 2;
-        return [{ item, text: item.marker.pin.label, rank, priority: item.marker.pin.priority ?? 0, order }];
+        const rank = emphasizedKeys.has(item.marker.key)
+          ? 0
+          : item.selected === "all"
+            ? 1
+            : 2;
+        return [
+          {
+            item,
+            text: item.marker.pin.label,
+            rank,
+            priority: item.marker.pin.priority ?? 0,
+            order,
+          },
+        ];
       })
       .sort((a, b) => {
         return a.rank - b.rank || b.priority - a.priority || a.order - b.order;
@@ -413,13 +520,30 @@ export function renderMap<T>({
       if (!onScreen(x, y, 80)) {
         continue;
       }
-      const { font, opacity: placeOpacity, dot, height: textHeight } = placeStyle[place.placeClass];
-      const dotBox = { left: x - dot - 1, top: y - dot - 1, right: x + dot + 1, bottom: y + dot + 1 };
+      const {
+        font,
+        opacity: placeOpacity,
+        dot,
+        height: textHeight,
+      } = placeStyle[place.placeClass];
+      const dotBox = {
+        left: x - dot - 1,
+        top: y - dot - 1,
+        right: x + dot + 1,
+        bottom: y + dot + 1,
+      };
       if (!placer.fits(dotBox)) {
         continue;
       }
       context.font = font;
-      const placed = placeBeside({ placer, x, y, radius: dot, width: measure(context, place.name), height: textHeight });
+      const placed = placeBeside({
+        placer,
+        x,
+        y,
+        radius: dot,
+        width: measure(context, place.name),
+        height: textHeight,
+      });
       if (!placed) {
         continue;
       }
@@ -436,7 +560,13 @@ export function renderMap<T>({
         context.stroke();
       }
       context.textAlign = placed.align;
-      drawHaloText({ context, text: place.name, x: placed.x, y: placed.y, style });
+      drawHaloText({
+        context,
+        text: place.name,
+        x: placed.x,
+        y: placed.y,
+        style,
+      });
     }
     context.globalAlpha = 1;
   }
@@ -454,9 +584,17 @@ export function renderMap<T>({
       }
       const halfWidth = shieldWidth(label.text) / 2 + LABEL_GAP;
       const halfHeight = SHIELD_HEIGHT / 2 + LABEL_GAP;
-      const box = { left: x - halfWidth, top: y - halfHeight, right: x + halfWidth, bottom: y + halfHeight };
+      const box = {
+        left: x - halfWidth,
+        top: y - halfHeight,
+        right: x + halfWidth,
+        bottom: y + halfHeight,
+      };
       const repeated = signs.some((other) => {
-        return other.text === label.text && Math.hypot(other.x - x, other.y - y) < SAME_SIGN_DISTANCE;
+        return (
+          other.text === label.text &&
+          Math.hypot(other.x - x, other.y - y) < SAME_SIGN_DISTANCE
+        );
       });
       if (!repeated && placer.fits(box)) {
         placer.add(box);
@@ -471,7 +609,11 @@ export function renderMap<T>({
     context.globalAlpha = opacity.pins;
     // Selected markers over unselected ones, and emphasized ones over all
     const layerOf = (item: ScreenMarker<T>) => {
-      return emphasizedKeys.has(item.marker.key) ? 2 : item.selected === "none" ? 0 : 1;
+      return emphasizedKeys.has(item.marker.key)
+        ? 2
+        : item.selected === "none"
+          ? 0
+          : 1;
     };
     for (const layer of [0, 1, 2]) {
       for (const item of shownMarkers) {

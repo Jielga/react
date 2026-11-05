@@ -70,7 +70,10 @@ export function publishedOutput(published) {
 
 function writeOutput(published) {
   if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, `${publishedOutput(published)}\n`);
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `${publishedOutput(published)}\n`,
+    );
   }
 }
 
@@ -90,7 +93,10 @@ function run(command, args, options) {
   });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   const dryRun = process.argv.includes("--dry-run");
   const { rootDir, packages } = await getPackages(process.cwd());
   const candidates = packages.map((pkg) => ({
@@ -122,13 +128,22 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const out = mkdtempSync(join(tmpdir(), "publish-"));
   try {
     for (const pkg of missing) {
-      console.log(`Publishing ${pkg.name}@${pkg.version} (${distTag(pkg.version)})`);
+      console.log(
+        `Publishing ${pkg.name}@${pkg.version} (${distTag(pkg.version)})`,
+      );
       const tarball = execFileSync(
         "bun",
         ["pm", "pack", "--quiet", "--destination", out],
         { cwd: pkg.dir, encoding: "utf8", shell: process.platform === "win32" },
       ).trim();
-      const args = ["publish", tarball, "--access", "public", "--tag", distTag(pkg.version)];
+      const args = [
+        "publish",
+        tarball,
+        "--access",
+        "public",
+        "--tag",
+        distTag(pkg.version),
+      ];
       if (dryRun) args.push("--dry-run");
       run("npm", args);
       published.push(publishedEntry(pkg, inRepo));

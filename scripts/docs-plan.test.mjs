@@ -34,7 +34,11 @@ describe("planPush", () => {
   });
 
   test("publishes the line when the branch moved past what is deployed", () => {
-    const plan = planPush({ ...seeded, lineVersion: "2.0.0-beta.0", version: "2.0.0-beta.1" });
+    const plan = planPush({
+      ...seeded,
+      lineVersion: "2.0.0-beta.0",
+      version: "2.0.0-beta.1",
+    });
     expect(slugs(plan)).toEqual(["next", "v2.0"]);
   });
 
@@ -87,12 +91,24 @@ describe("planPush", () => {
   });
 
   test("takes the root for a stable release that outranks it", () => {
-    const plan = planPush({ ...seeded, version: "2.0.0", lineVersion: undefined });
+    const plan = planPush({
+      ...seeded,
+      version: "2.0.0",
+      lineVersion: undefined,
+    });
     expect(root(plan)).toMatchObject({ slug: "v2.0", kind: "stable" });
   });
 
   test("does not take the root for a prerelease of a newer line", () => {
-    expect(root(planPush({ ...seeded, version: "3.0.0-beta.0", lineVersion: undefined }))).toBeNull();
+    expect(
+      root(
+        planPush({
+          ...seeded,
+          version: "3.0.0-beta.0",
+          lineVersion: undefined,
+        }),
+      ),
+    ).toBeNull();
   });
 
   test("does not take the root for a release the root already outranks", () => {
@@ -109,8 +125,14 @@ describe("planPush", () => {
   });
 
   test("builds the line from its tag when there is one, and from main when there is not", () => {
-    const moved = { ...seeded, version: "2.0.0-beta.1", tag: "@jielga/tmdatagrid@2.0.0-beta.1" };
-    expect(planPush(moved).targets[1].ref).toBe("@jielga/tmdatagrid@2.0.0-beta.1");
+    const moved = {
+      ...seeded,
+      version: "2.0.0-beta.1",
+      tag: "@jielga/tmdatagrid@2.0.0-beta.1",
+    };
+    expect(planPush(moved).targets[1].ref).toBe(
+      "@jielga/tmdatagrid@2.0.0-beta.1",
+    );
     expect(planPush({ ...moved, tag: null }).targets[1].ref).toBe("");
   });
 
@@ -129,7 +151,14 @@ describe("planPush", () => {
     expect(slugs(planPush(unreleased))).toEqual(["next"]);
     expect(root(planPush(unreleased))).toMatchObject({ slug: "next" });
     expect(
-      root(planPush({ ...unreleased, rootExists: true, rootSlug: "next", rootServesVersion: "0.0.0" })),
+      root(
+        planPush({
+          ...unreleased,
+          rootExists: true,
+          rootSlug: "next",
+          rootServesVersion: "0.0.0",
+        }),
+      ),
     ).toMatchObject({ slug: "next" });
   });
 
@@ -150,14 +179,26 @@ describe("planPush", () => {
 
 describe("planDispatch", () => {
   test("publishes a back version, and can hand it the root", () => {
-    const plan = planDispatch({ slug: "v1.1", ref: "v1.1.1", version: "1.1.1", mirrorRoot: true });
+    const plan = planDispatch({
+      slug: "v1.1",
+      ref: "v1.1.1",
+      version: "1.1.1",
+      mirrorRoot: true,
+    });
     expect(plan.targets[0]).toEqual({
-      slug: "v1.1", ref: "v1.1.1", version: "1.1.1", label: "1.1.1", kind: "stable", mirrorRoot: true,
+      slug: "v1.1",
+      ref: "v1.1.1",
+      version: "1.1.1",
+      label: "1.1.1",
+      kind: "stable",
+      mirrorRoot: true,
     });
   });
 
   test("names the kind from the slug and the version", () => {
-    const kind = (slug, version) => planDispatch({ slug, ref: "", version, mirrorRoot: false }).targets[0].kind;
+    const kind = (slug, version) =>
+      planDispatch({ slug, ref: "", version, mirrorRoot: false }).targets[0]
+        .kind;
     expect(kind("next", "2.0.0-beta.0")).toBe("dev");
     expect(kind("b/thing", "2.0.0-beta.0")).toBe("preview");
     expect(kind("v2.0", "2.0.0-beta.0")).toBe("prerelease");

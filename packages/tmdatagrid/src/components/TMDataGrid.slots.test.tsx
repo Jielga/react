@@ -181,7 +181,9 @@ describe("renderColumnMenuItems", () => {
 
     renderGridUi({
       tableProps: {
-        renderColumnMenuItems: () => [<Menu.Item key="only">Only mine</Menu.Item>],
+        renderColumnMenuItems: () => [
+          <Menu.Item key="only">Only mine</Menu.Item>,
+        ],
       },
     });
 
@@ -244,7 +246,9 @@ describe("renderRowContextMenu", () => {
     contextClickName(0);
 
     // Both halves, the grid's first - today's zero-config behavior.
-    expect(await screen.findByRole("menuitem", { name: "Copy" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("menuitem", { name: "Copy" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Mine" })).toBeInTheDocument();
   });
 
@@ -325,7 +329,9 @@ describe("DraftActions renderActions", () => {
 
   it("renders nothing at all while editing is off", () => {
     renderGridUi({
-      draftActionsProps: { renderActions: () => <span>Should not render</span> },
+      draftActionsProps: {
+        renderActions: () => <span>Should not render</span>,
+      },
     });
 
     expect(screen.queryByText("Should not render")).not.toBeInTheDocument();

@@ -28,18 +28,114 @@ type Position = Holding & {
 const SECTORS = ["Energy", "Financials", "Health care", "Technology"];
 
 const INITIAL_HOLDINGS: Holding[] = [
-  { id: "AAPL", ticker: "AAPL", name: "Apple", sector: "Technology", price: 228.4, shares: 1_850, targetPct: 12 },
-  { id: "MSFT", ticker: "MSFT", name: "Microsoft", sector: "Technology", price: 419.2, shares: 780, targetPct: 12 },
-  { id: "NVDA", ticker: "NVDA", name: "NVIDIA", sector: "Technology", price: 121.6, shares: 2_400, targetPct: 8 },
-  { id: "ASML", ticker: "ASML", name: "ASML Holding", sector: "Technology", price: 742.5, shares: 210, targetPct: 5 },
-  { id: "JPM", ticker: "JPM", name: "JPMorgan Chase", sector: "Financials", price: 214.9, shares: 900, targetPct: 9 },
-  { id: "BRK", ticker: "BRK.B", name: "Berkshire Hathaway", sector: "Financials", price: 462.1, shares: 320, targetPct: 7 },
-  { id: "ALV", ticker: "ALV", name: "Allianz", sector: "Financials", price: 297.3, shares: 410, targetPct: 5 },
-  { id: "UNH", ticker: "UNH", name: "UnitedHealth", sector: "Health care", price: 588.7, shares: 260, targetPct: 8 },
-  { id: "NOVO", ticker: "NOVO.B", name: "Novo Nordisk", sector: "Health care", price: 108.4, shares: 1_600, targetPct: 7 },
-  { id: "ROG", ticker: "ROG", name: "Roche", sector: "Health care", price: 271, shares: 380, targetPct: 5 },
-  { id: "XOM", ticker: "XOM", name: "Exxon Mobil", sector: "Energy", price: 117.8, shares: 1_100, targetPct: 8 },
-  { id: "EQNR", ticker: "EQNR", name: "Equinor", sector: "Energy", price: 26.4, shares: 4_200, targetPct: 6 },
+  {
+    id: "AAPL",
+    ticker: "AAPL",
+    name: "Apple",
+    sector: "Technology",
+    price: 228.4,
+    shares: 1_850,
+    targetPct: 12,
+  },
+  {
+    id: "MSFT",
+    ticker: "MSFT",
+    name: "Microsoft",
+    sector: "Technology",
+    price: 419.2,
+    shares: 780,
+    targetPct: 12,
+  },
+  {
+    id: "NVDA",
+    ticker: "NVDA",
+    name: "NVIDIA",
+    sector: "Technology",
+    price: 121.6,
+    shares: 2_400,
+    targetPct: 8,
+  },
+  {
+    id: "ASML",
+    ticker: "ASML",
+    name: "ASML Holding",
+    sector: "Technology",
+    price: 742.5,
+    shares: 210,
+    targetPct: 5,
+  },
+  {
+    id: "JPM",
+    ticker: "JPM",
+    name: "JPMorgan Chase",
+    sector: "Financials",
+    price: 214.9,
+    shares: 900,
+    targetPct: 9,
+  },
+  {
+    id: "BRK",
+    ticker: "BRK.B",
+    name: "Berkshire Hathaway",
+    sector: "Financials",
+    price: 462.1,
+    shares: 320,
+    targetPct: 7,
+  },
+  {
+    id: "ALV",
+    ticker: "ALV",
+    name: "Allianz",
+    sector: "Financials",
+    price: 297.3,
+    shares: 410,
+    targetPct: 5,
+  },
+  {
+    id: "UNH",
+    ticker: "UNH",
+    name: "UnitedHealth",
+    sector: "Health care",
+    price: 588.7,
+    shares: 260,
+    targetPct: 8,
+  },
+  {
+    id: "NOVO",
+    ticker: "NOVO.B",
+    name: "Novo Nordisk",
+    sector: "Health care",
+    price: 108.4,
+    shares: 1_600,
+    targetPct: 7,
+  },
+  {
+    id: "ROG",
+    ticker: "ROG",
+    name: "Roche",
+    sector: "Health care",
+    price: 271,
+    shares: 380,
+    targetPct: 5,
+  },
+  {
+    id: "XOM",
+    ticker: "XOM",
+    name: "Exxon Mobil",
+    sector: "Energy",
+    price: 117.8,
+    shares: 1_100,
+    targetPct: 8,
+  },
+  {
+    id: "EQNR",
+    ticker: "EQNR",
+    name: "Equinor",
+    sector: "Energy",
+    price: 26.4,
+    shares: 4_200,
+    targetPct: 6,
+  },
 ];
 
 const money = new Intl.NumberFormat("en-US", {
@@ -137,7 +233,9 @@ const columns = columnHelper.columns([
     ),
     footer: ({ table }) => (
       <Text fw={600} size="xs">
-        {money.format(Number(aggregateColumn({ table, columnId: "marketValue" })))}
+        {money.format(
+          Number(aggregateColumn({ table, columnId: "marketValue" })),
+        )}
       </Text>
     ),
   }),
@@ -226,8 +324,14 @@ const columns = columnHelper.columns([
       }
 
       return (
-        <Badge size="sm" variant="light" radius="sm" color={shares > 0 ? "teal" : "red"}>
-          {shares > 0 ? "Buy" : "Sell"} {Math.abs(shares).toLocaleString("en-US")}
+        <Badge
+          size="sm"
+          variant="light"
+          radius="sm"
+          color={shares > 0 ? "teal" : "red"}
+        >
+          {shares > 0 ? "Buy" : "Sell"}{" "}
+          {Math.abs(shares).toLocaleString("en-US")}
         </Badge>
       );
     },
@@ -258,7 +362,10 @@ export function PortfolioRebalancer() {
     });
   }, [holdings]);
 
-  const allocated = positions.reduce((sum, position) => sum + position.targetPct, 0);
+  const allocated = positions.reduce(
+    (sum, position) => sum + position.targetPct,
+    0,
+  );
 
   const turnover = positions.reduce(
     (sum, position) => sum + Math.abs(position.tradeShares) * position.price,
@@ -326,7 +433,10 @@ export function PortfolioRebalancer() {
           Zero selected targets
         </Button>
         <TMDataGrid.Spacer />
-        <Text size="xs" c={Math.abs(allocated - 100) < 0.05 ? "dimmed" : "orange"}>
+        <Text
+          size="xs"
+          c={Math.abs(allocated - 100) < 0.05 ? "dimmed" : "orange"}
+        >
           {allocated > 100
             ? `Over-allocated by ${pct(allocated - 100)}`
             : `Unallocated ${pct(100 - allocated)}`}

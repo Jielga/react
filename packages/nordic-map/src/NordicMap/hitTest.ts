@@ -42,7 +42,15 @@ function contains(bounds: MapBounds, point: Point, margin: number): boolean {
  * Sets the canvas transform from map units to screen pixels. The canvas compares a point against a path
  * after this transform, so `point` is then given in screen pixels too.
  */
-function applyMapTransform({ context, camera, frame }: { context: CanvasRenderingContext2D; camera: Camera; frame: Frame }) {
+function applyMapTransform({
+  context,
+  camera,
+  frame,
+}: {
+  context: CanvasRenderingContext2D;
+  camera: Camera;
+  frame: Frame;
+}) {
   const scale = scaleOf({ camera, frame });
   const [originX, originY] = toScreen({ camera, frame, point: [0, 0] });
   context.setTransform(scale, 0, 0, scale, originX, originY);
@@ -69,7 +77,11 @@ export function hitArea({
   let hit: PreparedArea | null = null;
   for (let index = areas.length - 1; index >= 0; index -= 1) {
     const candidate = areas[index];
-    if (candidate && contains(candidate.bounds, mapPoint, 0) && context.isPointInPath(candidate.shape, point[0], point[1])) {
+    if (
+      candidate &&
+      contains(candidate.bounds, mapPoint, 0) &&
+      context.isPointInPath(candidate.shape, point[0], point[1])
+    ) {
       hit = candidate;
       break;
     }

@@ -85,10 +85,9 @@ describe("the first-page reset under manualPagination", () => {
   it("takes a filter change back to page 0", () => {
     let api: TMDataGridApi<TestRow> | null = null;
     const queries: Array<Query> = [];
-    render(
-      <ServerGrid queries={queries} onReady={(grid) => (api = grid)} />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={queries} onReady={(grid) => (api = grid)} />, {
+      wrapper: MantineWrapper,
+    });
 
     act(() => api!.table.setPageIndex(3));
     expect(api!.table.store.state.pagination.pageIndex).toBe(3);
@@ -111,10 +110,9 @@ describe("the first-page reset under manualPagination", () => {
   it("takes a sort change back to page 0", () => {
     let api: TMDataGridApi<TestRow> | null = null;
     const queries: Array<Query> = [];
-    render(
-      <ServerGrid queries={queries} onReady={(grid) => (api = grid)} />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={queries} onReady={(grid) => (api = grid)} />, {
+      wrapper: MantineWrapper,
+    });
 
     act(() => api!.table.setPageIndex(2));
     act(() => api!.table.getColumn("name")!.toggleSorting());
@@ -126,10 +124,9 @@ describe("the first-page reset under manualPagination", () => {
   it("takes a quick search back to page 0", () => {
     let api: TMDataGridApi<TestRow> | null = null;
     const queries: Array<Query> = [];
-    render(
-      <ServerGrid queries={queries} onReady={(grid) => (api = grid)} />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={queries} onReady={(grid) => (api = grid)} />, {
+      wrapper: MantineWrapper,
+    });
 
     act(() => api!.table.setPageIndex(2));
     act(() => api!.table.setGlobalFilter("anna"));
@@ -140,10 +137,9 @@ describe("the first-page reset under manualPagination", () => {
   it("stays put when the filter panel seeds an empty row", () => {
     let api: TMDataGridApi<TestRow> | null = null;
     const queries: Array<Query> = [];
-    render(
-      <ServerGrid queries={queries} onReady={(grid) => (api = grid)} />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={queries} onReady={(grid) => (api = grid)} />, {
+      wrapper: MantineWrapper,
+    });
 
     act(() => api!.table.setPageIndex(3));
     // What opening the filter panel does: a row on the first filterable
@@ -161,10 +157,9 @@ describe("the first-page reset under manualPagination", () => {
 
   it("resets for a raw filter value it cannot recognise", () => {
     let api: TMDataGridApi<TestRow> | null = null;
-    render(
-      <ServerGrid queries={[]} onReady={(grid) => (api = grid)} />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={[]} onReady={(grid) => (api = grid)} />, {
+      wrapper: MantineWrapper,
+    });
 
     act(() => api!.table.setPageIndex(3));
     // Not the grid's own { operator, value } shape - a custom filter control,
@@ -197,10 +192,9 @@ describe("the first-page reset under manualPagination", () => {
 
 describe("SummaryCount on a server-driven grid", () => {
   it("shows the matched count alone without meta.totalRowCount", () => {
-    render(
-      <ServerGrid queries={[]} onReady={() => {}} withSummaryCount />,
-      { wrapper: MantineWrapper },
-    );
+    render(<ServerGrid queries={[]} onReady={() => {}} withSummaryCount />, {
+      wrapper: MantineWrapper,
+    });
 
     // `rowCount` is the server's 200. The fallback denominator would be the
     // rows in `data` - one page - so a grid without `meta.totalRowCount`

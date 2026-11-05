@@ -75,7 +75,9 @@ function renderEditGrid(
 describe("getEditFieldName", () => {
   it("prefers meta.edit.field, falls back to accessorKey, refuses accessorFn", () => {
     expect(
-      getEditFieldName({ columnDef: { meta: { edit: { field: "custom.path" } } } }),
+      getEditFieldName({
+        columnDef: { meta: { edit: { field: "custom.path" } } },
+      }),
     ).toBe("custom.path");
     expect(
       getEditFieldName({
@@ -648,7 +650,11 @@ describe("edit engine", () => {
     expect(onRowDelete).toHaveBeenCalledTimes(1);
     expect(onRowDelete.mock.calls[0]?.[0]).toMatchObject({ rowId: "1" });
 
-    const draft = renderEditGrid({ mode: "row", draft: true, onRowDelete: vi.fn() });
+    const draft = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onRowDelete: vi.fn(),
+    });
     draft.current.edit.deleteRow("1");
     expect(draft.current.edit.state.deletedRowIds).toEqual(["1"]);
     // Trash means trash - a second delete leaves the mark standing.
@@ -657,7 +663,11 @@ describe("edit engine", () => {
   });
 
   it("restoreRow removes the mark, and only the mark", () => {
-    const grid = renderEditGrid({ mode: "row", draft: true, onRowDelete: vi.fn() });
+    const grid = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onRowDelete: vi.fn(),
+    });
     const { edit } = grid.current;
     edit.deleteRow("1");
     edit.deleteRow("2");
@@ -899,8 +909,11 @@ describe("edit engine", () => {
       renderEditGrid({ mode: "row", draft: true }).current.edit.canDeleteRows(),
     ).toBe(false);
     expect(
-      renderEditGrid({ mode: "row", draft: true, onSaveDrafts: vi.fn() })
-        .current.edit.canDeleteRows(),
+      renderEditGrid({
+        mode: "row",
+        draft: true,
+        onSaveDrafts: vi.fn(),
+      }).current.edit.canDeleteRows(),
     ).toBe(true);
   });
 
@@ -910,7 +923,8 @@ describe("edit engine", () => {
     });
     const { edit } = grid.current;
     // The same erasure the context provider performs - canEditCell is chrome.
-    const table = grid.current.table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
+    const table = grid.current
+      .table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
 
     edit.begin({ rowId: "2", columnId: "name" });
     expect(edit.state.openRowIds).toEqual([]);
@@ -1425,7 +1439,11 @@ describe("the draft store", () => {
   });
 
   it("addRows opens a batch, and reports every row as open", async () => {
-    const grid = renderEditGrid({ mode: "row", draft: true, onSaveDrafts: vi.fn() });
+    const grid = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onSaveDrafts: vi.fn(),
+    });
     const { edit } = grid.current;
 
     const result = await edit.addRows([
@@ -1528,7 +1546,10 @@ describe("the draft store", () => {
     const grid = renderValidatedGrid({ onSaveDrafts });
     const { edit } = grid.current;
 
-    const names = Array.from({ length: 200 }, (_, index) => `Rad ${String(index)}`);
+    const names = Array.from(
+      { length: 200 },
+      (_, index) => `Rad ${String(index)}`,
+    );
     await edit.addRows(
       names.map((name, index) => ({ name, age: index })),
       { commit: true },
@@ -1692,10 +1713,9 @@ describe("the draft store", () => {
 
     // A committed row's values cannot have moved since it committed, so the
     // rules that judge the row alone would only say what they said then.
-    expect([
-      columnRule.mock.calls.length,
-      rowRule.mock.calls.length,
-    ]).toEqual(atCommit);
+    expect([columnRule.mock.calls.length, rowRule.mock.calls.length]).toEqual(
+      atCommit,
+    );
     const args = onSaveDrafts.mock.calls[0]?.[0] as {
       updated: Array<{ rowId: string }>;
     };
@@ -1711,10 +1731,12 @@ describe("the draft store", () => {
       tableValidators: {
         // A name belongs to the last row that took it, so a row loses it to
         // the next one - the clash only exists once that one has committed.
-        onSubmit: ({ value, rowId, rows }: TMDataGridTableValidateArgs<Person>) =>
-          rows.some(
-            (row) => row.rowId > rowId && row.value.name === value.name,
-          )
+        onSubmit: ({
+          value,
+          rowId,
+          rows,
+        }: TMDataGridTableValidateArgs<Person>) =>
+          rows.some((row) => row.rowId > rowId && row.value.name === value.name)
             ? { form: "Name taken", fields: { name: "Duplicate name" } }
             : undefined,
       },
@@ -2025,7 +2047,9 @@ describe("writing a cell from outside an editor", () => {
     const grid = renderEditGrid({ onCommit });
     const { edit } = grid.current;
 
-    await expect(edit.setCellValue("99", "name", "Annika")).resolves.toBe(false);
+    await expect(edit.setCellValue("99", "name", "Annika")).resolves.toBe(
+      false,
+    );
     await expect(edit.setCellValue("1", "nope", "Annika")).resolves.toBe(false);
 
     expect(onCommit).not.toHaveBeenCalled();
@@ -2310,7 +2334,11 @@ describe("reading rows as shown", () => {
 
     const rows = edit.getRows();
     expect(rows).toHaveLength(3);
-    expect(rows[2]).toMatchObject({ rowId: tempId, isNew: true, deleted: false });
+    expect(rows[2]).toMatchObject({
+      rowId: tempId,
+      isNew: true,
+      deleted: false,
+    });
     expect(rows[2]?.value.name).toBe("New");
     expect(edit.getRowValues(tempId)?.name).toBe("New");
   });
@@ -2433,7 +2461,8 @@ describe("editing.columns", () => {
 
   /** The erasure the context provider performs - `canEditCell` is chrome. */
   const columnOf = (api: TMDataGridApi<Person>, columnId: string) => {
-    const table = api.table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
+    const table =
+      api.table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
     const column = table.getColumn(columnId);
     if (column === undefined) throw new Error(`no column "${columnId}"`);
     return column;
@@ -2446,7 +2475,9 @@ describe("editing.columns", () => {
     expect(edit.isColumnEditable(columnOf(grid.current, "name"))).toBe(true);
     expect(edit.isColumnEditable(columnOf(grid.current, "age"))).toBe(true);
     // No accessorKey and no meta.edit.field - nothing to write to.
-    expect(edit.isColumnEditable(columnOf(grid.current, "display"))).toBe(false);
+    expect(edit.isColumnEditable(columnOf(grid.current, "display"))).toBe(
+      false,
+    );
     expect(edit.isColumnEditable(columnOf(grid.current, "readonlyName"))).toBe(
       false,
     );
@@ -2953,9 +2984,9 @@ describe("bulk deletes over the draft store", () => {
 
     // The discarded entry is gone; its temp id must not live on as a
     // deletion mark the save would then report.
-    expect(
-      edit.state.newRows.map((newRow) => newRow.tempId),
-    ).not.toContain(tempId);
+    expect(edit.state.newRows.map((newRow) => newRow.tempId)).not.toContain(
+      tempId,
+    );
     expect(edit.state.deletedRowIds).toEqual([]);
     expect(draftCount(edit.state)).toBe(2);
   });
@@ -3108,7 +3139,11 @@ describe("bulk deletes over the draft store", () => {
   });
 
   it("a deletion mark makes the row read-only and unselectable until restored", async () => {
-    const grid = renderEditGrid({ mode: "row", draft: true, onSaveDrafts: vi.fn() });
+    const grid = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onSaveDrafts: vi.fn(),
+    });
     const { edit, table } = grid.current;
     act(() => {
       table.setRowSelection({ "1": true, "2": true });
@@ -3132,7 +3167,11 @@ describe("bulk deletes over the draft store", () => {
   });
 
   it("marking a row cancels its open editor and keeps a committed edit under the mark", async () => {
-    const grid = renderEditGrid({ mode: "row", draft: true, onSaveDrafts: vi.fn() });
+    const grid = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onSaveDrafts: vi.fn(),
+    });
     const { edit } = grid.current;
     await edit.setCellValue("1", "name", "Edited");
     edit.begin({ rowId: "2", columnId: "name" });
@@ -3187,7 +3226,12 @@ describe("bulk deletes over the draft store", () => {
   it("the per-row save path reports a marked row's deletion only", async () => {
     const onCommit = vi.fn();
     const onRowDelete = vi.fn();
-    const grid = renderEditGrid({ mode: "row", draft: true, onCommit, onRowDelete });
+    const grid = renderEditGrid({
+      mode: "row",
+      draft: true,
+      onCommit,
+      onRowDelete,
+    });
     const { edit } = grid.current;
     await edit.setCellValue("1", "name", "Edited");
     edit.deleteRow("1");
@@ -3240,9 +3284,7 @@ describe("bulk deletes over the draft store", () => {
     expect(edit.state.committedRowIds).toEqual([]);
     expect(edit.state.deletedRowIds).toEqual([]);
     // Entry rows are the engine's own and stay.
-    expect(edit.state.newRows.map((newRow) => newRow.tempId)).toEqual([
-      tempId,
-    ]);
+    expect(edit.state.newRows.map((newRow) => newRow.tempId)).toEqual([tempId]);
   });
 
   it("keeps drafts for rows missing from a server-side page", async () => {
@@ -3373,7 +3415,11 @@ describe("meta.edit.mapCommitValue", () => {
       .calls[0]?.[0] as TMDataGridEditCommitArgs<Person>;
     expect(args.value.name).toBe("Annika");
     expect(args.changes).toEqual([
-      expect.objectContaining({ field: "name", previous: "Anna", next: "Annika" }),
+      expect.objectContaining({
+        field: "name",
+        previous: "Anna",
+        next: "Annika",
+      }),
     ]);
   });
 

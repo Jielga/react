@@ -15,7 +15,10 @@ function seeded(seed: number): () => number {
 
 const random = seeded(7);
 
-const totalPopulation = cities.reduce((sum, city) => sum + (city.data?.population ?? 0), 0);
+const totalPopulation = cities.reduce(
+  (sum, city) => sum + (city.data?.population ?? 0),
+  0,
+);
 
 /** A city picked at random, in proportion to its population */
 function randomCity() {

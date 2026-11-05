@@ -292,11 +292,13 @@ export type TMDataGridMenuExportProps = Omit<
 };
 
 /** The item's props as export options, with `"custom"` set aside for the picker. */
-function splitExportProps({ label, columns, ...rest }: TMDataGridMenuExportProps) {
+function splitExportProps({
+  label,
+  columns,
+  ...rest
+}: TMDataGridMenuExportProps) {
   const custom = columns === "custom";
-  const options: TMDataGridExportOptions = custom
-    ? rest
-    : { ...rest, columns };
+  const options: TMDataGridExportOptions = custom ? rest : { ...rest, columns };
   return { label, custom, options };
 }
 

@@ -11,11 +11,15 @@ export function EmployeeLinksGrid() {
   const persist = useMemo(
     () =>
       employeesLink.persist({
-        get: (name) => (router.state.location.search as Record<string, unknown>)[name],
+        get: (name) =>
+          (router.state.location.search as Record<string, unknown>)[name],
         set: (name, value) =>
           void router.navigate({
             to: ".",
-            search: (prev: Record<string, unknown>) => ({ ...prev, [name]: value }),
+            search: (prev: Record<string, unknown>) => ({
+              ...prev,
+              [name]: value,
+            }),
             replace: true,
           }),
       }),
@@ -46,7 +50,11 @@ export function EmployeeLinksGrid() {
 export function AddressBar() {
   const href = useRouterState({ select: (state) => state.location.href });
   return (
-    <Code block data-address style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+    <Code
+      block
+      data-address
+      style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}
+    >
       {href}
     </Code>
   );

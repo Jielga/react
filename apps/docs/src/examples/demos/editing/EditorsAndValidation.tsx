@@ -94,7 +94,11 @@ const columns = columnHelper.columns([
   columnHelper.accessor("salary", {
     header: "Custom",
     minSize: 200,
-    meta: { type: "number", align: "right", edit: { editor: SalarySliderEditor } },
+    meta: {
+      type: "number",
+      align: "right",
+      edit: { editor: SalarySliderEditor },
+    },
     cell: (info) => sek(info.getValue()),
   }),
 ]);

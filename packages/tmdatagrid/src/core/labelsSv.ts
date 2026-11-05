@@ -129,7 +129,9 @@ export const TMDATAGRID_LABELS_SV: TMDataGridLabels = {
   saveAllEdits: (rows) => (rows === 1 ? "Spara 1 rad" : `Spara ${rows} rader`),
   discardAllEdits: "Ångra alla",
   editRowsStillOpen: (rows) =>
-    rows === 1 ? "1 rad redigeras fortfarande" : `${rows} rader redigeras fortfarande`,
+    rows === 1
+      ? "1 rad redigeras fortfarande"
+      : `${rows} rader redigeras fortfarande`,
   confirmNewRow: "Lägg till rad",
   discardNewRow: "Avbryt ny rad",
   deleteRow: "Ta bort rad",
@@ -146,7 +148,9 @@ export const TMDATAGRID_LABELS_SV: TMDataGridLabels = {
 
   exportAll: "Exportera alla rader",
   exportSelected: (count) =>
-    count === 1 ? "Exportera 1 markerad rad" : `Exportera ${count} markerade rader`,
+    count === 1
+      ? "Exportera 1 markerad rad"
+      : `Exportera ${count} markerade rader`,
   exportPickerTitle: (format) => `Exportera som ${format}`,
   exportPickerHint: (selected) =>
     selected === null

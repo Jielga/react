@@ -12,9 +12,20 @@ import {
 
 const MANIFEST: DocsManifest = {
   entries: [
-    { path: "v1.1", label: "1.1.1", version: "1.1.1", kind: "stable", latest: true },
+    {
+      path: "v1.1",
+      label: "1.1.1",
+      version: "1.1.1",
+      kind: "stable",
+      latest: true,
+    },
     { path: "next", label: "next", version: "2.0.0-beta.0", kind: "dev" },
-    { path: "v2.0", label: "2.0.0-beta.0", version: "2.0.0-beta.0", kind: "prerelease" },
+    {
+      path: "v2.0",
+      label: "2.0.0-beta.0",
+      version: "2.0.0-beta.0",
+      kind: "prerelease",
+    },
     { path: "b/feature", label: "feature", kind: "preview" },
   ],
 };
@@ -25,7 +36,13 @@ describe("readManifest", () => {
       entries: [{ path: "next", label: "next", kind: "dev" }],
     });
     expect(parsed?.entries).toEqual([
-      { path: "next", label: "next", version: undefined, kind: "dev", latest: false },
+      {
+        path: "next",
+        label: "next",
+        version: undefined,
+        kind: "dev",
+        latest: false,
+      },
     ]);
   });
 

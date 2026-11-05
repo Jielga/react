@@ -12,7 +12,10 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { docsPageHref, docsSections, findDocsPage } from "../docs/docsPages.ts";
 import { DemoMapSettingsProvider } from "../examples/DemoMapSettings.tsx";
-import { DEMO_MAP_SWITCHES, useDemoMapSettings } from "../examples/demoMapSettings.ts";
+import {
+  DEMO_MAP_SWITCHES,
+  useDemoMapSettings,
+} from "../examples/demoMapSettings.ts";
 import { AppHeader } from "./AppHeader.tsx";
 import { DocsSearch } from "./DocsSearch.tsx";
 

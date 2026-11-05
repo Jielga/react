@@ -61,8 +61,7 @@ export type TMDataGridSettingsSlice = (typeof SETTINGS_STATE_SLICES)[number];
  * - `["employees.data", ["sorting"]]` - persists only the listed slices.
  */
 export type TMDataGridPersistKey<TSlice extends string> =
-  | string
-  | readonly [key: string, slices: readonly TSlice[]];
+  string | readonly [key: string, slices: readonly TSlice[]];
 
 /** Same values as Mantine's `StorageType`, which the package does not re-export. */
 export type TMDataGridStorageMode = "localStorage" | "sessionStorage";
@@ -373,7 +372,9 @@ function writeSlices(
   serialize: (value: Partial<GridState>) => string,
 ): void {
   if (!storage || !resolved) return;
-  const payload: Record<string, unknown> = { [VERSION_FIELD]: PERSIST_PAYLOAD_VERSION };
+  const payload: Record<string, unknown> = {
+    [VERSION_FIELD]: PERSIST_PAYLOAD_VERSION,
+  };
   for (const slice of resolved.slices) {
     // `null` for a slice the user cleared to `undefined` - the global filter
     // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
@@ -591,16 +592,16 @@ export function realignToColumns(
   restored: Partial<GridState>,
   known: ReadonlySet<string>,
 ): Partial<GridState> {
-  const has = (id: unknown): boolean =>
-    typeof id === "string" && known.has(id);
+  const has = (id: unknown): boolean => typeof id === "string" && known.has(id);
   const keepIds = (values: ReadonlyArray<string>) => values.filter(has);
-  const keepKeys = <T,>(record: Record<string, T>) =>
+  const keepKeys = <T>(record: Record<string, T>) =>
     Object.fromEntries(Object.entries(record).filter(([id]) => has(id)));
   const keepEntries = <T extends { id: string }>(entries: ReadonlyArray<T>) =>
     entries.filter((entry) => has(entry.id));
 
   const realigned: Partial<GridState> = { ...restored };
-  if (restored.columnOrder) realigned.columnOrder = keepIds(restored.columnOrder);
+  if (restored.columnOrder)
+    realigned.columnOrder = keepIds(restored.columnOrder);
   if (restored.grouping) realigned.grouping = keepIds(restored.grouping);
   if (restored.columnVisibility) {
     realigned.columnVisibility = keepKeys(restored.columnVisibility);

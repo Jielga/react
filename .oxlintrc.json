@@ -13,11 +13,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "packages/*/test/**",
-        "apps/*/src/test/**",
-        "**/*.test.tsx"
-      ],
+      "files": ["packages/*/test/**", "apps/*/src/test/**", "**/*.test.tsx"],
       "rules": {
         "react/only-export-components": "off"
       }

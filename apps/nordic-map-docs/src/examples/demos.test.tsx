@@ -9,11 +9,14 @@ import { DOCS_PAGES } from "../docs/docsPages.ts";
 import { listDemoFiles, loadDemo, loadSharedSource } from "./demoRegistry.ts";
 
 /** The library's skills, by path */
-const librarySkills = import.meta.glob<string>("../../../../packages/nordic-map/skills/**/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
+const librarySkills = import.meta.glob<string>(
+  "../../../../packages/nordic-map/skills/**/*.md",
+  {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  },
+);
 
 /** Every name `packages/nordic-map/src/index.ts` exports, values and types */
 function publicExportNames(source: string): string[] {
@@ -21,11 +24,18 @@ function publicExportNames(source: string): string[] {
     throw new Error("index.ts uses `export *`; list its names explicitly");
   }
   const names = new Set<string>();
-  for (const [, list = ""] of source.matchAll(/^export\s+(?:type\s+)?\{([^}]*)\}/gm)) {
+  for (const [, list = ""] of source.matchAll(
+    /^export\s+(?:type\s+)?\{([^}]*)\}/gm,
+  )) {
     for (const raw of list.split(",")) {
       const entry = raw.trim().replace(/^type\s+/, "");
       if (entry !== "") {
-        names.add(entry.split(/\s+as\s+/).at(-1)?.trim() ?? entry);
+        names.add(
+          entry
+            .split(/\s+as\s+/)
+            .at(-1)
+            ?.trim() ?? entry,
+        );
       }
     }
   }
@@ -35,16 +45,27 @@ function publicExportNames(source: string): string[] {
 /** The prop names of `NordicMapProps`, read from its source */
 function propNames(source: string): string[] {
   // A Windows checkout with core.autocrlf has CRLF line ends
-  const block = /^export type NordicMapProps<[^>]*> = \{\r?\n([\s\S]*?)\r?\n\};/m.exec(source)?.[1] ?? "";
+  const block =
+    /^export type NordicMapProps<[^>]*> = \{\r?\n([\s\S]*?)\r?\n\};/m.exec(
+      source,
+    )?.[1] ?? "";
   return [...block.matchAll(/^ {2}(\w+)\??:/gm)].map((match) => {
     return match[1] ?? "";
   });
 }
 
-function docsFences(): { page: string; file: string; extraSources: string[] }[] {
+function docsFences(): {
+  page: string;
+  file: string;
+  extraSources: string[];
+}[] {
   return DOCS_PAGES.flatMap((page) => {
     return findDemoFences(page.source).map((demo) => {
-      return { page: page.id, file: demo.file, extraSources: demo.extraSources ?? [] };
+      return {
+        page: page.id,
+        file: demo.file,
+        extraSources: demo.extraSources ?? [],
+      };
     });
   });
 }
@@ -129,7 +150,9 @@ describe("docs pages", () => {
     expect(props.length).toBeGreaterThan(20);
     const owners = new Map<string, string[]>();
     for (const page of DOCS_PAGES) {
-      for (const [, name = ""] of page.source.matchAll(/^\| `(\w+)` \| Prop \|/gm)) {
+      for (const [, name = ""] of page.source.matchAll(
+        /^\| `(\w+)` \| Prop \|/gm,
+      )) {
         owners.set(name, [...(owners.get(name) ?? []), page.id]);
       }
     }
@@ -172,7 +195,10 @@ describe("docs pages", () => {
     for (const { page, file, extraSources } of docsFences()) {
       expect(() => loadDemo(file), `${page}.md → ${file}`).not.toThrow();
       for (const source of extraSources) {
-        expect(() => loadSharedSource(source), `${page}.md → ${source}`).not.toThrow();
+        expect(
+          () => loadSharedSource(source),
+          `${page}.md → ${source}`,
+        ).not.toThrow();
       }
     }
   });
@@ -191,7 +217,9 @@ describe("docs pages", () => {
       }),
     );
     const broken = DOCS_PAGES.flatMap((page) => {
-      return [...page.source.matchAll(/\]\(\/docs\/([a-z-]+)(?:#([a-z0-9-]+))?\)/g)]
+      return [
+        ...page.source.matchAll(/\]\(\/docs\/([a-z-]+)(?:#([a-z0-9-]+))?\)/g),
+      ]
         .filter(([, id = "", slug]) => {
           const target = byId.get(id);
           if (target === undefined) {

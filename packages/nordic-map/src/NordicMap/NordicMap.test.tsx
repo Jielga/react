@@ -53,7 +53,13 @@ const failingSource: MapSource = {
 };
 
 const pins: MapPin<{ office: number }>[] = [
-  { id: "sto", lat: 59.33, lon: 18.07, label: "Stockholm", data: { office: 1 } },
+  {
+    id: "sto",
+    lat: 59.33,
+    lon: 18.07,
+    label: "Stockholm",
+    data: { office: 1 },
+  },
   { id: "got", lat: 57.71, lon: 11.97, label: "Göteborg", data: { office: 2 } },
   { id: "kir", lat: 67.86, lon: 20.23, label: "Kiruna", data: { office: 3 } },
 ];
@@ -77,14 +83,23 @@ async function shown() {
 describe("NordicMap", () => {
   it("names the map and leaves the loader once the data is in", async () => {
     render(<NordicMap source={source} label="Offices" />);
-    expect(screen.getByRole("application", { name: "Offices" })).toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "Loading map" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("application", { name: "Offices" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading map" }),
+    ).toBeInTheDocument();
     await shown();
   });
 
   it("shows the error text when the map data can not be loaded", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    render(<NordicMap source={failingSource} labels={{ loadError: "No map today." }} />);
+    render(
+      <NordicMap
+        source={failingSource}
+        labels={{ loadError: "No map today." }}
+      />,
+    );
     expect(await screen.findByRole("alert")).toHaveTextContent("No map today.");
     expect(error).toHaveBeenCalled();
   });
@@ -92,7 +107,9 @@ describe("NordicMap", () => {
   it("takes its texts from labels", async () => {
     render(<NordicMap source={source} labels={NORDIC_MAP_LABELS_SV} />);
     await shown();
-    expect(screen.getByRole("application", { name: "Karta" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("application", { name: "Karta" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zooma in" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Zooma ut" })).toBeDisabled();
   });
@@ -100,7 +117,14 @@ describe("NordicMap", () => {
   it("gives every pin on screen a button that selects it", async () => {
     const onSelectionChange = vi.fn();
     const onPinClick = vi.fn();
-    render(<NordicMap source={source} pins={pins} onSelectionChange={onSelectionChange} onPinClick={onPinClick} />);
+    render(
+      <NordicMap
+        source={source}
+        pins={pins}
+        onSelectionChange={onSelectionChange}
+        onPinClick={onPinClick}
+      />,
+    );
     await shown();
     const stockholm = screen.getByRole("button", { name: "Stockholm" });
     expect(stockholm).toHaveAttribute("aria-pressed", "false");
@@ -108,7 +132,10 @@ describe("NordicMap", () => {
     await userEvent.click(stockholm);
     expect(onSelectionChange).toHaveBeenLastCalledWith(["sto"]);
     expect(onPinClick).toHaveBeenCalledWith(pins[0]);
-    expect(screen.getByRole("button", { name: "Stockholm" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Stockholm" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "Kiruna" }));
     expect(onSelectionChange).toHaveBeenLastCalledWith(["sto", "kir"]);
@@ -116,7 +143,14 @@ describe("NordicMap", () => {
 
   it("keeps a single pin selected in single mode", async () => {
     const onSelectionChange = vi.fn();
-    render(<NordicMap source={source} pins={pins} selectionMode="single" onSelectionChange={onSelectionChange} />);
+    render(
+      <NordicMap
+        source={source}
+        pins={pins}
+        selectionMode="single"
+        onSelectionChange={onSelectionChange}
+      />,
+    );
     await shown();
     await userEvent.click(screen.getByRole("button", { name: "Stockholm" }));
     await userEvent.click(screen.getByRole("button", { name: "Kiruna" }));
@@ -174,7 +208,14 @@ describe("NordicMap", () => {
   it("reports its view, and queues a camera move made before the data is in", async () => {
     const ref = createRef<NordicMapHandle>();
     const onViewChange = vi.fn();
-    render(<NordicMap ref={ref} source={source} pins={pins} onViewChange={onViewChange} />);
+    render(
+      <NordicMap
+        ref={ref}
+        source={source}
+        pins={pins}
+        onViewChange={onViewChange}
+      />,
+    );
     expect(ref.current?.getView()).toBeNull();
     ref.current?.flyTo({ lat: 59.33, lon: 18.07, zoom: 8 });
     await shown();

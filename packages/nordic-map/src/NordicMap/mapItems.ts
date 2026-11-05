@@ -1,4 +1,9 @@
-import type { LineString, MultiLineString, MultiPolygon, Polygon } from "geojson";
+import type {
+  LineString,
+  MultiLineString,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 
 /** A point on the map, at a GPS position in WGS 84 degrees */
 export type MapPin<T = unknown> = {
