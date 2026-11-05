@@ -29,7 +29,8 @@ import type { ReadonlyStore, Store } from "@tanstack/store";
  * which removes the render-time sync entirely - is in the backlog.
  */
 
-type Observer = ((value: unknown) => void) | { next?: (value: unknown) => void };
+type Observer =
+  ((value: unknown) => void) | { next?: (value: unknown) => void };
 
 type Subscribe = (observer: Observer) => { unsubscribe: () => void };
 

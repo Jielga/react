@@ -41,9 +41,7 @@ describe("resizePreview", () => {
       rightLane: [],
     });
 
-    expect(preview?.gridTemplateColumns).toBe(
-      "36px 250px minmax(120px, 1fr)",
-    );
+    expect(preview?.gridTemplateColumns).toBe("36px 250px minmax(120px, 1fr)");
     // The grid's minimum grows with the column, or the drag would stop at the
     // viewport instead of scrolling.
     expect(preview?.minWidth).toBe(36 + 250 + 120);

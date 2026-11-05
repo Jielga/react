@@ -21,10 +21,5 @@ export default {
     format: "es",
   },
   plugins: dts({ dtsInput: true }),
-  external: [
-    /^react($|\/)/,
-    /^react-dom($|\/)/,
-    /^d3-geo$/,
-    /^geojson$/,
-  ],
+  external: [/^react($|\/)/, /^react-dom($|\/)/, /^d3-geo$/, /^geojson$/],
 };

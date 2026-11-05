@@ -155,7 +155,12 @@ describe("meta.autoSize", () => {
    * floor rather than as the content width.
    */
   const autoSizedColumns = [
-    { accessorKey: "city", header: "City", minSize: 120, meta: { autoSize: true } },
+    {
+      accessorKey: "city",
+      header: "City",
+      minSize: 120,
+      meta: { autoSize: true },
+    },
   ];
 
   it("fits the column to its mounted content once the rows arrive", async () => {
@@ -188,7 +193,9 @@ describe("meta.autoSize", () => {
     renderTable(result);
 
     await waitFor(() =>
-      expect(result.current.table.store.state.columnSizing["name"]).toBeDefined(),
+      expect(
+        result.current.table.store.state.columnSizing["name"],
+      ).toBeDefined(),
     );
     // "Name" at 16px/char plus the header's allowance, well under the
     // "Stockholm"-sized widths the value cells would have given.

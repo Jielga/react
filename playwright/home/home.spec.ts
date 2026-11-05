@@ -12,7 +12,9 @@ test("the index page links every package site", async ({ page }) => {
   await page.goto("/");
   for (const site of sites) {
     await expect(
-      page.getByRole("main").getByRole("link", { name: site.title, exact: true }),
+      page
+        .getByRole("main")
+        .getByRole("link", { name: site.title, exact: true }),
     ).toHaveAttribute("href", `https://jielga.github.io/react/${site.slug}/`);
   }
 });

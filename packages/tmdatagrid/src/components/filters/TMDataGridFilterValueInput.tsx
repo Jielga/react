@@ -48,7 +48,12 @@ export function TMDataGridFilterValueInput(args: TMDataGridFilterControlArgs) {
     return (
       // The interval's two ends. Either may stay empty (an open end), and
       // each writes its slot of the `[min, max]` pair.
-      <Group gap={4} wrap="nowrap" align="flex-start" w={fills ? "100%" : undefined}>
+      <Group
+        gap={4}
+        wrap="nowrap"
+        align="flex-start"
+        w={fills ? "100%" : undefined}
+      >
         <TextInput
           {...filterFieldProps(
             args,

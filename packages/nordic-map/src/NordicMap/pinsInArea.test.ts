@@ -25,7 +25,10 @@ describe("pinsInArea", () => {
       id: "a",
       geometry: {
         type: "MultiPolygon",
-        coordinates: [[ring(14, 60, 17, 62), ring(15.2, 61.2, 15.8, 61.8)], [ring(19, 65, 21, 67)]],
+        coordinates: [
+          [ring(14, 60, 17, 62), ring(15.2, 61.2, 15.8, 61.8)],
+          [ring(19, 65, 21, 67)],
+        ],
       },
     };
     expect(
@@ -36,7 +39,13 @@ describe("pinsInArea", () => {
   });
 
   it("accepts rings wound either way", () => {
-    const area: MapArea = { id: "b", geometry: { type: "Polygon", coordinates: [ring(14, 60, 17, 62).reverse()] } };
+    const area: MapArea = {
+      id: "b",
+      geometry: {
+        type: "Polygon",
+        coordinates: [ring(14, 60, 17, 62).reverse()],
+      },
+    };
     expect(
       pinsInArea(pins, area).map((pin) => {
         return pin.id;
@@ -46,7 +55,10 @@ describe("pinsInArea", () => {
 
   it("follows the great circle of a long edge, as the map draws it", () => {
     // The north edge from 10°E to 30°E at 64°N bows north to about 64.35°N in the middle
-    const area: MapArea = { id: "c", geometry: { type: "Polygon", coordinates: [ring(10, 60, 30, 64)] } };
+    const area: MapArea = {
+      id: "c",
+      geometry: { type: "Polygon", coordinates: [ring(10, 60, 30, 64)] },
+    };
     const bulge: MapPin[] = [{ id: "bulge", lat: 64.2, lon: 20 }];
     expect(pinsInArea(bulge, area)).toEqual(bulge);
   });

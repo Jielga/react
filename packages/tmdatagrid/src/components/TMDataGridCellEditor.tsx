@@ -10,7 +10,10 @@ import {
   useState,
 } from "react";
 import classes from "./TMDataGridTable.module.css";
-import { type TMDataGridRowData, useTMDataGridContext } from "../TMDataGridContext";
+import {
+  type TMDataGridRowData,
+  useTMDataGridContext,
+} from "../TMDataGridContext";
 import { isButtonElement, isInputElement, isNode } from "../core/dom";
 import {
   getEditFieldName,
@@ -30,10 +33,7 @@ import { TMDataGridSelectEditor } from "./editors/TMDataGridSelectEditor";
 import { TMDataGridStringEditor } from "./editors/TMDataGridStringEditor";
 import { useFieldError } from "./editors/editorShared";
 
-const BUILT_IN_EDITORS: Record<
-  string,
-  ComponentType<TMDataGridEditorArgs>
-> = {
+const BUILT_IN_EDITORS: Record<string, ComponentType<TMDataGridEditorArgs>> = {
   string: TMDataGridStringEditor,
   number: TMDataGridNumberEditor,
   boolean: TMDataGridBooleanEditor,

@@ -179,12 +179,20 @@ function toSearchRequest(state: {
     orderBy: state.sorting.flatMap((sort) => {
       const column = QUERY_FIELDS[sort.id];
       return column
-        ? [{ field: column.field, direction: sort.desc ? "DESC" : "ASC" } as const]
+        ? [
+            {
+              field: column.field,
+              direction: sort.desc ? "DESC" : "ASC",
+            } as const,
+          ]
         : [];
     }),
     // The grid counts pages from 0 and this API from 1. One `+ 1` here is the
     // whole of that disagreement.
-    page: { number: state.pagination.pageIndex + 1, size: state.pagination.pageSize },
+    page: {
+      number: state.pagination.pageIndex + 1,
+      size: state.pagination.pageSize,
+    },
   };
 }
 

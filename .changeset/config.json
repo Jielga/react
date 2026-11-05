@@ -7,12 +7,7 @@
     }
   ],
   "commit": false,
-  "fixed": [
-    [
-      "@jielga/tmdatagrid",
-      "@jielga/tmdatagrid-xlsx"
-    ]
-  ],
+  "fixed": [["@jielga/tmdatagrid", "@jielga/tmdatagrid-xlsx"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

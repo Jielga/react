@@ -19,7 +19,9 @@ test("an open row's spanning cell is one box over the columns it covers", async 
   // right edge, and the cells in between are not rendered.
   const span = grid.cell({ rowId: "2", columnId: "name" });
   await expect(span).toHaveAttribute("aria-colspan", "4");
-  await expect(grid.cell({ rowId: "2", columnId: "department" })).toHaveCount(0);
+  await expect(grid.cell({ rowId: "2", columnId: "department" })).toHaveCount(
+    0,
+  );
 
   const spanBox = await box(span);
   const firstHeader = await box(grid.part("header", { columnId: "name" }));
@@ -50,6 +52,8 @@ test("closing the row brings its cells back", async ({ page }) => {
   await expect(grid.cell({ rowId: "2", columnId: "name" })).not.toHaveAttribute(
     "aria-colspan",
   );
-  await expect(grid.cell({ rowId: "2", columnId: "department" })).toHaveCount(1);
+  await expect(grid.cell({ rowId: "2", columnId: "department" })).toHaveCount(
+    1,
+  );
   await expect(grid.part("details", { rowId: "2" })).toHaveCount(0);
 });

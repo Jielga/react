@@ -11,8 +11,7 @@ import { excerpt, searchDocs, SEARCH_INDEX } from "./searchIndex";
  * the queries that used to return a full list of confident nonsense.
  */
 
-const titles = (query: string) =>
-  searchDocs(query).map((entry) => entry.title);
+const titles = (query: string) => searchDocs(query).map((entry) => entry.title);
 
 /** The page a result sits on: a page entry is its own title. */
 const pageOf = (query: string) =>
@@ -101,7 +100,9 @@ describe("docs search", () => {
 
   describe("prose is searchable", () => {
     it("finds a page by a word only its body carries", () => {
-      expect(pageOf("virtualization")).toContain("Scrolling and virtualization");
+      expect(pageOf("virtualization")).toContain(
+        "Scrolling and virtualization",
+      );
       expect(pageOf("localStorage")).toContain("Persistence");
     });
 
@@ -131,17 +132,25 @@ describe("docs search", () => {
       // so the passage under "The column helper" that defines it went unfound.
       const results = searchDocs("createTMDataGridColumnHelper");
       expect(results[0].kind).toBe("symbol");
-      expect(results[1]).toMatchObject({ kind: "text", hash: "the-column-helper" });
+      expect(results[1]).toMatchObject({
+        kind: "text",
+        hash: "the-column-helper",
+      });
     });
 
     it("finds a symbol's passages while the name is still being typed", () => {
-      const hashes = searchDocs("createTMDataGridCol").map((entry) => entry.hash);
+      const hashes = searchDocs("createTMDataGridCol").map(
+        (entry) => entry.hash,
+      );
       expect(hashes).toContain("the-column-helper");
     });
 
     it("returns one row per destination", () => {
       const results = searchDocs("draft");
-      const keys = results.map((entry) => `${entry.to}#${entry.hash ?? ""}${entry.kind === "symbol" ? entry.title : ""}`);
+      const keys = results.map(
+        (entry) =>
+          `${entry.to}#${entry.hash ?? ""}${entry.kind === "symbol" ? entry.title : ""}`,
+      );
       expect(new Set(keys).size).toBe(keys.length);
     });
 
@@ -170,7 +179,9 @@ describe("docs search", () => {
         const page = findDocsPage(alias.pageId);
         expect(page, `no page ${alias.pageId}`).toBeDefined();
         if (!page || alias.hash === undefined) continue;
-        const slugs = extractHeadings(page.source).map((heading) => heading.slug);
+        const slugs = extractHeadings(page.source).map(
+          (heading) => heading.slug,
+        );
         expect(slugs, `${alias.pageId}#${alias.hash}`).toContain(alias.hash);
       }
     });

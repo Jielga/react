@@ -11,7 +11,11 @@ const frame: Frame = {
 
 describe("cameraForBounds", () => {
   it("fits the bounds inside the margin", () => {
-    const camera = cameraForBounds({ frame, bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 }, margin: 50 });
+    const camera = cameraForBounds({
+      frame,
+      bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+      margin: 50,
+    });
     // 0.4 pixels per unit fit the whole map, and 300 pixels for 100 units is 3, so the zoom is 7.5
     expect(camera.k).toBeCloseTo(7.5);
     expect(toScreen({ camera, frame, point: [0, 0] })).toEqual([50, 50]);
@@ -19,7 +23,11 @@ describe("cameraForBounds", () => {
   });
 
   it("stops at maxZoom for a single point", () => {
-    const camera = cameraForBounds({ frame, bounds: { minX: 5, minY: 5, maxX: 5, maxY: 5 }, margin: 50 });
+    const camera = cameraForBounds({
+      frame,
+      bounds: { minX: 5, minY: 5, maxX: 5, maxY: 5 },
+      margin: 50,
+    });
     expect(camera).toEqual({ k: 50, center: [5, 5] });
   });
 });

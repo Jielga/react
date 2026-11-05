@@ -2,7 +2,12 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { cellAt, part, queryPart, renderWithMantine } from "../../test/gridHarness";
+import {
+  cellAt,
+  part,
+  queryPart,
+  renderWithMantine,
+} from "../../test/gridHarness";
 import { TMDataGrid } from "./TMDataGrid";
 import type { TMDataGridEditMode } from "../core/editEngine";
 import {
@@ -86,7 +91,11 @@ describe("edit modes", () => {
 
   type Gesture = "enter" | "tab" | "blur" | "escape";
 
-  const perform = async (user: UserEvent, gesture: Gesture, mode: TMDataGridEditMode) => {
+  const perform = async (
+    user: UserEvent,
+    gesture: Gesture,
+    mode: TMDataGridEditMode,
+  ) => {
     if (gesture === "blur") return clickAway(user);
     if (gesture === "tab") {
       // The confirming editor's ✓ and ✕ are its own form: Tab reaches them
@@ -109,7 +118,10 @@ describe("edit modes", () => {
     /** The draft is gone and the row is clean again. */
     | "cancels";
 
-  const MATRIX: Array<{ mode: TMDataGridEditMode; expected: Record<Gesture, Outcome> }> = [
+  const MATRIX: Array<{
+    mode: TMDataGridEditMode;
+    expected: Record<Gesture, Outcome>;
+  }> = [
     {
       mode: "cell",
       expected: {
@@ -229,9 +241,7 @@ describe("edit modes", () => {
     await user.type(nameInput(), "Annika");
     await user.click(part("save-row", { rowId: "1" }));
 
-    await waitFor(() =>
-      expect(rowOne()).toHaveAttribute("data-draft", "true"),
-    );
+    await waitFor(() => expect(rowOne()).toHaveAttribute("data-draft", "true"));
     // A committed row is decided, so it goes back to rendering values: its
     // form is gone and the row is the draft store's values.
     expect(noEditor()).toBe(true);
@@ -305,9 +315,7 @@ describe("edit modes", () => {
   it("keeps a row the edit left invalid open, still saying why", async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
-    renderWithMantine(
-      <ModeGrid mode="cell" draft onCommit={onCommit} />,
-    );
+    renderWithMantine(<ModeGrid mode="cell" draft onCommit={onCommit} />);
 
     // "A" fails the column's `min(2)`, so the row cannot park.
     await startEditing(user, "A");
@@ -316,7 +324,9 @@ describe("edit modes", () => {
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(rowOne()).not.toHaveAttribute("data-draft");
-    expect(part("open-rows-note")).toHaveTextContent("1 row still being edited");
+    expect(part("open-rows-note")).toHaveTextContent(
+      "1 row still being edited",
+    );
     // The editor stays - a refused commit is not a decision - and the message
     // with it: the cell is marked, and the lane's ✓ carries the text as well.
     expect(noEditor()).toBe(false);

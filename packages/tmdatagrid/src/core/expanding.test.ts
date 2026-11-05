@@ -101,8 +101,9 @@ describe("areAllRowsExpanded", () => {
       expand: true,
     });
 
-    expect(areAllRowsExpanded({ rows, expanded: everyGroup, target: "groups" }))
-      .toBe(true);
+    expect(
+      areAllRowsExpanded({ rows, expanded: everyGroup, target: "groups" }),
+    ).toBe(true);
     expect(
       areAllRowsExpanded({ rows, expanded: everyGroup, target: "details" }),
     ).toBe(false);
@@ -122,7 +123,8 @@ describe("areAllRowsExpanded", () => {
 
   it("is false when there are none of that kind - nothing to collapse", () => {
     const { result } = renderGrid({ renderDetails: () => null });
-    const rows = erased(result.current).table.getPrePaginatedRowModel().flatRows;
+    const rows = erased(result.current).table.getPrePaginatedRowModel()
+      .flatRows;
 
     // Ungrouped: every row is a data row, so there is no group to be open.
     expect(areAllRowsExpanded({ rows, expanded: true, target: "groups" })).toBe(

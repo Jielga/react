@@ -33,7 +33,10 @@ export function ColorSchemeSwitch() {
       data={[
         { value: "light", label: <SchemeLabel icon={IconSun} name="Light" /> },
         { value: "dark", label: <SchemeLabel icon={IconMoon} name="Dark" /> },
-        { value: "auto", label: <SchemeLabel icon={IconDeviceDesktop} name="System" /> },
+        {
+          value: "auto",
+          label: <SchemeLabel icon={IconDeviceDesktop} name="System" />,
+        },
       ]}
     />
   );

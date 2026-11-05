@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Point } from "./camera.ts";
 import type { MapPin } from "./mapItems.ts";
-import { buildMarkers, clusterPoints, markerPins, markerRadius } from "./markers.ts";
+import {
+  buildMarkers,
+  clusterPoints,
+  markerPins,
+  markerRadius,
+} from "./markers.ts";
 import type { PlacedPin } from "./markers.ts";
 
 function place(pins: { pin: MapPin; point: Point }[]): PlacedPin<unknown>[] {
@@ -84,6 +89,8 @@ describe("buildMarkers", () => {
 
   it("makes clusters larger than pins", () => {
     const [cluster] = buildMarkers({ placed: pins, radius: 10 });
-    expect(cluster && markerRadius({ marker: cluster, pinRadius: 5 })).toBeGreaterThan(5);
+    expect(
+      cluster && markerRadius({ marker: cluster, pinRadius: 5 }),
+    ).toBeGreaterThan(5);
   });
 });

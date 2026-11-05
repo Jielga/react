@@ -82,7 +82,9 @@ export function AreaDetails({
           if (draft.trim() === "") {
             return "An area needs an id";
           }
-          return draft !== area.id && takenIds.includes(draft) ? "Another area has this id" : null;
+          return draft !== area.id && takenIds.includes(draft)
+            ? "Another area has this id"
+            : null;
         }}
         onCommit={(id) => {
           onChange({ ...area, id });
@@ -108,10 +110,22 @@ export function AreaDetails({
         }}
       />
       <Group gap="xs" mt={4}>
-        <Button size="xs" variant="default" leftSection={<IconFocus2 size={14} />} onClick={onZoomTo} disabled={area.parts.length === 0}>
+        <Button
+          size="xs"
+          variant="default"
+          leftSection={<IconFocus2 size={14} />}
+          onClick={onZoomTo}
+          disabled={area.parts.length === 0}
+        >
           Zoom to area
         </Button>
-        <Button size="xs" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+        <Button
+          size="xs"
+          variant="light"
+          color="red"
+          leftSection={<IconTrash size={14} />}
+          onClick={onDelete}
+        >
           Delete area
         </Button>
       </Group>

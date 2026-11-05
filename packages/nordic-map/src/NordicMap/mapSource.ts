@@ -1,4 +1,9 @@
-import type { LineString, MultiLineString, MultiPolygon, Polygon } from "geojson";
+import type {
+  LineString,
+  MultiLineString,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 
 /** [longitude, latitude] in WGS 84 degrees */
 export type LonLat = [number, number];
@@ -119,7 +124,15 @@ export function cellKey(cell: MapCell): string {
 }
 
 /** Cells of `level` that touch `box`. */
-export function cellsInBox({ source, level, box }: { source: MapSource; level: number; box: LonLatBox }): MapCell[] {
+export function cellsInBox({
+  source,
+  level,
+  box,
+}: {
+  source: MapSource;
+  level: number;
+  box: LonLatBox;
+}): MapCell[] {
   const size = source.levels[level]?.cellSize;
   if (size === undefined) {
     return [];
@@ -144,7 +157,13 @@ export function cellsInBox({ source, level, box }: { source: MapSource; level: n
 }
 
 /** The most detailed level that `zoom` shows. */
-export function levelForZoom({ source, zoom }: { source: MapSource; zoom: number }): number {
+export function levelForZoom({
+  source,
+  zoom,
+}: {
+  source: MapSource;
+  zoom: number;
+}): number {
   let level = 0;
   source.levels.forEach((candidate, index) => {
     if (candidate.minZoom <= zoom) {

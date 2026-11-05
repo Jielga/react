@@ -71,16 +71,19 @@ export type TMDataGridColumnInfoOf<TColumn> =
   TColumn extends TMDataGridTypedColumn<infer TInfo> ? TInfo : never;
 
 /** `"address.city"` becomes `"address_city"`, as TanStack derives the id. */
-type DotsToUnderscores<S extends string> = S extends `${infer Head}.${infer Tail}`
-  ? `${Head}_${DotsToUnderscores<Tail>}`
-  : S;
+type DotsToUnderscores<S extends string> =
+  S extends `${infer Head}.${infer Tail}`
+    ? `${Head}_${DotsToUnderscores<Tail>}`
+    : S;
 
 /**
  * The column id the helper's `accessor` call produces: the explicit `id`,
  * else the accessor key. An accessor function without an `id` gets `never`,
  * which no link can name.
  */
-export type TMDataGridAccessorColumnId<TAccessor, TId extends string> = [TId] extends [never]
+export type TMDataGridAccessorColumnId<TAccessor, TId extends string> = [
+  TId,
+] extends [never]
   ? TAccessor extends string
     ? DotsToUnderscores<TAccessor>
     : never
@@ -118,7 +121,9 @@ export type TMDataGridDateInput = Date | string;
 
 /** One choice of a select column: the value, or an element of an array value. */
 type OptionOf<TValue> =
-  NonNullable<TValue> extends ReadonlyArray<infer TElement> ? TElement : NonNullable<TValue>;
+  NonNullable<TValue> extends ReadonlyArray<infer TElement>
+    ? TElement
+    : NonNullable<TValue>;
 
 type ScalarInput = {
   string: string;
@@ -148,7 +153,10 @@ type FilterInputFor<
       ? {
           operator: TOperator;
           /** `null` leaves that end open. */
-          value: readonly [from: RangeEnd<TType> | null, to: RangeEnd<TType> | null];
+          value: readonly [
+            from: RangeEnd<TType> | null,
+            to: RangeEnd<TType> | null,
+          ];
         }
       : { operator: TOperator; value: ScalarInput[TType] };
 
@@ -177,10 +185,8 @@ export type TMDataGridUrlFiltersInput<TInfo extends TMDataGridColumnInfo> = [
     };
 
 /** The ids a link may sort by. */
-export type TMDataGridUrlSortableId<TInfo extends TMDataGridColumnInfo> = Extract<
-  TInfo,
-  { sortable: true }
->["id"];
+export type TMDataGridUrlSortableId<TInfo extends TMDataGridColumnInfo> =
+  Extract<TInfo, { sortable: true }>["id"];
 
 type Carries<
   TSlices extends ReadonlyArray<TMDataGridDataSlice>,
@@ -194,7 +200,9 @@ export type TMDataGridUrlInput<
 > = (Carries<TSlices, "columnFilters"> extends true
   ? { filters?: TMDataGridUrlFiltersInput<TInfo> }
   : unknown) &
-  (Carries<TSlices, "globalFilter"> extends true ? { globalFilter?: string } : unknown) &
+  (Carries<TSlices, "globalFilter"> extends true
+    ? { globalFilter?: string }
+    : unknown) &
   (Carries<TSlices, "sorting"> extends true
     ? {
         sorting?: ReadonlyArray<{
@@ -246,7 +254,9 @@ export type TMDataGridUrlState<
   /** For `persist.urlKey`. */
   readonly urlKey: TMDataGridPersistKey<TMDataGridDataSlice>;
   /** The param's value for a link, or `undefined` when the input sets nothing. */
-  payload(input: TMDataGridUrlInput<TInfo, TSlices>): TMDataGridUrlPayload | undefined;
+  payload(
+    input: TMDataGridUrlInput<TInfo, TSlices>,
+  ): TMDataGridUrlPayload | undefined;
   /** The search object for a router link, `{ [key]: payload }`. */
   search(input: TMDataGridUrlInput<TInfo, TSlices>): {
     [K in TKey]: TMDataGridUrlPayload | undefined;
@@ -283,7 +293,8 @@ export type TMDataGridUrlState<
 export function createTMDataGridUrlState<
   const TKey extends string,
   TColumns extends ReadonlyArray<unknown>,
-  const TSlices extends ReadonlyArray<TMDataGridDataSlice> = typeof DATA_STATE_SLICES,
+  const TSlices extends ReadonlyArray<TMDataGridDataSlice> =
+    typeof DATA_STATE_SLICES,
 >(options: {
   /** The URL search param. */
   key: TKey;
@@ -291,7 +302,11 @@ export function createTMDataGridUrlState<
   columns: TColumns;
   /** The data slices the param carries. Defaults to every data slice. */
   slices?: TSlices;
-}): TMDataGridUrlState<TKey, TSlices, TMDataGridColumnInfoOf<TColumns[number]>> {
+}): TMDataGridUrlState<
+  TKey,
+  TSlices,
+  TMDataGridColumnInfoOf<TColumns[number]>
+> {
   const { key, columns } = options;
   const slices = (options.slices ?? DATA_STATE_SLICES) as TSlices;
   const urlKey: TMDataGridPersistKey<TMDataGridDataSlice> = options.slices
@@ -300,7 +315,8 @@ export function createTMDataGridUrlState<
 
   const columnTypes = new Map<string, TMDataGridColumnType>();
   forEachLeafColumnDef(columns, (id, record) => {
-    const type = (record.meta as { type?: TMDataGridColumnType } | undefined)?.type;
+    const type = (record.meta as { type?: TMDataGridColumnType } | undefined)
+      ?.type;
     columnTypes.set(id, type ?? "string");
   });
 
@@ -359,8 +375,11 @@ function toPayload(
   const payload: TMDataGridUrlPayload = {};
 
   if (input.filters && slices.includes("columnFilters")) {
-    const columnFilters = Object.entries(input.filters).flatMap(([id, filter]) =>
-      filter ? [{ id, value: toFilterValue(filter, columnTypes.get(id)) }] : [],
+    const columnFilters = Object.entries(input.filters).flatMap(
+      ([id, filter]) =>
+        filter
+          ? [{ id, value: toFilterValue(filter, columnTypes.get(id)) }]
+          : [],
     );
     if (columnFilters.length > 0) payload.columnFilters = columnFilters;
   }
@@ -368,7 +387,10 @@ function toPayload(
     payload.globalFilter = input.globalFilter;
   }
   if (input.sorting && input.sorting.length > 0 && slices.includes("sorting")) {
-    payload.sorting = input.sorting.map(({ id, desc = false }) => ({ id, desc }));
+    payload.sorting = input.sorting.map(({ id, desc = false }) => ({
+      id,
+      desc,
+    }));
   }
   if (input.pagination && slices.includes("pagination")) {
     payload.pagination = {
@@ -394,12 +416,18 @@ function toFilterValue(
   }
   if (operator === "between") {
     const [from, to] = value as readonly [unknown, unknown];
-    return { operator, value: [toFilterString(from, type), toFilterString(to, type)] };
+    return {
+      operator,
+      value: [toFilterString(from, type), toFilterString(to, type)],
+    };
   }
   return { operator, value: toFilterString(value, type) };
 }
 
-function toFilterString(value: unknown, type: TMDataGridColumnType | undefined): string {
+function toFilterString(
+  value: unknown,
+  type: TMDataGridColumnType | undefined,
+): string {
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return localIsoDay(value);
   // The date controls write `YYYY-MM-DD`; a full ISO timestamp is cut to it.
@@ -420,7 +448,9 @@ function localIsoDay(date: Date): string {
  * encodes it itself. Both directions go through JSON, so the grid's "the param
  * is unchanged, skip the write" comparison keeps holding.
  */
-function toUrlStorage(storage: TMDataGridUrlSearchStorage): TMDataGridUrlStorage {
+function toUrlStorage(
+  storage: TMDataGridUrlSearchStorage,
+): TMDataGridUrlStorage {
   return {
     get: (name) => {
       const value = storage.get(name);
@@ -429,7 +459,12 @@ function toUrlStorage(storage: TMDataGridUrlSearchStorage): TMDataGridUrlStorage
       return typeof value === "string" ? value : JSON.stringify(value);
     },
     set: (name, value) => {
-      storage.set(name, value === null ? undefined : (JSON.parse(value) as TMDataGridUrlPayload));
+      storage.set(
+        name,
+        value === null
+          ? undefined
+          : (JSON.parse(value) as TMDataGridUrlPayload),
+      );
     },
   };
 }

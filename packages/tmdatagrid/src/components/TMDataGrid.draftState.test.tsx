@@ -50,7 +50,9 @@ function DraftGrid({
 
 function renderDraftGrid(options: Partial<UseTMDataGridOptions<TestRow>> = {}) {
   let api!: TMDataGridApi<TestRow>;
-  renderWithMantine(<DraftGrid {...options} onReady={(grid) => (api = grid)} />);
+  renderWithMantine(
+    <DraftGrid {...options} onReady={(grid) => (api = grid)} />,
+  );
   return api;
 }
 
@@ -166,7 +168,8 @@ describe("deletion-marked rows", () => {
     });
     // Stockholm holds rows 1, 4, 7 and 10.
     act(() => {
-      for (const id of ["1", "4", "7"]) api.table.getRow(id).toggleSelected(true);
+      for (const id of ["1", "4", "7"])
+        api.table.getRow(id).toggleSelected(true);
     });
     const groupBox = () =>
       part("select-row", { rowId: "city:Stockholm" }) as HTMLInputElement;

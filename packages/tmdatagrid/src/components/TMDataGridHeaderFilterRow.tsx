@@ -46,15 +46,22 @@ function isEmptyValue(value: string | ReadonlyArray<string>): boolean {
  * and not much else. Everything else is the same filter: the same operators,
  * the same `meta.filter.control`, the same `columnFilters` state.
  */
-function HeaderFilterControl({ column }: { column: TMDataGridHeader["column"] }) {
+function HeaderFilterControl({
+  column,
+}: {
+  column: TMDataGridHeader["column"];
+}) {
   const { table, labels, controlSize } = useTMDataGridContext();
   const filterValue = useSelector(
     table.store,
-    (state) => state.columnFilters.find((filter) => filter.id === column.id)?.value,
+    (state) =>
+      state.columnFilters.find((filter) => filter.id === column.id)?.value,
   );
 
   const defaultOperator = getColumnDefaultOperator(column);
-  const current = isTMDataGridFilterValue(filterValue) ? filterValue : undefined;
+  const current = isTMDataGridFilterValue(filterValue)
+    ? filterValue
+    : undefined;
   const operator = current?.operator ?? defaultOperator;
   const value = current?.value ?? emptyValueForOperator(operator);
   const label = getColumnLabel(column);

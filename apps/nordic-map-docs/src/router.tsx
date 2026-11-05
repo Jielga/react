@@ -1,4 +1,10 @@
-import { createBrowserHistory, createRootRoute, createRoute, createRouter, redirect } from "@tanstack/react-router";
+import {
+  createBrowserHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  redirect,
+} from "@tanstack/react-router";
 import { DocsIndexPage } from "./docs/DocsIndexPage.tsx";
 import { DocsRoutePage } from "./docs/DocsRoutePage.tsx";
 import { AreaEditorPage } from "./editor/AreaEditorPage.tsx";
@@ -65,7 +71,14 @@ const editorRoute = createRoute({
   component: AreaEditorPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, docsIndexRoute, docsRoute, gettingStartedRedirect, playgroundRoute, editorRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  docsIndexRoute,
+  docsRoute,
+  gettingStartedRedirect,
+  playgroundRoute,
+  editorRoute,
+]);
 
 export const router = createRouter({
   routeTree,

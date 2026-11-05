@@ -133,14 +133,17 @@ export function resolveColumnOptions({
       .map((value) => ({ value }));
   }
 
-  const list = typeof source === "function" ? source({ table, column, row }) : source;
+  const list =
+    typeof source === "function" ? source({ table, column, row }) : source;
   return list.map((option) =>
     typeof option === "string" ? { value: option } : option,
   );
 }
 
 type ComboboxItem = { value: string; label: string; disabled?: boolean };
-type ComboboxData = Array<ComboboxItem | { group: string; items: ComboboxItem[] }>;
+type ComboboxData = Array<
+  ComboboxItem | { group: string; items: ComboboxItem[] }
+>;
 
 /**
  * The same list in the shape Mantine's `Select` / `MultiSelect` take, with

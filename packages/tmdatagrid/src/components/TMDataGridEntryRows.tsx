@@ -10,7 +10,10 @@ import { shallow } from "@tanstack/store";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import classes from "./TMDataGridTable.module.css";
 import sticky from "./sticky.module.css";
-import { type TMDataGridRowData, useTMDataGridContext } from "../TMDataGridContext";
+import {
+  type TMDataGridRowData,
+  useTMDataGridContext,
+} from "../TMDataGridContext";
 import {
   getColumnAlign,
   isColumnEditableForRow,
@@ -19,10 +22,7 @@ import {
 import { draftCellContext } from "../core/draftCellContext";
 import { getEditFieldName, type TMDataGridEditApi } from "../core/editEngine";
 import { focusEditorContent } from "../core/editorFocus";
-import {
-  tmDataGridFeatures,
-  type TMDataGridFeatures,
-} from "../useTMDataGrid";
+import { tmDataGridFeatures, type TMDataGridFeatures } from "../useTMDataGrid";
 import { TMDataGridCellEditor } from "./TMDataGridCellEditor";
 import { EDIT_COLUMN_ID } from "./TMDataGridEditColumn";
 import type { TMDataGridColumnLayout } from "./TMDataGridTable";
@@ -74,7 +74,9 @@ function EntryCell({
   const isInvalid = useSelector(edit.store, (state) => {
     if (fieldName === null) return false;
     const projection = state.rows[entryRow.id];
-    return projection !== undefined && projection.errorFields.includes(fieldName);
+    return (
+      projection !== undefined && projection.errorFields.includes(fieldName)
+    );
   });
   const editable =
     cell !== undefined && isEntryCellEditable(entryRow, column, edit);
@@ -105,7 +107,9 @@ function EntryCell({
       }
       className={[
         classes.entryCell,
-        layout.isBoundary && layout.pinnedAt === "left" ? sticky.stickyLeft : "",
+        layout.isBoundary && layout.pinnedAt === "left"
+          ? sticky.stickyLeft
+          : "",
         layout.isBoundary && layout.pinnedAt === "right"
           ? sticky.stickyRight
           : "",

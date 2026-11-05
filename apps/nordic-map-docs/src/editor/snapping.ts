@@ -42,8 +42,12 @@ function edgesOf(shapes: Part[][]): Segment[] {
 function indexSegments(segments: Segment[]): SnapIndex {
   const cells = new Map<string, Segment[]>();
   for (const segment of segments) {
-    const minColumn = Math.floor(Math.min(segment.a[0], segment.b[0]) / CELL_SIZE);
-    const maxColumn = Math.floor(Math.max(segment.a[0], segment.b[0]) / CELL_SIZE);
+    const minColumn = Math.floor(
+      Math.min(segment.a[0], segment.b[0]) / CELL_SIZE,
+    );
+    const maxColumn = Math.floor(
+      Math.max(segment.a[0], segment.b[0]) / CELL_SIZE,
+    );
     const minRow = Math.floor(Math.min(segment.a[1], segment.b[1]) / CELL_SIZE);
     const maxRow = Math.floor(Math.max(segment.a[1], segment.b[1]) / CELL_SIZE);
     for (let column = minColumn; column <= maxColumn; column += 1) {
@@ -65,7 +69,13 @@ function indexSegments(segments: Segment[]): SnapIndex {
  * Indexes every edge of the shapes. A ring's last point connects to its first. The edges that end at the
  * `exclude` point object are left out, so a point being dragged does not snap to where it was.
  */
-export function buildSnapIndex({ shapes, exclude }: { shapes: Part[][]; exclude?: LonLat }): SnapIndex {
+export function buildSnapIndex({
+  shapes,
+  exclude,
+}: {
+  shapes: Part[][];
+  exclude?: LonLat;
+}): SnapIndex {
   return indexSegments(
     edgesOf(shapes).filter(({ a, b }) => {
       return a !== exclude && b !== exclude;
@@ -79,7 +89,8 @@ export function buildSnapIndex({ shapes, exclude }: { shapes: Part[][]; exclude?
  */
 export function buildOutlineIndex(shapes: Part[][]): SnapIndex {
   const key = ({ a, b }: Segment) => {
-    const [first, second] = a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]) ? [a, b] : [b, a];
+    const [first, second] =
+      a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]) ? [a, b] : [b, a];
     return `${first[0]},${first[1]},${second[0]},${second[1]}`;
   };
   const edges = edgesOf(shapes);
@@ -95,7 +106,19 @@ export function buildOutlineIndex(shapes: Part[][]): SnapIndex {
   );
 }
 
-function segmentsNear({ index, west, south, east, north }: { index: SnapIndex; west: number; south: number; east: number; north: number }): Set<Segment> {
+function segmentsNear({
+  index,
+  west,
+  south,
+  east,
+  north,
+}: {
+  index: SnapIndex;
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}): Set<Segment> {
   const found = new Set<Segment>();
   const minColumn = Math.floor(west / index.cellSize);
   const maxColumn = Math.floor(east / index.cellSize);
@@ -115,7 +138,13 @@ function segmentsNear({ index, west, south, east, north }: { index: SnapIndex; w
   return found;
 }
 
-function screenOf({ projection, point }: { projection: ScreenProjection; point: LonLat }): ScreenPoint | null {
+function screenOf({
+  projection,
+  point,
+}: {
+  projection: ScreenProjection;
+  point: LonLat;
+}): ScreenPoint | null {
   return projection.project({ lon: point[0], lat: point[1] });
 }
 
@@ -178,7 +207,14 @@ export function findSnap({
       if (lengthSquared === 0) {
         continue;
       }
-      const t = Math.max(0, Math.min(1, ((pointer.x - screenA.x) * dx + (pointer.y - screenA.y) * dy) / lengthSquared));
+      const t = Math.max(
+        0,
+        Math.min(
+          1,
+          ((pointer.x - screenA.x) * dx + (pointer.y - screenA.y) * dy) /
+            lengthSquared,
+        ),
+      );
       const nearest = { x: screenA.x + t * dx, y: screenA.y + t * dy };
       const distance = Math.hypot(nearest.x - pointer.x, nearest.y - pointer.y);
       if (distance <= radius && (!edge || distance < edge.distance)) {

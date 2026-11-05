@@ -88,7 +88,11 @@ const markdownComponents: Components = {
   // Fenced blocks go through the same highlighter the examples
   // use, so docs and demos show code identically - and every
   // snippet in the docs gets a copy button.
-  code: ({ className, children, ...props }: ComponentPropsWithoutRef<"code">) => {
+  code: ({
+    className,
+    children,
+    ...props
+  }: ComponentPropsWithoutRef<"code">) => {
     // Inline code has no language class; only fences do.
     if (!className?.startsWith("language-")) {
       return <code {...props}>{children}</code>;
@@ -190,7 +194,8 @@ export function DocsPage({
   // replaces the history entry rather than adding one.
   useEffect(() => {
     const { hash } = window.location;
-    const target = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+    const target =
+      hash && document.getElementById(decodeURIComponent(hash.slice(1)));
     if (target && !target.matches(":target")) window.location.replace(hash);
   }, [source]);
 

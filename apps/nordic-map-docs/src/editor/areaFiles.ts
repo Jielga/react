@@ -24,7 +24,11 @@ function isObject(value: Json | undefined): value is JsonObject {
 }
 
 function text(value: Json | undefined): string | undefined {
-  return typeof value === "string" && value !== "" ? value : typeof value === "number" ? String(value) : undefined;
+  return typeof value === "string" && value !== ""
+    ? value
+    : typeof value === "number"
+      ? String(value)
+      : undefined;
 }
 
 function asGeometry(value: Json | undefined): Polygon | MultiPolygon | null {
@@ -33,15 +37,27 @@ function asGeometry(value: Json | undefined): Polygon | MultiPolygon | null {
   }
   // The positions are checked one by one when they become parts
   if (value.type === "Polygon") {
-    return { type: "Polygon", coordinates: value.coordinates as Polygon["coordinates"] };
+    return {
+      type: "Polygon",
+      coordinates: value.coordinates as Polygon["coordinates"],
+    };
   }
   if (value.type === "MultiPolygon") {
-    return { type: "MultiPolygon", coordinates: value.coordinates as MultiPolygon["coordinates"] };
+    return {
+      type: "MultiPolygon",
+      coordinates: value.coordinates as MultiPolygon["coordinates"],
+    };
   }
   return null;
 }
 
-type Candidate = { id?: string; label?: string; fill?: string; stroke?: string; geometry: Json | undefined };
+type Candidate = {
+  id?: string;
+  label?: string;
+  fill?: string;
+  stroke?: string;
+  geometry: Json | undefined;
+};
 
 /** The areas in a MapArea list, a GeoJSON FeatureCollection, a Feature, or a bare Polygon or MultiPolygon */
 function candidatesOf(value: Json): Candidate[] | string {
@@ -50,7 +66,13 @@ function candidatesOf(value: Json): Candidate[] | string {
       if (!isObject(item)) {
         return { geometry: undefined };
       }
-      return { id: text(item.id), label: text(item.label), fill: text(item.fill), stroke: text(item.stroke), geometry: item.geometry };
+      return {
+        id: text(item.id),
+        label: text(item.label),
+        fill: text(item.fill),
+        stroke: text(item.stroke),
+        geometry: item.geometry,
+      };
     });
   }
   if (!isObject(value)) {
@@ -89,22 +111,33 @@ function featureCandidate(feature: Json): Candidate {
 
 /** The value of `export const x: T = value;` in a TypeScript module, such as the one `exportAreas` writes */
 function moduleValue(input: string): string {
-  const match = /export\s+const\s+\w+\s*(?::[^=]*)?=\s*([\s\S]*?);?\s*$/.exec(input);
+  const match = /export\s+const\s+\w+\s*(?::[^=]*)?=\s*([\s\S]*?);?\s*$/.exec(
+    input,
+  );
   return match?.[1] ?? input;
 }
 
-export type ParseResult = { areas: EditorArea[]; skipped: number } | { error: string };
+export type ParseResult =
+  { areas: EditorArea[]; skipped: number } | { error: string };
 
 /**
  * Reads areas from text. Entries without a Polygon or MultiPolygon are skipped and counted. Ids that are
  * missing, or already in `takenIds` or earlier in the text, get a free id.
  */
-export function parseAreas({ input, takenIds = [] }: { input: string; takenIds?: string[] }): ParseResult {
+export function parseAreas({
+  input,
+  takenIds = [],
+}: {
+  input: string;
+  takenIds?: string[];
+}): ParseResult {
   let value: Json;
   try {
     value = JSON.parse(moduleValue(input)) as Json;
   } catch (error) {
-    return { error: `Not valid JSON: ${error instanceof Error ? error.message : String(error)}` };
+    return {
+      error: `Not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
   const candidates = candidatesOf(value);
   if (typeof candidates === "string") {
@@ -134,7 +167,13 @@ export function parseAreas({ input, takenIds = [] }: { input: string; takenIds?:
 }
 
 /** `wanted` if it is free, or else the first free `wanted-2`, `wanted-3`, ..., or `area-1`, `area-2`, ... */
-export function freeId({ wanted, taken }: { wanted?: string; taken: Set<string> }): string {
+export function freeId({
+  wanted,
+  taken,
+}: {
+  wanted?: string;
+  taken: Set<string>;
+}): string {
   if (wanted && !taken.has(wanted)) {
     return wanted;
   }
@@ -148,7 +187,13 @@ export function freeId({ wanted, taken }: { wanted?: string; taken: Set<string> 
 }
 
 /** The areas that have a shape, as `MapArea`s */
-export function toMapAreas({ areas, decimals }: { areas: EditorArea[]; decimals: number }): MapArea[] {
+export function toMapAreas({
+  areas,
+  decimals,
+}: {
+  areas: EditorArea[];
+  decimals: number;
+}): MapArea[] {
   return areas.flatMap((area): MapArea[] => {
     const geometry = geometryFromParts({ parts: area.parts, decimals });
     if (!geometry) {
@@ -188,7 +233,15 @@ function stringify(value: unknown): string {
   });
 }
 
-export function exportAreas({ areas, format, decimals = EXPORT_DECIMALS }: { areas: EditorArea[]; format: ExportFormat; decimals?: number }): string {
+export function exportAreas({
+  areas,
+  format,
+  decimals = EXPORT_DECIMALS,
+}: {
+  areas: EditorArea[];
+  format: ExportFormat;
+  decimals?: number;
+}): string {
   const mapAreas = toMapAreas({ areas, decimals });
   switch (format) {
     case "json":
@@ -199,7 +252,12 @@ export function exportAreas({ areas, format, decimals = EXPORT_DECIMALS }: { are
       return `${stringify({
         type: "FeatureCollection",
         features: mapAreas.map(({ id, geometry, ...properties }) => {
-          return { type: "Feature", id, properties: { id, ...properties }, geometry };
+          return {
+            type: "Feature",
+            id,
+            properties: { id, ...properties },
+            geometry,
+          };
         }),
       })}\n`;
   }

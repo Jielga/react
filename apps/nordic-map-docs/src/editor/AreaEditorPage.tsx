@@ -76,8 +76,14 @@ const LAYER_SWITCHES: { key: keyof MapLayerSettings; label: string }[] = [
 
 /** Full precision on the map; the export rounds */
 const DISPLAY_DECIMALS = 9;
-const REFERENCE_STYLE = { fill: "rgba(0, 0, 0, 0)", stroke: "rgba(80, 90, 105, 0.5)" };
-const SELECTED_REGION_STYLE = { fill: "rgba(28, 126, 214, 0.4)", stroke: "rgba(28, 126, 214, 0.9)" };
+const REFERENCE_STYLE = {
+  fill: "rgba(0, 0, 0, 0)",
+  stroke: "rgba(80, 90, 105, 0.5)",
+};
+const SELECTED_REGION_STYLE = {
+  fill: "rgba(28, 126, 214, 0.4)",
+  stroke: "rgba(28, 126, 214, 0.9)",
+};
 /** Names listed for a region selection before the rest are counted */
 const LISTED_REGIONS = 6;
 
@@ -85,16 +91,29 @@ const LISTED_REGIONS = 6;
 const geometryCache = new WeakMap<Part[], MapArea["geometry"] | null>();
 function geometryOf(parts: Part[]): MapArea["geometry"] | null {
   if (!geometryCache.has(parts)) {
-    geometryCache.set(parts, geometryFromParts({ parts, decimals: DISPLAY_DECIMALS }));
+    geometryCache.set(
+      parts,
+      geometryFromParts({ parts, decimals: DISPLAY_DECIMALS }),
+    );
   }
   return geometryCache.get(parts) ?? null;
 }
 
 function isTextField(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+  );
 }
 
-function ModeHint({ mode, drawingPoints }: { mode: Mode; drawingPoints: number }) {
+function ModeHint({
+  mode,
+  drawingPoints,
+}: {
+  mode: Mode;
+  drawingPoints: number;
+}) {
   if (mode.kind === "draw") {
     return (
       <Alert color="blue" p="xs">
@@ -105,7 +124,8 @@ function ModeHint({ mode, drawingPoints }: { mode: Mode; drawingPoints: number }
           </Text>
         )}
         <Text size="xs" c="dimmed" mt={4}>
-          <Kbd size="xs">Backspace</Kbd> removes the last point, <Kbd size="xs">Esc</Kbd> cancels. Drag to pan.
+          <Kbd size="xs">Backspace</Kbd> removes the last point,{" "}
+          <Kbd size="xs">Esc</Kbd> cancels. Drag to pan.
         </Text>
       </Alert>
     );
@@ -113,17 +133,22 @@ function ModeHint({ mode, drawingPoints }: { mode: Mode; drawingPoints: number }
   if (mode.kind === "selectRegions") {
     return (
       <Alert color="blue" p="xs">
-        <Text size="sm">Click regions to select them, and again to unselect. The outer edge of the selection becomes the area.</Text>
+        <Text size="sm">
+          Click regions to select them, and again to unselect. The outer edge of
+          the selection becomes the area.
+        </Text>
         <Text size="xs" c="dimmed" mt={4}>
-          <Kbd size="xs">Enter</Kbd> creates the area, <Kbd size="xs">Esc</Kbd> stops.
+          <Kbd size="xs">Enter</Kbd> creates the area, <Kbd size="xs">Esc</Kbd>{" "}
+          stops.
         </Text>
       </Alert>
     );
   }
   return (
     <Text size="xs" c="dimmed">
-      Click an area to select it. Drag a point to move it, drag the dot in the middle of an edge to add a point, and
-      press <Kbd size="xs">Delete</Kbd> to remove the selected point, or the selected area when no point is selected.{" "}
+      Click an area to select it. Drag a point to move it, drag the dot in the
+      middle of an edge to add a point, and press <Kbd size="xs">Delete</Kbd> to
+      remove the selected point, or the selected area when no point is selected.{" "}
       <Kbd size="xs">Ctrl</Kbd>+<Kbd size="xs">Z</Kbd> undoes.
     </Text>
   );
@@ -131,7 +156,9 @@ function ModeHint({ mode, drawingPoints }: { mode: Mode; drawingPoints: number }
 
 /** Draws areas over the map of Sweden and exports them as `MapArea` data */
 export function AreaEditorPage() {
-  const colorScheme = useComputedColorScheme("light", { getInitialValueInEffect: false });
+  const colorScheme = useComputedColorScheme("light", {
+    getInitialValueInEffect: false,
+  });
   const history = useEditorHistory();
   const { areas } = history;
   const map = useRef<NordicMapHandle>(null);
@@ -152,7 +179,10 @@ export function AreaEditorPage() {
   const [settings, setSettings] = useEditorSettings();
   const { reference, snapping, layers } = settings;
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [message, setMessage] = useState<{ color: string; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    color: string;
+    text: string;
+  } | null>(null);
   const references = useReferenceRegions(reference);
   const coastIndex = useCoastIndex(snapping && layers.border);
 
@@ -169,7 +199,10 @@ export function AreaEditorPage() {
   const referenceAreas = useMemo(() => {
     const chosen = new Set(selectedRegionIds);
     return references.regions.map(({ area }): MapArea => {
-      return { ...area, ...(chosen.has(area.id) ? SELECTED_REGION_STYLE : REFERENCE_STYLE) };
+      return {
+        ...area,
+        ...(chosen.has(area.id) ? SELECTED_REGION_STYLE : REFERENCE_STYLE),
+      };
     });
   }, [references.regions, selectedRegionIds]);
   const selectedRegions =
@@ -183,7 +216,15 @@ export function AreaEditorPage() {
     const own = areas.flatMap((area): MapArea[] => {
       const geometry = geometryOf(area.parts);
       return geometry
-        ? [{ id: `area:${area.id}`, label: area.label || area.id, fill: area.fill, ...(area.stroke ? { stroke: area.stroke } : {}), geometry }]
+        ? [
+            {
+              id: `area:${area.id}`,
+              label: area.label || area.id,
+              fill: area.fill,
+              ...(area.stroke ? { stroke: area.stroke } : {}),
+              geometry,
+            },
+          ]
         : [];
     });
     return [...referenceAreas, ...own];
@@ -229,7 +270,13 @@ export function AreaEditorPage() {
     );
   }
 
-  function updateSelectedParts({ parts, preview }: { parts: Part[]; preview: boolean }) {
+  function updateSelectedParts({
+    parts,
+    preview,
+  }: {
+    parts: Part[];
+    preview: boolean;
+  }) {
     if (!selected) {
       return;
     }
@@ -243,9 +290,20 @@ export function AreaEditorPage() {
     }
   }
 
-  function newArea({ parts, label }: { parts: Part[]; label?: string }): EditorArea {
+  function newArea({
+    parts,
+    label,
+  }: {
+    parts: Part[];
+    label?: string;
+  }): EditorArea {
     const id = freeId({ taken: new Set(ids) });
-    return { id, label: label ?? `Area ${id.replace("area-", "")}`, fill: swatchFor(areas.length), parts };
+    return {
+      id,
+      label: label ?? `Area ${id.replace("area-", "")}`,
+      fill: swatchFor(areas.length),
+      parts,
+    };
   }
 
   function select(id: string | null) {
@@ -257,9 +315,15 @@ export function AreaEditorPage() {
     if (mode.kind !== "draw" || mode.ring.length < 3) {
       return;
     }
-    const target = mode.target === null ? null : areas.find((area) => area.id === mode.target);
+    const target =
+      mode.target === null
+        ? null
+        : areas.find((area) => area.id === mode.target);
     if (target) {
-      replaceArea({ id: target.id, next: { ...target, parts: [...target.parts, [mode.ring]] } });
+      replaceArea({
+        id: target.id,
+        next: { ...target, parts: [...target.parts, [mode.ring]] },
+      });
       select(target.id);
     } else {
       const area = newArea({ parts: [[mode.ring]] });
@@ -270,7 +334,13 @@ export function AreaEditorPage() {
     pointerStore.set(null);
   }
 
-  function toggleRegionAt({ point, ids: chosen }: { point: LonLat; ids: string[] }) {
+  function toggleRegionAt({
+    point,
+    ids: chosen,
+  }: {
+    point: LonLat;
+    ids: string[];
+  }) {
     const region = references.regions.find(({ parts }) => {
       return partsContain({ parts, point });
     });
@@ -300,18 +370,27 @@ export function AreaEditorPage() {
         }),
       );
       if (target) {
-        replaceArea({ id: target.id, next: { ...target, parts: unionParts([target.parts, joined]) } });
+        replaceArea({
+          id: target.id,
+          next: { ...target, parts: unionParts([target.parts, joined]) },
+        });
         select(target.id);
       } else {
         const [only] = selectedRegions;
-        const area = newArea({ parts: joined, label: selectedRegions.length === 1 ? only?.area.label : undefined });
+        const area = newArea({
+          parts: joined,
+          label: selectedRegions.length === 1 ? only?.area.label : undefined,
+        });
         history.commit([...areas, area]);
         select(area.id);
       }
       setMessage(null);
       setMode({ kind: "select" });
     } catch (error) {
-      setMessage({ color: "red", text: `Could not join the regions: ${error instanceof Error ? error.message : String(error)}` });
+      setMessage({
+        color: "red",
+        text: `Could not join the regions: ${error instanceof Error ? error.message : String(error)}`,
+      });
     }
   }
 
@@ -321,7 +400,15 @@ export function AreaEditorPage() {
       const handle = map.current;
       const screen = handle?.project(position);
       const free = pointerStore.get()?.free ?? false;
-      const snap = handle && screen && snapping && !free ? findSnap({ pointer: screen, indexes: drawIndexes, projection: handle, radius: SNAP_RADIUS }) : null;
+      const snap =
+        handle && screen && snapping && !free
+          ? findSnap({
+              pointer: screen,
+              indexes: drawIndexes,
+              projection: handle,
+              radius: SNAP_RADIUS,
+            })
+          : null;
       setMode({ ...mode, ring: [...mode.ring, snap?.at ?? point] });
       return;
     }
@@ -338,7 +425,10 @@ export function AreaEditorPage() {
 
   function deleteSelectedVertex() {
     if (selected && selectedVertex) {
-      updateSelectedParts({ parts: removeVertex({ parts: selected.parts, ref: selectedVertex }), preview: false });
+      updateSelectedParts({
+        parts: removeVertex({ parts: selected.parts, ref: selectedVertex }),
+        preview: false,
+      });
       setSelectedVertex(null);
     }
   }
@@ -392,7 +482,11 @@ export function AreaEditorPage() {
       } else if (event.key === "Enter" && mode.kind === "draw") {
         event.preventDefault();
         finishDrawing();
-      } else if (event.key === "Enter" && mode.kind === "selectRegions" && !(event.target instanceof HTMLButtonElement)) {
+      } else if (
+        event.key === "Enter" &&
+        mode.kind === "selectRegions" &&
+        !(event.target instanceof HTMLButtonElement)
+      ) {
         // Enter on a focused button presses that button instead
         event.preventDefault();
         joinRegions({ target: null });
@@ -425,7 +519,10 @@ export function AreaEditorPage() {
       return;
     }
     const rect = event.currentTarget.getBoundingClientRect();
-    pointerStore.set({ point: { x: event.clientX - rect.left, y: event.clientY - rect.top }, free: event.altKey });
+    pointerStore.set({
+      point: { x: event.clientX - rect.left, y: event.clientY - rect.top },
+      free: event.altKey,
+    });
   }
 
   const hasShapes = areas.some((area) => {
@@ -486,7 +583,8 @@ export function AreaEditorPage() {
               Area editor
             </Title>
             <Text size="sm" c="dimmed">
-              Draw areas over the map and export them as data for the <code>areas</code> prop. Your work is kept in this browser.
+              Draw areas over the map and export them as data for the{" "}
+              <code>areas</code> prop. Your work is kept in this browser.
             </Text>
           </div>
 
@@ -494,7 +592,11 @@ export function AreaEditorPage() {
             <Button
               size="xs"
               leftSection={<IconPlus size={14} />}
-              variant={mode.kind === "draw" && mode.target === null ? "filled" : "default"}
+              variant={
+                mode.kind === "draw" && mode.target === null
+                  ? "filled"
+                  : "default"
+              }
               onClick={() => {
                 select(null);
                 setMode({ kind: "draw", target: null, ring: [] });
@@ -506,7 +608,11 @@ export function AreaEditorPage() {
               <Button
                 size="xs"
                 leftSection={<IconPolygon size={14} />}
-                variant={mode.kind === "draw" && mode.target !== null ? "filled" : "default"}
+                variant={
+                  mode.kind === "draw" && mode.target !== null
+                    ? "filled"
+                    : "default"
+                }
                 disabled={!selected}
                 onClick={() => {
                   if (selected) {
@@ -518,15 +624,24 @@ export function AreaEditorPage() {
                 Draw part
               </Button>
             </Tooltip>
-            <Tooltip label="Show counties or municipalities first" disabled={reference !== "none"}>
+            <Tooltip
+              label="Show counties or municipalities first"
+              disabled={reference !== "none"}
+            >
               <Button
                 size="xs"
                 leftSection={<IconSquarePlus size={14} />}
                 variant={mode.kind === "selectRegions" ? "filled" : "default"}
-                disabled={reference === "none" || references.regions.length === 0}
+                disabled={
+                  reference === "none" || references.regions.length === 0
+                }
                 onClick={() => {
                   setSelectedVertex(null);
-                  setMode(mode.kind === "selectRegions" ? { kind: "select" } : { kind: "selectRegions", ids: [] });
+                  setMode(
+                    mode.kind === "selectRegions"
+                      ? { kind: "select" }
+                      : { kind: "selectRegions", ids: [] },
+                  );
                 }}
               >
                 Select regions
@@ -545,7 +660,9 @@ export function AreaEditorPage() {
                       .map(({ area }) => {
                         return area.label ?? area.id;
                       })
-                      .join(", ")}${selectedRegions.length > LISTED_REGIONS ? ` and ${selectedRegions.length - LISTED_REGIONS} more` : ""}`}
+                      .join(
+                        ", ",
+                      )}${selectedRegions.length > LISTED_REGIONS ? ` and ${selectedRegions.length - LISTED_REGIONS} more` : ""}`}
               </Text>
               <Group gap="xs">
                 <Button
@@ -598,12 +715,22 @@ export function AreaEditorPage() {
           <Group gap="xs" justify="space-between">
             <Group gap={4}>
               <Tooltip label="Undo">
-                <ActionIcon variant="default" aria-label="Undo" disabled={!history.canUndo} onClick={undo}>
+                <ActionIcon
+                  variant="default"
+                  aria-label="Undo"
+                  disabled={!history.canUndo}
+                  onClick={undo}
+                >
                   <IconArrowBackUp size={16} />
                 </ActionIcon>
               </Tooltip>
               <Tooltip label="Redo">
-                <ActionIcon variant="default" aria-label="Redo" disabled={!history.canRedo} onClick={redo}>
+                <ActionIcon
+                  variant="default"
+                  aria-label="Redo"
+                  disabled={!history.canRedo}
+                  onClick={redo}
+                >
                   <IconArrowForwardUp size={16} />
                 </ActionIcon>
               </Tooltip>
@@ -648,7 +775,10 @@ export function AreaEditorPage() {
                   // The map shows road signs only where it shows roads
                   disabled={key === "roadLabels" && !layers.roads}
                   onChange={(event) => {
-                    setSettings({ ...settings, layers: { ...layers, [key]: event.currentTarget.checked } });
+                    setSettings({
+                      ...settings,
+                      layers: { ...layers, [key]: event.currentTarget.checked },
+                    });
                   }}
                 />
               );
@@ -696,7 +826,10 @@ export function AreaEditorPage() {
               description="To your areas, the regions shown, and the coast and border while they show. Hold Alt to place a point freely."
               checked={snapping}
               onChange={(event) => {
-                setSettings({ ...settings, snapping: event.currentTarget.checked });
+                setSettings({
+                  ...settings,
+                  snapping: event.currentTarget.checked,
+                });
               }}
             />
           </Stack>
@@ -759,17 +892,30 @@ export function AreaEditorPage() {
 
           {selected && (
             <>
-              <Divider label={selected.label || selected.id} labelPosition="left" />
+              <Divider
+                label={selected.label || selected.id}
+                labelPosition="left"
+              />
               {selectedVertex && (
                 <Group gap="xs">
-                  <Button size="xs" variant="default" onClick={deleteSelectedVertex}>
+                  <Button
+                    size="xs"
+                    variant="default"
+                    onClick={deleteSelectedVertex}
+                  >
                     Delete point
                   </Button>
                   <Button
                     size="xs"
                     variant="default"
                     onClick={() => {
-                      updateSelectedParts({ parts: removePart({ parts: selected.parts, part: selectedVertex.part }), preview: false });
+                      updateSelectedParts({
+                        parts: removePart({
+                          parts: selected.parts,
+                          part: selectedVertex.part,
+                        }),
+                        preview: false,
+                      });
                       setSelectedVertex(null);
                     }}
                   >

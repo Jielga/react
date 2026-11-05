@@ -38,7 +38,8 @@ export function CustomAreasControl({
             <>None saved yet. Draw some in the {editorLink}.</>
           ) : (
             <>
-              {stored.length} {stored.length === 1 ? "area" : "areas"} from the {editorLink}
+              {stored.length} {stored.length === 1 ? "area" : "areas"} from the{" "}
+              {editorLink}
             </>
           )
         }
@@ -64,7 +65,11 @@ export function CustomAreasControl({
             <Text size="xs" c="dimmed">
               {imported.length} imported
             </Text>
-            <Button size="compact-xs" variant="subtle" onClick={onClearImported}>
+            <Button
+              size="compact-xs"
+              variant="subtle"
+              onClick={onClearImported}
+            >
               Clear
             </Button>
           </>

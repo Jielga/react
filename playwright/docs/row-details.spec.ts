@@ -32,7 +32,9 @@ test("the header control opens every panel and closes them again", async ({
   await grid.part("details-toggle-all").click();
   // Only the rendered rows exist to check; the rest are virtualized.
   await expect(
-    grid.root.locator('[data-dg-part="row"]:not(:has([data-dg-part="details"]))'),
+    grid.root.locator(
+      '[data-dg-part="row"]:not(:has([data-dg-part="details"]))',
+    ),
   ).toHaveCount(0);
 
   await grid.part("details-toggle-all").click();
@@ -57,9 +59,7 @@ test('the lane sits at the right edge under detailsColumnPosition: "right"', asy
   await expect(grid.part("details", { rowId: "1" })).toBeVisible();
 });
 
-test("grouping a details grid renders its group rows", async ({
-  page,
-}) => {
+test("grouping a details grid renders its group rows", async ({ page }) => {
   const grid = await openDemoGrid(page, {
     route: "/docs/row-details",
     file: "rows/DetailsPanel.tsx",

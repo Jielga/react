@@ -7,7 +7,10 @@ import {
   type RefObject,
 } from "react";
 import { isInputElement } from "../../core/dom";
-import { firstErrorText, type TMDataGridEditField } from "../../core/editEngine";
+import {
+  firstErrorText,
+  type TMDataGridEditField,
+} from "../../core/editEngine";
 
 /**
  * `data-*` attributes for a built-in editor's `inputProps`. JSX accepts them

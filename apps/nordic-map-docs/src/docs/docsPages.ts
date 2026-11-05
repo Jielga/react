@@ -19,7 +19,14 @@ import tooltipsDoc from "@jielga/nordic-map/docs/tooltips.md?raw";
  * owns. A demo lives inside the page that explains it, named by a ```demo fence.
  */
 
-export const DOCS_SECTIONS = ["Start here", "Pins", "Map", "Look and language", "Data", "Reference"] as const;
+export const DOCS_SECTIONS = [
+  "Start here",
+  "Pins",
+  "Map",
+  "Look and language",
+  "Data",
+  "Reference",
+] as const;
 
 export type DocsSection = (typeof DOCS_SECTIONS)[number];
 
@@ -52,7 +59,8 @@ export const DOCS_PAGES: DocsPageEntry[] = [
     id: "selection",
     section: "Pins",
     label: "Selection",
-    description: "Select pins by drag, click or area, and highlight one from a list",
+    description:
+      "Select pins by drag, click or area, and highlight one from a list",
     source: selectionDoc,
   },
   {
@@ -87,7 +95,8 @@ export const DOCS_PAGES: DocsPageEntry[] = [
     id: "areas",
     section: "Map",
     label: "Areas",
-    description: "Filled regions, counties and municipalities, choropleth maps, and drawing your own",
+    description:
+      "Filled regions, counties and municipalities, choropleth maps, and drawing your own",
     source: areasDoc,
   },
   {
@@ -153,7 +162,10 @@ export function docsPageHref(page: DocsPageEntry): string {
 }
 
 /** The sections with their pages, in order, without the empty ones */
-export function docsSections(): { section: DocsSection; pages: DocsPageEntry[] }[] {
+export function docsSections(): {
+  section: DocsSection;
+  pages: DocsPageEntry[];
+}[] {
   return DOCS_SECTIONS.map((section) => {
     return {
       section,

@@ -53,15 +53,44 @@ export const SKILLS = [
 ] as const;
 
 const FIRST_NAMES = [
-  "Anna", "Erik", "Maria", "Lars", "Sofia", "Johan", "Emma", "Anders",
-  "Karin", "Mikael", "Lena", "Patrik", "Helena", "Martin", "Cecilia",
-  "Fredrik", "Sara", "Tobias", "Åsa", "Daniel",
+  "Anna",
+  "Erik",
+  "Maria",
+  "Lars",
+  "Sofia",
+  "Johan",
+  "Emma",
+  "Anders",
+  "Karin",
+  "Mikael",
+  "Lena",
+  "Patrik",
+  "Helena",
+  "Martin",
+  "Cecilia",
+  "Fredrik",
+  "Sara",
+  "Tobias",
+  "Åsa",
+  "Daniel",
 ];
 
 const LAST_NAMES = [
-  "Lindqvist", "Johansson", "Svensson", "Eriksson", "Karlsson", "Nilsson",
-  "Petersson", "Gustafsson", "Magnusson", "Olsson", "Persson", "Björk",
-  "Lundström", "Holm", "Strand",
+  "Lindqvist",
+  "Johansson",
+  "Svensson",
+  "Eriksson",
+  "Karlsson",
+  "Nilsson",
+  "Petersson",
+  "Gustafsson",
+  "Magnusson",
+  "Olsson",
+  "Persson",
+  "Björk",
+  "Lundström",
+  "Holm",
+  "Strand",
 ];
 
 /** Strips the diacritics an email address cannot carry. */
@@ -93,7 +122,8 @@ export function makeEmployee(index: number): Employee {
     age: 22 + ((index * 17) % 40),
     hired: `20${18 + (index % 8)}-${month}-${day}`,
     active: index % 5 !== 3,
-    status: index % 10 < 7 ? "Active" : index % 10 < 9 ? "On leave" : "Terminated",
+    status:
+      index % 10 < 7 ? "Active" : index % 10 < 9 ? "On leave" : "Terminated",
     skills: [
       SKILLS[index % SKILLS.length],
       SKILLS[(index + 2) % SKILLS.length],

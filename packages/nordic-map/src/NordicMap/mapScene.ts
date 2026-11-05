@@ -12,7 +12,12 @@ export type MapScene = {
   roads: { roadClass: RoadClass; path: Path2D }[];
   roadLabels: { text: string; at: Point }[];
   /** From the most important, which gets its name drawn first */
-  places: { name: string; at: Point; placeClass: PlaceClass; population: number }[];
+  places: {
+    name: string;
+    at: Point;
+    placeClass: PlaceClass;
+    population: number;
+  }[];
 };
 
 const placeRank: Record<PlaceClass, number> = { city: 0, town: 1, village: 2 };
@@ -39,7 +44,13 @@ function join(paths: (Path2D | null)[]): Path2D | null {
  * visible seam there, because the anti-aliased edges of both sides do not add up to full coverage.
  * One fill of the joined path has no seam.
  */
-export function buildScene({ cells, contextCells }: { cells: PreparedCell[]; contextCells: PreparedCell[] }): MapScene {
+export function buildScene({
+  cells,
+  contextCells,
+}: {
+  cells: PreparedCell[];
+  contextCells: PreparedCell[];
+}): MapScene {
   return {
     contextLand: join(
       contextCells.map((cell) => {
@@ -88,7 +99,10 @@ export function buildScene({ cells, contextCells }: { cells: PreparedCell[]; con
         return cell.places;
       })
       .sort((a, b) => {
-        return placeRank[a.placeClass] - placeRank[b.placeClass] || b.population - a.population;
+        return (
+          placeRank[a.placeClass] - placeRank[b.placeClass] ||
+          b.population - a.population
+        );
       }),
   };
 }

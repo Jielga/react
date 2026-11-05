@@ -17,6 +17,9 @@ const app = (path: string) => fileURLToPath(new URL(path, import.meta.url));
  * reader's demo map settings.
  */
 export const workspaceAlias: AliasOptions = [
-  { find: /^@jielga\/nordic-map$/, replacement: app("src/examples/nordicMapForDemos.tsx") },
+  {
+    find: /^@jielga\/nordic-map$/,
+    replacement: app("src/examples/nordicMapForDemos.tsx"),
+  },
   { find: /^@jielga\/nordic-map\/docs\//, replacement: map("docs/") },
 ];

@@ -12,7 +12,10 @@ test("an added row is a draft until Save", async ({ page }) => {
 
   await demo.getByRole("button", { name: "Add row", exact: true }).click();
   const tempId = (await grid.entryRow().getAttribute("data-row-id")) ?? "";
-  await grid.fillRow(tempId, { firstName: "Testa", lastName: "Nordkvist-4711" });
+  await grid.fillRow(tempId, {
+    firstName: "Testa",
+    lastName: "Nordkvist-4711",
+  });
   await grid.commitEntryRow(tempId);
 
   const row = grid.part("row", { rowId: tempId });
@@ -34,7 +37,9 @@ test("an added row is a draft until Save", async ({ page }) => {
   await grid.filterBy({ columnId: "lastName", value: "Nordkvist-4711" });
   await grid.expectRowCount(1);
   await expect(
-    grid.part("row").locator('[data-column-id="firstName"]:not([data-dg-part])'),
+    grid
+      .part("row")
+      .locator('[data-column-id="firstName"]:not([data-dg-part])'),
   ).toHaveText("Testa");
 });
 

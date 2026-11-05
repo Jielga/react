@@ -54,7 +54,9 @@ export function columnCanQuickSearch<
   // Off the table as a plain record, for the same generic-features reason as
   // the options read in isRankingActive.
   const model = (
-    column.table as unknown as { getCoreRowModel: () => RowModel<TFeatures, TData> }
+    column.table as unknown as {
+      getCoreRowModel: () => RowModel<TFeatures, TData>;
+    }
   ).getCoreRowModel();
   let byColumn = searchableColumns.get(model);
   if (byColumn === undefined) {
@@ -135,9 +137,10 @@ function bestRank<TFeatures extends TableFeatures, TData extends RowData>(
  * Whether the ranked ordering applies: the fuzzy quick search is narrowing
  * the grid, and nothing else claims an order - no sort, no grouping.
  */
-function isRankingActive<TFeatures extends TableFeatures, TData extends RowData>(
-  table: Table<TFeatures, TData>,
-): boolean {
+function isRankingActive<
+  TFeatures extends TableFeatures,
+  TData extends RowData,
+>(table: Table<TFeatures, TData>): boolean {
   // Off the options as a plain record: a generic `TFeatures` does not carry
   // the global-filtering feature's option types, and this file stays generic
   // to avoid a cycle with useTMDataGrid.

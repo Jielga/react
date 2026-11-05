@@ -29,7 +29,9 @@ export function parseSites(value) {
       throw new Error(`${where}: "slug" must match ${SLUG}.`);
     }
     if (RESERVED.has(site.slug) || /^v\d/.test(site.slug)) {
-      throw new Error(`${where}: "${site.slug}" is reserved at the Pages root.`);
+      throw new Error(
+        `${where}: "${site.slug}" is reserved at the Pages root.`,
+      );
     }
     if (seen.has(site.slug)) {
       throw new Error(`${where}: "${site.slug}" is listed twice.`);

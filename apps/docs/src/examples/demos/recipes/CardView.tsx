@@ -225,9 +225,7 @@ function CardList({
 
   return (
     <Box ref={mergedRef} style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-      <Box
-        style={{ position: "relative", height: virtualizer.getTotalSize() }}
-      >
+      <Box style={{ position: "relative", height: virtualizer.getTotalSize() }}>
         {virtualizer.getVirtualItems().map((line) => (
           <Box
             key={line.key}
@@ -280,7 +278,9 @@ function EmployeeCard({
       h={CARD_HEIGHT}
       data-row-id={row.id}
       style={{
-        borderColor: selected ? "var(--mantine-primary-color-filled)" : undefined,
+        borderColor: selected
+          ? "var(--mantine-primary-color-filled)"
+          : undefined,
       }}
     >
       <Group justify="space-between" wrap="nowrap" align="flex-start">

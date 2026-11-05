@@ -28,7 +28,14 @@ function BrandMark() {
       aria-hidden
       className={classes.mark}
     >
-      <rect x={1} y={1} width={20} height={20} rx={4} className={classes.markFrame} />
+      <rect
+        x={1}
+        y={1}
+        width={20}
+        height={20}
+        rx={4}
+        className={classes.markFrame}
+      />
       {GRID_GLYPH_CELLS.map(([x, y]) => (
         <rect key={`${x}-${y}`} x={x} y={y} width={8} height={8} rx={1.5} />
       ))}

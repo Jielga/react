@@ -260,7 +260,9 @@ function ViewsMenuItems({
         <>
           <Menu.Label>{labels.views}</Menu.Label>
           {views.list.length === 0 ? (
-            <Menu.Label data-dg-part="views-none">{labels.viewsNone}</Menu.Label>
+            <Menu.Label data-dg-part="views-none">
+              {labels.viewsNone}
+            </Menu.Label>
           ) : (
             views.list.map(item)
           )}
@@ -376,7 +378,9 @@ export function TMDataGridMenuViewsSub() {
           rightSection={
             <span className={classes.subValue}>
               {views.active && (
-                <span className={classes.subValueName}>{views.active.name}</span>
+                <span className={classes.subValueName}>
+                  {views.active.name}
+                </span>
               )}
               {views.modified && (
                 <span
@@ -500,7 +504,9 @@ export function TMDataGridColumnsPanelViews() {
           label={labels.views}
           description={views.modified ? labels.viewsModified : undefined}
           placeholder={
-            views.list.length === 0 ? labels.viewsNone : labels.viewsNoneSelected
+            views.list.length === 0
+              ? labels.viewsNone
+              : labels.viewsNoneSelected
           }
           data={data}
           value={views.activeId}

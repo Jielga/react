@@ -16,7 +16,9 @@ export type LabelPlacer = {
 const BUCKET = 64;
 
 export function overlaps(a: Box, b: Box): boolean {
-  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+  return (
+    a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+  );
 }
 
 /**
@@ -29,8 +31,16 @@ export function createLabelPlacer(): LabelPlacer {
 
   const keysOf = (box: Box) => {
     const keys: string[] = [];
-    for (let x = Math.floor(box.left / BUCKET); x <= Math.floor(box.right / BUCKET); x += 1) {
-      for (let y = Math.floor(box.top / BUCKET); y <= Math.floor(box.bottom / BUCKET); y += 1) {
+    for (
+      let x = Math.floor(box.left / BUCKET);
+      x <= Math.floor(box.right / BUCKET);
+      x += 1
+    ) {
+      for (
+        let y = Math.floor(box.top / BUCKET);
+        y <= Math.floor(box.bottom / BUCKET);
+        y += 1
+      ) {
         keys.push(`${x},${y}`);
       }
     }

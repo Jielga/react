@@ -109,15 +109,26 @@ describe("editorModel", () => {
 
   it("moves, inserts and removes points without touching the other rings", () => {
     const parts = [square];
-    const moved = moveVertex({ parts, ref: { part: 0, ring: 0, index: 1 }, to: [13, 59] });
+    const moved = moveVertex({
+      parts,
+      ref: { part: 0, ring: 0, index: 1 },
+      to: [13, 59],
+    });
     expect(moved[0]?.[0]?.[1]).toEqual([13, 59]);
     expect(parts[0]?.[0]?.[1]).toEqual([12, 60]);
 
-    const inserted = insertVertex({ parts, ref: { part: 0, ring: 0, index: 4 }, at: [9, 61] });
+    const inserted = insertVertex({
+      parts,
+      ref: { part: 0, ring: 0, index: 4 },
+      at: [9, 61],
+    });
     expect(inserted[0]?.[0]).toHaveLength(5);
     expect(inserted[0]?.[0]?.[4]).toEqual([9, 61]);
 
-    const removed = removeVertex({ parts: inserted, ref: { part: 0, ring: 0, index: 4 } });
+    const removed = removeVertex({
+      parts: inserted,
+      ref: { part: 0, ring: 0, index: 4 },
+    });
     expect(removed).toEqual(parts);
   });
 
@@ -134,8 +145,15 @@ describe("editorModel", () => {
         [1, 2],
       ],
     ];
-    expect(removeVertex({ parts: [triangle], ref: { part: 0, ring: 1, index: 0 } })).toEqual([[triangle[0]]]);
-    expect(removeVertex({ parts: [triangle, square], ref: { part: 0, ring: 0, index: 0 } })).toEqual([square]);
+    expect(
+      removeVertex({ parts: [triangle], ref: { part: 0, ring: 1, index: 0 } }),
+    ).toEqual([[triangle[0]]]);
+    expect(
+      removeVertex({
+        parts: [triangle, square],
+        ref: { part: 0, ring: 0, index: 0 },
+      }),
+    ).toEqual([square]);
   });
 
   it("finds a ring that crosses itself", () => {

@@ -20,7 +20,9 @@ type GridState = TableState<TMDataGridFeatures>;
 /** A complete, valid state - tests narrow or corrupt it as needed. */
 function gridState(overrides: Partial<GridState> = {}): GridState {
   return {
-    columnFilters: [{ id: "name", value: { operator: "contains", value: "a" } }],
+    columnFilters: [
+      { id: "name", value: { operator: "contains", value: "a" } },
+    ],
     globalFilter: "search",
     sorting: [{ id: "name", desc: true }],
     pagination: { pageIndex: 2, pageSize: 50 },
@@ -52,9 +54,7 @@ describe("hasPersistenceKeys", () => {
 
   it("is true with only a urlKey", () => {
     expect(hasPersistenceKeys({ urlKey: "g" })).toBe(true);
-    expect(hasPersistenceKeys({ urlKey: ["g", ["columnFilters"]] })).toBe(
-      true,
-    );
+    expect(hasPersistenceKeys({ urlKey: ["g", ["columnFilters"]] })).toBe(true);
   });
 });
 
@@ -467,9 +467,13 @@ describe("urlKey", () => {
     it("takes every data slice from a bare key", () => {
       const { params, urlStorage } = fakeUrl();
 
-      writePersistedState(gridState(), { urlKey: "g", urlStorage }, {
-        baseline: defaults,
-      });
+      writePersistedState(
+        gridState(),
+        { urlKey: "g", urlStorage },
+        {
+          baseline: defaults,
+        },
+      );
 
       expect(Object.keys(param(params, "g") ?? {}).sort()).toEqual(
         [...DATA_STATE_SLICES].sort(),
@@ -753,7 +757,9 @@ describe("urlKey", () => {
 
       // An own key, so it overrides `initialState.globalFilter` in the merge.
       expect(Object.hasOwn(restored, "globalFilter")).toBe(true);
-      expect({ globalFilter: "Holm", ...restored }.globalFilter).toBeUndefined();
+      expect(
+        { globalFilter: "Holm", ...restored }.globalFilter,
+      ).toBeUndefined();
     });
 
     it("drops a null slice that may not be undefined", () => {

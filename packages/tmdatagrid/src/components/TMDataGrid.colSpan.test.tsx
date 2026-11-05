@@ -143,7 +143,9 @@ describe("meta.colSpan", () => {
 
   describe("under cell selection", () => {
     const focusedCell = () =>
-      document.querySelector<HTMLElement>('[data-cell="true"][data-focused="true"]');
+      document.querySelector<HTMLElement>(
+        '[data-cell="true"][data-focused="true"]',
+      );
 
     it("steps over the spanning cell as one cell", async () => {
       const user = userEvent.setup();
@@ -245,7 +247,10 @@ describe("meta.colSpan", () => {
 
     it("walks Shift+Tab onto the spanning cell covering the previous row's last column", async () => {
       const user = userEvent.setup();
-      renderGridUi({ columns: firstRowSpanWithButton, cellSelection: "single" });
+      renderGridUi({
+        columns: firstRowSpanWithButton,
+        cellSelection: "single",
+      });
 
       await user.click(bodyCell("2", "city")!);
       await user.keyboard("{Enter}");

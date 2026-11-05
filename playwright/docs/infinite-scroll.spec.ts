@@ -11,11 +11,9 @@ test("scrolling to the end loads the next page", async ({ page }) => {
   await grid.expectSettled();
   const before = Number(await grid.grid.getAttribute("data-dg-row-count"));
 
-  await grid.root
-    .locator("[data-dg-scroll-container]")
-    .evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
+  await grid.root.locator("[data-dg-scroll-container]").evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
 
   await expect
     .poll(async () => {

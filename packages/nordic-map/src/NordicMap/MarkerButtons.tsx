@@ -22,7 +22,13 @@ type MarkerButtonsProps = {
  * The pins and clusters on screen as buttons, in `pins` order, so the keyboard and screen readers reach them.
  * The buttons are visually hidden: the canvas draws the markers, and a ring around the focused one.
  */
-export function MarkerButtons({ buttons, focusedKey, onFocusChange, onActivate, onFocusLost }: MarkerButtonsProps) {
+export function MarkerButtons({
+  buttons,
+  focusedKey,
+  onFocusChange,
+  onActivate,
+  onFocusLost,
+}: MarkerButtonsProps) {
   const focusedIsGone =
     focusedKey !== null &&
     !buttons.some((button) => {

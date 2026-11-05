@@ -4,7 +4,11 @@ import type { EditorArea } from "./editorModel.ts";
 
 const MAX_UNDO = 200;
 
-type History = { past: EditorArea[][]; present: EditorArea[]; future: EditorArea[][] };
+type History = {
+  past: EditorArea[][];
+  present: EditorArea[];
+  future: EditorArea[][];
+};
 
 export type EditorHistory = {
   areas: EditorArea[];
@@ -41,7 +45,11 @@ export function useEditorHistory(): EditorHistory {
     commit: (next) => {
       const before = gestureStart.current ?? history.present;
       gestureStart.current = null;
-      setHistory({ past: [...history.past, before].slice(-MAX_UNDO), present: next, future: [] });
+      setHistory({
+        past: [...history.past, before].slice(-MAX_UNDO),
+        present: next,
+        future: [],
+      });
     },
     preview: (next) => {
       gestureStart.current ??= history.present;
@@ -57,13 +65,21 @@ export function useEditorHistory(): EditorHistory {
     undo: () => {
       const previous = history.past.at(-1);
       if (previous && gestureStart.current === null) {
-        setHistory({ past: history.past.slice(0, -1), present: previous, future: [history.present, ...history.future] });
+        setHistory({
+          past: history.past.slice(0, -1),
+          present: previous,
+          future: [history.present, ...history.future],
+        });
       }
     },
     redo: () => {
       const [next, ...future] = history.future;
       if (next && gestureStart.current === null) {
-        setHistory({ past: [...history.past, history.present], present: next, future });
+        setHistory({
+          past: [...history.past, history.present],
+          present: next,
+          future,
+        });
       }
     },
     canUndo: history.past.length > 0,

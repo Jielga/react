@@ -5,7 +5,10 @@ import { BUNDLED_SITES } from "docs-shell/sites.ts";
 import { HomePage } from "./HomePage";
 
 beforeEach(() => {
-  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.reject(new Error("offline"))),
+  );
 });
 
 describe("HomePage", () => {

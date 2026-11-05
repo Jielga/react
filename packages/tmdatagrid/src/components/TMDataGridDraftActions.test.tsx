@@ -41,7 +41,9 @@ function DraftGrid({
 
 function renderDraftGrid(options: Partial<UseTMDataGridOptions<TestRow>> = {}) {
   let api!: TMDataGridApi<TestRow>;
-  renderWithMantine(<DraftGrid {...options} onReady={(grid) => (api = grid)} />);
+  renderWithMantine(
+    <DraftGrid {...options} onReady={(grid) => (api = grid)} />,
+  );
   return api;
 }
 

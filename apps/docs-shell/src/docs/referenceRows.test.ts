@@ -14,10 +14,17 @@ const code = (value: string) => el("code", [text(value)]);
 
 function table(...rows: Array<Array<Node>>): Node {
   return el("table", [
-    el("thead", [el("tr", [el("th", [text("Name")]), el("th", [text("Type")])])]),
+    el("thead", [
+      el("tr", [el("th", [text("Name")]), el("th", [text("Type")])]),
+    ]),
     el(
       "tbody",
-      rows.map((cells) => el("tr", cells.map((cell) => el("td", [cell])))),
+      rows.map((cells) =>
+        el(
+          "tr",
+          cells.map((cell) => el("td", [cell])),
+        ),
+      ),
     ),
   ]);
 }
@@ -42,20 +49,33 @@ describe("rehypeReferenceRows", () => {
   });
 
   it("drops the leading dashes of a CSS variable from the anchor", () => {
-    const [row] = rows(run(table([code("--dg-row-selected-bg"), text("colour")])));
+    const [row] = rows(
+      run(table([code("--dg-row-selected-bg"), text("colour")])),
+    );
     expect(row.properties?.id).toBe("ref-dg-row-selected-bg");
   });
 
   it("leaves a row alone that leads with a value or with prose", () => {
     const tree = run(
-      table([code("{ updated, created }"), text("x")], [text("Plain"), text("x")]),
+      table(
+        [code("{ updated, created }"), text("x")],
+        [text("Plain"), text("x")],
+      ),
     );
-    expect(rows(tree).map((row) => row.properties?.id)).toEqual([undefined, undefined]);
+    expect(rows(tree).map((row) => row.properties?.id)).toEqual([
+      undefined,
+      undefined,
+    ]);
   });
 
   it("gives a name's anchor to its first row only", () => {
-    const tree = run(table([code("rows"), text("a")], [code("rows"), text("b")]));
-    expect(rows(tree).map((row) => row.properties?.id)).toEqual(["ref-rows", undefined]);
+    const tree = run(
+      table([code("rows"), text("a")], [code("rows"), text("b")]),
+    );
+    expect(rows(tree).map((row) => row.properties?.id)).toEqual([
+      "ref-rows",
+      undefined,
+    ]);
   });
 
   it("labels every body cell with its column header", () => {

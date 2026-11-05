@@ -57,7 +57,11 @@ function moveInList(
   const remaining = ids.filter((id) => id !== movedId);
   const targetIndex = remaining.indexOf(targetId);
   if (targetIndex === -1) return [...ids];
-  remaining.splice(side === "before" ? targetIndex : targetIndex + 1, 0, movedId);
+  remaining.splice(
+    side === "before" ? targetIndex : targetIndex + 1,
+    0,
+    movedId,
+  );
   return remaining;
 }
 

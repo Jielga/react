@@ -28,13 +28,21 @@ export function changelogEntry(markdown, version) {
     }
   }
 
-  return lines.slice(start + 1, end).join("\n").trim();
+  return lines
+    .slice(start + 1, end)
+    .join("\n")
+    .trim();
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   const [version, path = "CHANGELOG.md"] = process.argv.slice(2);
   if (!version) {
-    console.error("Usage: node scripts/changelog-entry.mjs <version> [changelog-path]");
+    console.error(
+      "Usage: node scripts/changelog-entry.mjs <version> [changelog-path]",
+    );
     process.exit(1);
   }
 

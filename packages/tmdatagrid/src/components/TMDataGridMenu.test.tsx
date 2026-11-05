@@ -521,7 +521,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     const downloads = captureDownloads();
     const user = userEvent.setup();
     renderWithMantine(
-      <MenuGrid options={{ initialState: { columnVisibility: { city: false } } }}>
+      <MenuGrid
+        options={{ initialState: { columnVisibility: { city: false } } }}
+      >
         <TMDataGrid.Menu>
           <TMDataGrid.Menu.Export columns="all" />
         </TMDataGrid.Menu>
@@ -552,7 +554,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     await user.click(part("export-picker-confirm", undefined, dialog));
 
     await waitFor(() => expect(downloads).toHaveLength(1));
-    expect(await downloads[0]?.text()).toContain("ID;Name;Age\r\n1;Anna;20\r\n");
+    expect(await downloads[0]?.text()).toContain(
+      "ID;Name;Age\r\n1;Anna;20\r\n",
+    );
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
@@ -567,7 +571,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     await user.click(part("menu-export"));
 
     const dialog = await screen.findByRole("dialog");
-    expect(part("export-column", { columnId: "city" }, dialog)).not.toBeChecked();
+    expect(
+      part("export-column", { columnId: "city" }, dialog),
+    ).not.toBeChecked();
 
     await user.click(part("export-column", { columnId: "city" }, dialog));
     await user.click(part("export-picker-confirm", undefined, dialog));
@@ -585,7 +591,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     await user.click(part("menu-export"));
 
     const dialog = await screen.findByRole("dialog");
-    expect(dialog).toHaveTextContent(TMDATAGRID_LABELS_EN.exportPickerTitle("CSV"));
+    expect(dialog).toHaveTextContent(
+      TMDATAGRID_LABELS_EN.exportPickerTitle("CSV"),
+    );
     expect(part("export-picker-hint", undefined, dialog)).toHaveTextContent(
       TMDATAGRID_LABELS_EN.exportPickerHint(null),
     );
@@ -621,7 +629,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     const user = userEvent.setup();
     customMenu({
       columns: wideColumns,
-      initialState: { columnVisibility: { nameAgain: false, cityAgain: false } },
+      initialState: {
+        columnVisibility: { nameAgain: false, cityAgain: false },
+      },
     });
 
     await user.click(part("menu-button"));
@@ -630,7 +640,9 @@ describe("TMDataGrid.Menu.Export columns", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(part("export-picker-search", undefined, dialog), "again");
     expect(
-      parts("export-column", undefined, dialog).map((item) => item.dataset.columnId),
+      parts("export-column", undefined, dialog).map(
+        (item) => item.dataset.columnId,
+      ),
     ).toEqual(["nameAgain", "cityAgain"]);
 
     const all = part("export-column-all", undefined, dialog);

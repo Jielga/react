@@ -32,7 +32,10 @@ import { CloseIcon } from "./icons";
 import { filterControlFor } from "./filters/filterControlFor";
 import { TMDataGridFilterValueInput } from "./filters/TMDataGridFilterValueInput";
 
-const FALLBACK_FILTER: TMDataGridFilterValue = { operator: "contains", value: "" };
+const FALLBACK_FILTER: TMDataGridFilterValue = {
+  operator: "contains",
+  value: "",
+};
 
 function asFilterValue(value: unknown): TMDataGridFilterValue {
   return isTMDataGridFilterValue(value) ? value : FALLBACK_FILTER;
@@ -40,17 +43,17 @@ function asFilterValue(value: unknown): TMDataGridFilterValue {
 
 /** Mantine's style props (`p="md"`, `w={320}`) are set on the panel block. */
 export type TMDataGridFilterPanelProps = BoxProps & {
-   /**
-    * How one filter row is laid out.
-    *
-    * `"row"` - the default - puts column, operator and value side by side,
-    * which wants about 550px. `"stacked"` puts them one under the other, each
-    * filling the width, for a host too narrow for that: the sidebar surface
-    * uses it, and so should a panel you place in a drawer or a narrow column.
-    *
-    * Passed through to every value control as its `layout`, so a
-    * `meta.filter.control` can size itself to the same decision.
-    */
+  /**
+   * How one filter row is laid out.
+   *
+   * `"row"` - the default - puts column, operator and value side by side,
+   * which wants about 550px. `"stacked"` puts them one under the other, each
+   * filling the width, for a host too narrow for that: the sidebar surface
+   * uses it, and so should a panel you place in a drawer or a narrow column.
+   *
+   * Passed through to every value control as its `layout`, so a
+   * `meta.filter.control` can size itself to the same decision.
+   */
   layout?: TMDataGridFilterPanelLayout;
 };
 
@@ -146,7 +149,10 @@ export function TMDataGridFilterPanel({
     ui.actions.focusPanelFilter(toColumnId);
   }
 
-  function patchFilter(columnId: string, patch: Partial<TMDataGridFilterValue>) {
+  function patchFilter(
+    columnId: string,
+    patch: Partial<TMDataGridFilterValue>,
+  ) {
     table.setColumnFilters(
       columnFilters.map((filter) =>
         filter.id === columnId
@@ -156,7 +162,10 @@ export function TMDataGridFilterPanel({
     );
   }
 
-  function changeOperator(columnId: string, operator: TMDataGridFilterOperator) {
+  function changeOperator(
+    columnId: string,
+    operator: TMDataGridFilterOperator,
+  ) {
     const current = asFilterValue(
       columnFilters.find((filter) => filter.id === columnId)?.value,
     );
@@ -208,7 +217,8 @@ export function TMDataGridFilterPanel({
           const value = asFilterValue(filter.value);
           const type = column ? getColumnType(column) : "string";
           const needsValue = operatorNeedsValue(value.operator);
-          const scalarValue = typeof value.value === "string" ? value.value : "";
+          const scalarValue =
+            typeof value.value === "string" ? value.value : "";
           // The same options-and-control decision the header cells make.
           const { options, ValueControl } =
             column === undefined
@@ -282,7 +292,10 @@ export function TMDataGridFilterPanel({
               {/* What the focus effect above aims at. A `meta.filter.control`
                   may render anything, so the slot is the only landmark the
                   panel can count on. */}
-              <div className={classes.filterValueSlot} data-dg-filter-value-slot>
+              <div
+                className={classes.filterValueSlot}
+                data-dg-filter-value-slot
+              >
                 {column ? (
                   // `meta.filter.control` if the column declares one, the
                   // built-in shape-by-operator input otherwise - both through
@@ -307,7 +320,9 @@ export function TMDataGridFilterPanel({
                     w={stacked ? "100%" : 180}
                     data-dg-part="filter-value"
                     disabled={!needsValue}
-                    placeholder={needsValue ? labels.filterValuePlaceholder : ""}
+                    placeholder={
+                      needsValue ? labels.filterValuePlaceholder : ""
+                    }
                     value={needsValue ? scalarValue : ""}
                     onChange={(event) =>
                       patchFilter(filter.id, {

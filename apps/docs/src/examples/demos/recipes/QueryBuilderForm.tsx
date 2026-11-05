@@ -479,7 +479,9 @@ export function QueryBuilderForm() {
               type="date"
               size="xs"
               value={field.state.value}
-              onChange={(event) => field.handleChange(event.currentTarget.value)}
+              onChange={(event) =>
+                field.handleChange(event.currentTarget.value)
+              }
             />
           )}
         </form.Field>
@@ -490,7 +492,9 @@ export function QueryBuilderForm() {
               type="date"
               size="xs"
               value={field.state.value}
-              onChange={(event) => field.handleChange(event.currentTarget.value)}
+              onChange={(event) =>
+                field.handleChange(event.currentTarget.value)
+              }
             />
           )}
         </form.Field>
@@ -502,7 +506,9 @@ export function QueryBuilderForm() {
               size="xs"
               style={{ flex: 1 }}
               value={field.state.value}
-              onChange={(event) => field.handleChange(event.currentTarget.value)}
+              onChange={(event) =>
+                field.handleChange(event.currentTarget.value)
+              }
             />
           )}
         </form.Field>

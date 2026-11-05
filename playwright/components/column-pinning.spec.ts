@@ -34,7 +34,11 @@ test("holds pinned columns in place while the body scrolls sideways", async ({
   // The right edge of the scrollport: the container's box minus its
   // vertical scrollbar.
   const viewportRight = await container.evaluate((element) => {
-    return element.getBoundingClientRect().left + element.clientLeft + element.clientWidth;
+    return (
+      element.getBoundingClientRect().left +
+      element.clientLeft +
+      element.clientWidth
+    );
   });
   const status = await boxOf(header("status"));
   expect(status.x + status.width).toBeCloseTo(viewportRight, 0);
@@ -46,7 +50,9 @@ test("holds pinned columns in place while the body scrolls sideways", async ({
   expect((await boxOf(idCell)).x).toBe(idAfter.x);
 
   expect(
-    await header("id").evaluate((element) => getComputedStyle(element).position),
+    await header("id").evaluate(
+      (element) => getComputedStyle(element).position,
+    ),
   ).toBe("sticky");
 });
 

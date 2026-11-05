@@ -15,15 +15,19 @@ export type MapProjection = {
 };
 
 /** Points along the edge of the box. Its edges curve in the projection, so the corners alone are not enough. */
-export
-function boxOutline(box: LonLatBox): MultiPoint {
+export function boxOutline(box: LonLatBox): MultiPoint {
   const coordinates: LonLat[] = [];
   const steps = 16;
   for (let step = 0; step <= steps; step += 1) {
     const t = step / steps;
     const lon = box.west + (box.east - box.west) * t;
     const lat = box.south + (box.north - box.south) * t;
-    coordinates.push([lon, box.south], [lon, box.north], [box.west, lat], [box.east, lat]);
+    coordinates.push(
+      [lon, box.south],
+      [lon, box.north],
+      [box.west, lat],
+      [box.east, lat],
+    );
   }
   return { type: "MultiPoint", coordinates };
 }
@@ -52,11 +56,20 @@ export function createMapProjection(source: MapSource): MapProjection {
 }
 
 /** The box in map units, around its curved edges */
-export function projectBox({ projection, box }: { projection: MapProjection; box: LonLatBox }): MapBounds | null {
+export function projectBox({
+  projection,
+  box,
+}: {
+  projection: MapProjection;
+  box: LonLatBox;
+}): MapBounds | null {
   return boundsOfPoints(
     boxOutline(box).coordinates.flatMap((position) => {
       const [lon, lat] = position;
-      const point = lon === undefined || lat === undefined ? null : projection.project([lon, lat]);
+      const point =
+        lon === undefined || lat === undefined
+          ? null
+          : projection.project([lon, lat]);
       return point ? [point] : [];
     }),
   );
@@ -77,7 +90,12 @@ export function viewBox({
   const { width, height } = frame.size;
   const xs = [-margin, width / 2, width + margin];
   const ys = [-margin, height / 2, height + margin];
-  const box: LonLatBox = { west: Infinity, south: Infinity, east: -Infinity, north: -Infinity };
+  const box: LonLatBox = {
+    west: Infinity,
+    south: Infinity,
+    east: -Infinity,
+    north: -Infinity,
+  };
   for (const x of xs) {
     for (const y of ys) {
       const lonLat = projection.invert(toMap({ camera, frame, point: [x, y] }));

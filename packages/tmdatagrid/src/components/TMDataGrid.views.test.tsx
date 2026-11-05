@@ -26,8 +26,16 @@ import { useTMDataGrid, type UseTMDataGridOptions } from "../useTMDataGrid";
 import { TMDataGrid } from "./TMDataGrid";
 
 const PRESETS: TMDataGridViewPreset[] = [
-  { id: "noAge", name: "Without age", state: { columnVisibility: { age: false } } },
-  { id: "cityFirst", name: "City first", state: { columnOrder: ["city", "id", "name", "age"] } },
+  {
+    id: "noAge",
+    name: "Without age",
+    state: { columnVisibility: { age: false } },
+  },
+  {
+    id: "cityFirst",
+    name: "City first",
+    state: { columnOrder: ["city", "id", "name", "age"] },
+  },
 ];
 
 /** A grid whose toolbar holds whatever the test passes. */
@@ -115,7 +123,12 @@ describe("grid.views", () => {
       views: { presets: PRESETS, slices: ["columnVisibility"] },
     });
     act(() => result.current.views.select("cityFirst"));
-    expect(dataColumnIds(result.current)).toEqual(["id", "name", "age", "city"]);
+    expect(dataColumnIds(result.current)).toEqual([
+      "id",
+      "name",
+      "age",
+      "city",
+    ]);
   });
 
   it("reports a layout change as modified, and selecting again discards it", () => {
@@ -157,7 +170,10 @@ describe("grid.views", () => {
           {
             id: "old",
             name: "Old",
-            state: { columnOrder: ["gone", "city"], columnVisibility: { gone: false, age: false } },
+            state: {
+              columnOrder: ["gone", "city"],
+              columnVisibility: { gone: false, age: false },
+            },
           },
         ],
       },
@@ -191,7 +207,8 @@ describe("grid.views", () => {
   it("saves the current layout as a user view and selects it", async () => {
     const { result } = renderGrid({ views: {} });
     act(() => result.current.table.getColumn("city")?.toggleVisibility(false));
-    let saved: Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
+    let saved:
+      Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
     await act(async () => {
       saved = await result.current.views.saveAs("  No city ");
     });
@@ -208,7 +225,8 @@ describe("grid.views", () => {
 
   it("refuses a duplicate name, presets included", async () => {
     const { result } = renderGrid({ views: { presets: PRESETS } });
-    let saved: Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
+    let saved:
+      Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
     await act(async () => {
       saved = await result.current.views.saveAs("without AGE");
     });
@@ -219,7 +237,8 @@ describe("grid.views", () => {
     const { result } = renderGrid({
       views: { presets: PRESETS, allowUserViews: false },
     });
-    let saved: Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
+    let saved:
+      Awaited<ReturnType<typeof result.current.views.saveAs>> | undefined;
     await act(async () => {
       saved = await result.current.views.saveAs("Mine");
     });
@@ -249,7 +268,9 @@ describe("grid.views", () => {
     await act(async () => {
       await result.current.views.overwrite();
     });
-    expect(result.current.views.active?.state.columnVisibility).toEqual({ age: false });
+    expect(result.current.views.active?.state.columnVisibility).toEqual({
+      age: false,
+    });
   });
 
   it("loads user views from the store and applies the stored selection", async () => {
@@ -354,15 +375,16 @@ describe("the views menu items", () => {
     clickInSub(part("views-save"));
 
     await waitFor(() =>
-      expect(screen.getByRole("menuitemradio", { name: "Mine" })).toHaveAttribute(
-        "aria-checked",
-        "true",
-      ),
+      expect(
+        screen.getByRole("menuitemradio", { name: "Mine" }),
+      ).toHaveAttribute("aria-checked", "true"),
     );
     // Both kinds now: one heading each, and a lock on the presets.
     expect(screen.getByText("Presets")).toBeInTheDocument();
     expect(screen.getByText("My views")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Preset, can't be changed")).toHaveLength(2);
+    expect(screen.getAllByLabelText("Preset, can't be changed")).toHaveLength(
+      2,
+    );
     // Nothing to save into a view that matches the layout.
     expect(queryPart("views-overwrite")).toBeNull();
     expect(part("views-delete")).toHaveAccessibleName("Delete view");
@@ -386,7 +408,9 @@ describe("the views menu items", () => {
     const mine = await screen.findByRole("menuitemradio", { name: /^Mine/ });
     expect(mine).toHaveAttribute("data-modified");
     expect(mine).toHaveTextContent("Minemodified");
-    expect(part("views-overwrite")).toHaveAccessibleName("Save changes to view");
+    expect(part("views-overwrite")).toHaveAccessibleName(
+      "Save changes to view",
+    );
 
     clickInSub(mine);
     expect(headerIds()).toContain("city");
@@ -400,7 +424,9 @@ describe("the views menu items", () => {
     clickInSub(part("views-save-as"));
     await user.type(part("views-name"), "city FIRST");
 
-    expect(screen.getByText("A view with that name already exists")).toBeInTheDocument();
+    expect(
+      screen.getByText("A view with that name already exists"),
+    ).toBeInTheDocument();
     expect(part("views-save")).toBeDisabled();
   });
 
@@ -513,7 +539,9 @@ describe("TMDataGrid.ColumnsPanel views", () => {
   it("shows the picker, and Discard changes once the layout moves away", async () => {
     const user = userEvent.setup();
     renderWithMantine(
-      <ViewsGrid options={{ views: { presets: PRESETS, defaultView: "noAge" } }}>
+      <ViewsGrid
+        options={{ views: { presets: PRESETS, defaultView: "noAge" } }}
+      >
         <TMDataGrid.ColumnsPanel />
       </ViewsGrid>,
     );
@@ -551,7 +579,11 @@ describe("isViewModified", () => {
       ),
     ).toBe(false);
     expect(
-      isViewModified({ columnVisibility: { age: false } }, { columnVisibility: {} }, ids),
+      isViewModified(
+        { columnVisibility: { age: false } },
+        { columnVisibility: {} },
+        ids,
+      ),
     ).toBe(true);
   });
 
@@ -563,9 +595,9 @@ describe("isViewModified", () => {
         ids,
       ),
     ).toBe(false);
-    expect(isViewModified({ columnOrder: [] }, { columnOrder: ["name"] }, ids)).toBe(
-      true,
-    );
+    expect(
+      isViewModified({ columnOrder: [] }, { columnOrder: ["name"] }, ids),
+    ).toBe(true);
   });
 
   it("ignores the generated lanes and the ids of columns that are gone", () => {

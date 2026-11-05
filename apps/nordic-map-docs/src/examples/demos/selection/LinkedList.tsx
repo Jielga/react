@@ -1,4 +1,11 @@
-import { Checkbox, Group, ScrollArea, Stack, Text, UnstyledButton } from "@mantine/core";
+import {
+  Checkbox,
+  Group,
+  ScrollArea,
+  Stack,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { NordicMap, swedenOsmSource } from "@jielga/nordic-map";
 import { useState } from "react";
 import { cities } from "../../data/cities.ts";
@@ -31,7 +38,11 @@ export function LinkedList() {
                 key={city.id}
                 px="xs"
                 py={4}
-                bg={hovered === city.id ? "var(--mantine-color-default-hover)" : undefined}
+                bg={
+                  hovered === city.id
+                    ? "var(--mantine-color-default-hover)"
+                    : undefined
+                }
                 onMouseEnter={() => {
                   setHovered(city.id);
                 }}
@@ -49,7 +60,13 @@ export function LinkedList() {
                 }}
               >
                 <Group gap="xs" wrap="nowrap">
-                  <Checkbox size="xs" checked={selected.includes(city.id)} readOnly tabIndex={-1} aria-hidden />
+                  <Checkbox
+                    size="xs"
+                    checked={selected.includes(city.id)}
+                    readOnly
+                    tabIndex={-1}
+                    aria-hidden
+                  />
                   <Text size="sm">{city.label}</Text>
                 </Group>
               </UnstyledButton>

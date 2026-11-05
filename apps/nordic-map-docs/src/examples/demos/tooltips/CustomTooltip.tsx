@@ -15,7 +15,8 @@ export function CustomTooltip() {
               <>
                 <strong>{target.pin.label}</strong>
                 <br />
-                {target.pin.data?.population.toLocaleString("sv-SE")} inhabitants
+                {target.pin.data?.population.toLocaleString("sv-SE")}{" "}
+                inhabitants
               </>
             );
           }

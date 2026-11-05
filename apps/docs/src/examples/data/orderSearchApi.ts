@@ -46,7 +46,10 @@ export type Predicate =
   | { field: string; op: "isNull" | "isNotNull" }
   | {
       field: string;
-      op: Exclude<PredicateOp, "in" | "notIn" | "range" | "isNull" | "isNotNull">;
+      op: Exclude<
+        PredicateOp,
+        "in" | "notIn" | "range" | "isNull" | "isNotNull"
+      >;
       value: string | number;
     };
 
@@ -86,13 +89,7 @@ const CUSTOMERS = [
   "Öresund Marin",
 ] as const;
 
-const CITIES = [
-  "Stockholm",
-  "Göteborg",
-  "Malmö",
-  "Uppsala",
-  "Umeå",
-] as const;
+const CITIES = ["Stockholm", "Göteborg", "Malmö", "Uppsala", "Umeå"] as const;
 
 function makeRecord(ref: number): OrderRecord {
   const month = String(1 + (ref % 12)).padStart(2, "0");
@@ -124,7 +121,10 @@ const withinBound = (
   value: unknown,
   bound: string | number | undefined,
   compare: (left: string | number, right: string | number) => boolean,
-) => bound === undefined || bound === "" || compare(value as string | number, bound);
+) =>
+  bound === undefined ||
+  bound === "" ||
+  compare(value as string | number, bound);
 
 function matches(record: OrderRecord, predicate: Predicate): boolean {
   const value = field(record, predicate.field);

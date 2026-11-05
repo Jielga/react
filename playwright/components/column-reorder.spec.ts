@@ -11,9 +11,7 @@ function headerOrder(root: Locator): Promise<Array<string>> {
 }
 
 function headerOf(root: Locator, columnId: string): Locator {
-  return root.locator(
-    `[data-dg-part="header"][data-column-id="${columnId}"]`,
-  );
+  return root.locator(`[data-dg-part="header"][data-column-id="${columnId}"]`);
 }
 
 async function leftHalf(locator: Locator): Promise<{ x: number; y: number }> {
@@ -27,26 +25,18 @@ test("moves a column by dragging its header onto another", async ({
 }) => {
   const component = await mount("Grid/Default");
   // The generated checkbox lane leads; it is pinned and never moves.
-  await expect.poll(() => headerOrder(component)).toEqual([
-    "__select__",
-    "id",
-    "name",
-    "age",
-    "city",
-  ]);
+  await expect
+    .poll(() => headerOrder(component))
+    .toEqual(["__select__", "id", "name", "age", "city"]);
 
   const target = headerOf(component, "name");
   await headerOf(component, "city").dragTo(target, {
     targetPosition: await leftHalf(target),
   });
 
-  await expect.poll(() => headerOrder(component)).toEqual([
-    "__select__",
-    "id",
-    "city",
-    "name",
-    "age",
-  ]);
+  await expect
+    .poll(() => headerOrder(component))
+    .toEqual(["__select__", "id", "city", "name", "age"]);
 });
 
 test("keeps a move inside its pinning lane", async ({ mount }) => {

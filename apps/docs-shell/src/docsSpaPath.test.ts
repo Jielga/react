@@ -59,8 +59,7 @@ function run({ attributes, url }: { attributes: Attributes; url: string }) {
 describe("the root's 404 page", () => {
   it("sends a deep link into a site to that site's front copy", () => {
     expect(
-      run({ attributes: ROUTER, url: "/react/tmdatagrid/docs/testing" })
-        .sentTo,
+      run({ attributes: ROUTER, url: "/react/tmdatagrid/docs/testing" }).sentTo,
     ).toBe("/react/tmdatagrid/?/docs/testing");
   });
 
@@ -82,9 +81,9 @@ describe("the root's 404 page", () => {
 
   // The grid site used to be served from the Pages root itself.
   it("sends a path under no site to the legacy site", () => {
-    expect(
-      run({ attributes: ROUTER, url: "/react/docs/xlsx" }).sentTo,
-    ).toBe("/react/tmdatagrid/?/docs/xlsx");
+    expect(run({ attributes: ROUTER, url: "/react/docs/xlsx" }).sentTo).toBe(
+      "/react/tmdatagrid/?/docs/xlsx",
+    );
     expect(
       run({ attributes: ROUTER, url: "/react/v2.0/docs/columns" }).sentTo,
     ).toBe("/react/tmdatagrid/v2.0/?/docs/columns");
@@ -143,7 +142,10 @@ describe("a copy", () => {
 
   // A copy's index is a real file, so it is served rather than missed.
   it("leaves its own front page alone", () => {
-    const out = run({ attributes: copy("next"), url: "/react/tmdatagrid/next/" });
+    const out = run({
+      attributes: copy("next"),
+      url: "/react/tmdatagrid/next/",
+    });
     expect(out.sentTo).toBeNull();
     expect(out.settledOn).toBeNull();
   });
