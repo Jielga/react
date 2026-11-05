@@ -72,7 +72,9 @@ function renderCells() {
   const table = result.current
     .table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
   const row = table.getRow("1");
-  const cells = new Map(row.getAllCells().map((cell) => [cell.column.id, cell]));
+  const cells = new Map(
+    row.getAllCells().map((cell) => [cell.column.id, cell]),
+  );
   return (columnId: string) => {
     const cell = cells.get(columnId);
     if (cell === undefined) throw new Error(`No cell for ${columnId}`);

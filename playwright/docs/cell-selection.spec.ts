@@ -1,9 +1,7 @@
 import { openDemoGrid } from "../support/docsSite";
 import { expect, test } from "../support/test";
 
-test("a shift-click selects the block between two cells", async ({
-  page,
-}) => {
+test("a shift-click selects the block between two cells", async ({ page }) => {
   // The demo starts in range mode.
   const grid = await openDemoGrid(page, {
     route: "/docs/cell-selection",

@@ -44,7 +44,9 @@ describe("resolveColSpans", () => {
     expect(resolveColSpans(center("a", "b"), () => 0)).toEqual([1, 1]);
     expect(resolveColSpans(center("a", "b"), () => Number.NaN)).toEqual([1, 1]);
     expect(
-      resolveColSpans(center("a", "b", "c"), (index) => (index === 0 ? 2.9 : 1)),
+      resolveColSpans(center("a", "b", "c"), (index) =>
+        index === 0 ? 2.9 : 1,
+      ),
     ).toEqual([2, 0, 1]);
   });
 

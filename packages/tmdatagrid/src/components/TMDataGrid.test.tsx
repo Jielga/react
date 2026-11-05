@@ -1,4 +1,10 @@
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -54,10 +60,7 @@ describe("rendering", () => {
     // Five columns: the generated checkbox column plus the four defined ones.
     expect(grid).toHaveAttribute("aria-colcount", "5");
     // Every row plus the header row, whether or not it is mounted.
-    expect(grid).toHaveAttribute(
-      "aria-rowcount",
-      String(testRows.length + 1),
-    );
+    expect(grid).toHaveAttribute("aria-rowcount", String(testRows.length + 1));
   });
 
   it("says truly-empty when there is no data and no filter", () => {
@@ -76,9 +79,7 @@ describe("rendering", () => {
     await user.click(screen.getByRole("button", { name: "Filters" }));
     await user.type(screen.getByLabelText("Value"), "999999");
 
-    expect(
-      screen.getByText("No rows match your filters"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No rows match your filters")).toBeInTheDocument();
   });
 
   it("meta.noResultsLabel names the filtered case", async () => {
@@ -121,9 +122,7 @@ describe("rendering", () => {
 
     await user.type(screen.getByLabelText("Value"), "999999");
 
-    expect(
-      screen.getByText("No rows match your filters"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No rows match your filters")).toBeInTheDocument();
     expect(screen.queryByText("No rows to show")).not.toBeInTheDocument();
   });
 
@@ -146,9 +145,7 @@ describe("rendering", () => {
 
     await user.type(screen.getByLabelText("Value"), "999999");
 
-    expect(
-      screen.getByText("blank slate, filtered: true"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("blank slate, filtered: true")).toBeInTheDocument();
   });
 
   it("shows no message while an entry row is open on an empty grid", async () => {
@@ -162,7 +159,8 @@ describe("rendering", () => {
         columns: testColumns,
         getRowId: (row) => String(row.id),
         editing: {
-          mode: "cell", draft: true,
+          mode: "cell",
+          draft: true,
           newRowDefaults: () => ({ ...testRows[0]!, id: 0 }),
         },
       } as UseTMDataGridOptions<TestRow>);
@@ -233,9 +231,7 @@ describe("sorting", () => {
   it("does not advertise sorting on a grid that has it switched off", () => {
     renderGridUi({ enableSorting: false });
 
-    expect(header("age")).not.toHaveAttribute(
-      "aria-sort",
-    );
+    expect(header("age")).not.toHaveAttribute("aria-sort");
   });
 });
 
@@ -277,7 +273,10 @@ describe("column visibility", () => {
 
   it("leaves the generated lanes out of the menu", async () => {
     const user = userEvent.setup();
-    renderGridUi({ enableRowNumbers: true, initialState: { grouping: ["city"] } });
+    renderGridUi({
+      enableRowNumbers: true,
+      initialState: { grouping: ["city"] },
+    });
 
     await user.click(part("menu-button"));
 
@@ -301,12 +300,16 @@ describe("column visibility", () => {
     // neither pass may touch them. `table.toggleAllColumnsVisible` writes an
     // entry for every leaf column, which is what published the tree column.
     await user.click(part("columns-toggle-all"));
-    expect(queryPart("header", { columnId: GROUP_COLUMN_ID })).not.toBeInTheDocument();
+    expect(
+      queryPart("header", { columnId: GROUP_COLUMN_ID }),
+    ).not.toBeInTheDocument();
     expect(part("select-all")).toBeInTheDocument();
     expect(queryPart("header", { columnId: "city" })).not.toBeInTheDocument();
 
     await user.click(part("columns-toggle-all"));
-    expect(queryPart("header", { columnId: GROUP_COLUMN_ID })).not.toBeInTheDocument();
+    expect(
+      queryPart("header", { columnId: GROUP_COLUMN_ID }),
+    ).not.toBeInTheDocument();
     expect(part("select-all")).toBeInTheDocument();
     expect(header("city")).toBeInTheDocument();
   });
@@ -326,7 +329,10 @@ describe("column visibility", () => {
     // The payload a pre-2.1 session left behind, when the lane was hideable.
     localStorage.setItem(
       "s",
-      JSON.stringify({ __v: 1, columnVisibility: { [SELECT_COLUMN_ID]: false, city: false } }),
+      JSON.stringify({
+        __v: 1,
+        columnVisibility: { [SELECT_COLUMN_ID]: false, city: false },
+      }),
     );
     renderGridUi({ persist: { settingsKey: "s" } });
 
@@ -690,14 +696,20 @@ describe("Toolbar", () => {
   });
 
   it("marks itself for the bottom border under withBottomBorder", () => {
-    renderWithMantine(<StyledToolbarGrid toolbarProps={{ withBottomBorder: true }} />);
+    renderWithMantine(
+      <StyledToolbarGrid toolbarProps={{ withBottomBorder: true }} />,
+    );
     expect(part("toolbar")).toHaveAttribute("data-with-bottom-border", "true");
   });
 
   it("sets Mantine style props on the wrappers and keeps the part classes", () => {
     renderWithMantine(
       <StyledToolbarGrid
-        toolbarProps={{ mb: "sm", className: "toolbar-of-mine", mod: { tone: "quiet" } }}
+        toolbarProps={{
+          mb: "sm",
+          className: "toolbar-of-mine",
+          mod: { tone: "quiet" },
+        }}
       />,
     );
     const toolbar = part("toolbar");
@@ -754,20 +766,12 @@ describe("multi-column sorting", () => {
     await user.keyboard("{/Shift}");
 
     // Both columns sort at once: city first, age appended by the Shift.
-    expect(header("city")).toHaveAttribute(
-      "aria-sort",
-      "ascending",
+    expect(header("city")).toHaveAttribute("aria-sort", "ascending");
+    expect(header("age")).toHaveAttribute("aria-sort", "descending");
+    expect(part("sort-index", undefined, header("city"))).toHaveTextContent(
+      "1",
     );
-    expect(header("age")).toHaveAttribute(
-      "aria-sort",
-      "descending",
-    );
-    expect(
-      part("sort-index", undefined, header("city")),
-    ).toHaveTextContent("1");
-    expect(
-      part("sort-index", undefined, header("age")),
-    ).toHaveTextContent("2");
+    expect(part("sort-index", undefined, header("age"))).toHaveTextContent("2");
   });
 
   it("collapses back to one sort on a plain click, hiding the priorities", async () => {
@@ -780,14 +784,8 @@ describe("multi-column sorting", () => {
     await user.keyboard("{/Shift}");
     await user.click(header("name"));
 
-    expect(header("name")).toHaveAttribute(
-      "aria-sort",
-      "ascending",
-    );
-    expect(header("city")).toHaveAttribute(
-      "aria-sort",
-      "none",
-    );
+    expect(header("name")).toHaveAttribute("aria-sort", "ascending");
+    expect(header("city")).toHaveAttribute("aria-sort", "none");
     expect(queryPart("sort-index")).not.toBeInTheDocument();
   });
 });
@@ -884,7 +882,9 @@ describe("scrollToRow", () => {
     );
   }
 
-  const renderScrollGrid = (options: Partial<UseTMDataGridOptions<TestRow>> = {}) => {
+  const renderScrollGrid = (
+    options: Partial<UseTMDataGridOptions<TestRow>> = {},
+  ) => {
     let api: TMDataGridApi<TestRow> | null = null;
     renderWithMantine(
       <ScrollGrid {...options} onReady={(next) => (api = next)} />,
@@ -936,7 +936,9 @@ describe("scrollToRow", () => {
 
     // Parked at the edge: already on screen, and out of the scrolling order.
     expect(api.scrollToRow({ rowId: "300" })).toBe(true);
-    expect(part("row", { rowId: "300" }, part("pinned-top"))).toBeInTheDocument();
+    expect(
+      part("row", { rowId: "300" }, part("pinned-top")),
+    ).toBeInTheDocument();
   });
 });
 
@@ -1028,7 +1030,10 @@ describe("onReachEnd", () => {
     // The append changes the count, which re-arms the latch.
     rerender(
       <ReachGrid
-        rows={[...testRows, ...makeRows(2).map((row) => ({ ...row, id: row.id + 100 }))]}
+        rows={[
+          ...testRows,
+          ...makeRows(2).map((row) => ({ ...row, id: row.id + 100 })),
+        ]}
         onReachEnd={() => calls.push(1)}
       />,
     );
@@ -1045,7 +1050,10 @@ describe("onReachEnd", () => {
 describe("testing contract", () => {
   it("names the root and the grid element", () => {
     renderWithMantine(
-      <Grid tableProps={{ "aria-label": "Employees" }} data-testid="employees" />,
+      <Grid
+        tableProps={{ "aria-label": "Employees" }}
+        data-testid="employees"
+      />,
     );
 
     const root = screen.getByTestId("employees");
@@ -1053,7 +1061,9 @@ describe("testing contract", () => {
     // The scoping the whole contract rests on: a row is found *through* the
     // named root, which is what keeps two grids on a page apart.
     expect(part("row", { rowId: "1" }, root)).toBeInTheDocument();
-    expect(screen.getByRole("table", { name: "Employees" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: "Employees" }),
+    ).toBeInTheDocument();
   });
 
   it("addresses a cell by its row and column, with cell selection off", () => {
@@ -1071,10 +1081,7 @@ describe("testing contract", () => {
   it("carries the column id on the header as well as the cells", () => {
     const { container } = renderGridUi();
 
-    expect(header("name")).toHaveAttribute(
-      "data-column-id",
-      "name",
-    );
+    expect(header("name")).toHaveAttribute("data-column-id", "name");
     expect(
       container.querySelectorAll('[data-column-id="name"]').length,
     ).toBeGreaterThan(1);
@@ -1133,14 +1140,14 @@ describe("testing contract", () => {
 
   it("sorts and pages through the lane and pager test ids", async () => {
     const user = userEvent.setup();
-    renderGridUi({ enablePagination: true, initialState: { pagination: { pageIndex: 0, pageSize: 5 } } });
+    renderGridUi({
+      enablePagination: true,
+      initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
+    });
 
     // A numeric column sorts descending first.
     await user.click(part("header-sort", { columnId: "age" }));
-    expect(header("age")).toHaveAttribute(
-      "aria-sort",
-      "descending",
-    );
+    expect(header("age")).toHaveAttribute("aria-sort", "descending");
 
     expect(part("page-range")).toHaveTextContent("1–5 of 12");
     await user.click(part("page-next"));
@@ -1214,7 +1221,10 @@ describe("testing contract", () => {
     expect(screen.getByRole("table")).toHaveAttribute("data-dg-row-count", "2");
 
     await user.click(part("search-clear"));
-    expect(screen.getByRole("table")).toHaveAttribute("data-dg-row-count", "12");
+    expect(screen.getByRole("table")).toHaveAttribute(
+      "data-dg-row-count",
+      "12",
+    );
   });
 
   it("ticks a row through its checkbox part", async () => {
@@ -1345,7 +1355,10 @@ describe("persist.urlKey", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     window.history.replaceState(null, "", "/grid");
     const { result, unmount } = renderGrid({
-      persist: { dataKey: ["d", ["sorting"]], urlKey: ["g", ["columnFilters"]] },
+      persist: {
+        dataKey: ["d", ["sorting"]],
+        urlKey: ["g", ["columnFilters"]],
+      },
     });
 
     act(() => {

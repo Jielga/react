@@ -50,7 +50,9 @@ describe("formatExportValue", () => {
   });
 
   it("joins a multiSelect cell's array the way it reads on screen", () => {
-    expect(formatExportValue(["Paid", "Pending"], nordic)).toBe("Paid, Pending");
+    expect(formatExportValue(["Paid", "Pending"], nordic)).toBe(
+      "Paid, Pending",
+    );
     // Elements go through the same formatting as scalar cells.
     expect(formatExportValue([1.5, 2], nordic)).toBe("1,5, 2");
     expect(formatExportValue([], nordic)).toBe("");
@@ -129,7 +131,10 @@ describe("buildExportData", () => {
         header: "Name",
         meta: { exportValue: ({ value }) => String(value).toUpperCase() },
       }),
-      helper.accessor("city", { header: "City", meta: { enableExport: false } }),
+      helper.accessor("city", {
+        header: "City",
+        meta: { enableExport: false },
+      }),
     ]);
     const { result } = renderGrid({ columns });
 
@@ -353,7 +358,8 @@ describe("column selection", () => {
       "age",
     ]);
     expect(
-      buildExportData({ table: result.current.table, columns: "all" }).columnIds,
+      buildExportData({ table: result.current.table, columns: "all" })
+        .columnIds,
     ).toEqual(["id", "name", "age", "city"]);
   });
 

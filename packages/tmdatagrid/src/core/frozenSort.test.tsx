@@ -152,10 +152,7 @@ describe("sortMode: frozen", () => {
     const { result, setData } = renderFrozen();
     // Erik moves to the end, but stays first; the new row sorts after Maria.
     const edited = withAge(ROWS, 2, 50);
-    const added = [
-      ...edited,
-      { id: 5, name: "Sofia", age: 25, city: "Malmö" },
-    ];
+    const added = [...edited, { id: 5, name: "Sofia", age: 25, city: "Malmö" }];
     setData(added);
     expect(order(result.current)).toEqual(["2", "3", "5", "1", "4"]);
 

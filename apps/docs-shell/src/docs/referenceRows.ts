@@ -63,7 +63,10 @@ export function rehypeReferenceRows({ anchorClass }: { anchorClass: string }) {
           const cells = elements(row, "td");
           cells.forEach((cell, index) => {
             if (labels[index]) {
-              cell.properties = { ...cell.properties, dataLabel: labels[index] };
+              cell.properties = {
+                ...cell.properties,
+                dataLabel: labels[index],
+              };
             }
           });
 

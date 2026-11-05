@@ -25,9 +25,18 @@ type Projected = { shape: Path2D; bounds: MapBounds };
  * Projected shapes by projection and geometry object. An area whose fill changes keeps its geometry object,
  * so it is not projected again, even when the `areas` array is new.
  */
-const projectedShapes = new WeakMap<MapProjection, WeakMap<Geometry, Projected | null>>();
+const projectedShapes = new WeakMap<
+  MapProjection,
+  WeakMap<Geometry, Projected | null>
+>();
 
-function project({ geometry, projection }: { geometry: Geometry; projection: MapProjection }): Projected | null {
+function project({
+  geometry,
+  projection,
+}: {
+  geometry: Geometry;
+  projection: MapProjection;
+}): Projected | null {
   // Path2D is a browser API, and there is nothing to draw without it
   if (typeof Path2D === "undefined") {
     return null;
@@ -42,7 +51,10 @@ function project({ geometry, projection }: { geometry: Geometry; projection: Map
     return known;
   }
   const toPath = geoPath(projection.projection);
-  const drawn = geometry.type === "Polygon" || geometry.type === "MultiPolygon" ? rewindPolygon(geometry) : geometry;
+  const drawn =
+    geometry.type === "Polygon" || geometry.type === "MultiPolygon"
+      ? rewindPolygon(geometry)
+      : geometry;
   const d = toPath(drawn);
   const [[minX, minY], [maxX, maxY]] = toPath.bounds(drawn);
   const projected =
@@ -53,14 +65,26 @@ function project({ geometry, projection }: { geometry: Geometry; projection: Map
   return projected;
 }
 
-export function prepareAreas({ areas, projection }: { areas: MapArea[]; projection: MapProjection }): PreparedArea[] {
+export function prepareAreas({
+  areas,
+  projection,
+}: {
+  areas: MapArea[];
+  projection: MapProjection;
+}): PreparedArea[] {
   return areas.flatMap((area) => {
     const projected = project({ geometry: area.geometry, projection });
     return projected ? [{ area, ...projected }] : [];
   });
 }
 
-export function preparePaths({ paths, projection }: { paths: MapPath[]; projection: MapProjection }): PreparedPath[] {
+export function preparePaths({
+  paths,
+  projection,
+}: {
+  paths: MapPath[];
+  projection: MapProjection;
+}): PreparedPath[] {
   return paths.flatMap((path) => {
     const projected = project({ geometry: path.geometry, projection });
     return projected ? [{ path, ...projected }] : [];

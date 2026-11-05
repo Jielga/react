@@ -107,7 +107,9 @@ describe("readFeatureFlags", () => {
       false,
     );
     expect(readFeatureFlags({ enableHiding: false }).hiding).toBe(false);
-    expect(readFeatureFlags({ enableColumnPinning: false }).pinning).toBe(false);
+    expect(readFeatureFlags({ enableColumnPinning: false }).pinning).toBe(
+      false,
+    );
     expect(readFeatureFlags({ enableColumnResizing: false }).resizing).toBe(
       false,
     );
@@ -122,11 +124,15 @@ describe("readFeatureFlags", () => {
   describe("pagination", () => {
     it("is off unless asked for", () => {
       expect(readFeatureFlags({}).pagination).toBe(false);
-      expect(readFeatureFlags({ enablePagination: true }).pagination).toBe(true);
+      expect(readFeatureFlags({ enablePagination: true }).pagination).toBe(
+        true,
+      );
     });
 
     it("is implied by manual pagination", () => {
-      expect(readFeatureFlags({ manualPagination: true }).pagination).toBe(true);
+      expect(readFeatureFlags({ manualPagination: true }).pagination).toBe(
+        true,
+      );
     });
   });
 
@@ -158,7 +164,8 @@ describe("readFeatureFlags", () => {
 
     it("lets the highlight be set against the mode", () => {
       expect(
-        readFeatureFlags({ showSelectedBackground: true }).showSelectedBackground,
+        readFeatureFlags({ showSelectedBackground: true })
+          .showSelectedBackground,
       ).toBe(true);
       expect(
         readFeatureFlags({
@@ -233,7 +240,10 @@ describe("getGridCapabilities", () => {
     const { result } = renderGrid();
 
     expect(
-      getGridCapabilities(erased(result.current).table, result.current.features),
+      getGridCapabilities(
+        erased(result.current).table,
+        result.current.features,
+      ),
     ).toMatchObject({
       canSortAny: true,
       canFilterAny: true,
@@ -256,7 +266,10 @@ describe("getGridCapabilities", () => {
     });
 
     expect(
-      getGridCapabilities(erased(result.current).table, result.current.features),
+      getGridCapabilities(
+        erased(result.current).table,
+        result.current.features,
+      ),
     ).toMatchObject({
       canSortAny: false,
       canFilterAny: false,

@@ -52,7 +52,9 @@ const notFound = readFileSync(join(STATIC, "404.html"), "utf8")
   .replaceAll("%SITES%", sites.map((site) => site.slug).join(" "))
   .replaceAll(
     "%LEGACY_SITE%",
-    sites.some((site) => site.slug === LEGACY_ROOT_SITE) ? LEGACY_ROOT_SITE : "",
+    sites.some((site) => site.slug === LEGACY_ROOT_SITE)
+      ? LEGACY_ROOT_SITE
+      : "",
   );
 writeFileSync(join(pages, "404.html"), notFound);
 

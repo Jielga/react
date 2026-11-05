@@ -36,7 +36,9 @@ export function DgAutocompleteFilter(args: TMDataGridFilterControlArgs) {
       size={size}
       disabled={!needsValue}
       placeholder={
-        needsValue && args.layout !== "header" ? labels.filterValuePlaceholder : ""
+        needsValue && args.layout !== "header"
+          ? labels.filterValuePlaceholder
+          : ""
       }
       data={suggestions.map((option) => option.value)}
       limit={20}

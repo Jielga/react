@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadSwedenCounties, loadSwedenMunicipalities } from "@jielga/nordic-map";
+import {
+  loadSwedenCounties,
+  loadSwedenMunicipalities,
+} from "@jielga/nordic-map";
 import type { MapArea } from "@jielga/nordic-map";
 import { partsFromGeometry } from "./editorModel.ts";
 import type { Part } from "./editorModel.ts";
@@ -17,7 +20,10 @@ export type ReferenceRegions = {
   error: string | null;
 };
 
-const LOADERS: Record<Exclude<ReferenceLayer, "none">, () => Promise<MapArea[]>> = {
+const LOADERS: Record<
+  Exclude<ReferenceLayer, "none">,
+  () => Promise<MapArea[]>
+> = {
   counties: loadSwedenCounties,
   municipalities: loadSwedenMunicipalities,
 };
@@ -26,8 +32,14 @@ const noRegions: Region[] = [];
 
 /** The counties or municipalities shown under the areas, to trace, snap to and add */
 export function useReferenceRegions(layer: ReferenceLayer): ReferenceRegions {
-  const [loaded, setLoaded] = useState<{ layer: ReferenceLayer; areas: MapArea[] } | null>(null);
-  const [error, setError] = useState<{ layer: ReferenceLayer; message: string } | null>(null);
+  const [loaded, setLoaded] = useState<{
+    layer: ReferenceLayer;
+    areas: MapArea[];
+  } | null>(null);
+  const [error, setError] = useState<{
+    layer: ReferenceLayer;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (layer === "none") {
@@ -42,7 +54,10 @@ export function useReferenceRegions(layer: ReferenceLayer): ReferenceRegions {
       },
       (reason: unknown) => {
         if (!cancelled) {
-          setError({ layer, message: reason instanceof Error ? reason.message : String(reason) });
+          setError({
+            layer,
+            message: reason instanceof Error ? reason.message : String(reason),
+          });
         }
       },
     );

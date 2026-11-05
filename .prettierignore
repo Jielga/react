@@ -1,0 +1,12 @@
+# Docs are prose, not code. The tests and the skill line limit read them by
+# exact row and line, and a padded table rewrites every row for one cell.
+*.md
+
+# Written by changesets.
+.changeset/pre.json
+
+# Written by the scripts in packages/nordic-map/scripts/map-data/.
+packages/nordic-map/src/data/
+
+# Local agent worktrees, each a full copy of the repository.
+.claude/

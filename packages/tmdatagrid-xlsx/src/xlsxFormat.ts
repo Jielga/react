@@ -52,7 +52,8 @@ function dateText(value: Date): string {
  */
 function cellText(value: unknown): string {
   if (value === null || value === undefined) return "";
-  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
+  if (typeof value === "number")
+    return Number.isFinite(value) ? String(value) : "";
   if (typeof value === "string") return value;
   if (typeof value === "boolean") return value ? "true" : "false";
   if (value instanceof Date) {
@@ -85,7 +86,8 @@ function cellText(value: unknown): string {
 function cellValue(value: unknown): number | Date | boolean | string | null {
   if (value === null || value === undefined) return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (value instanceof Date)
+    return Number.isNaN(value.getTime()) ? null : value;
   if (typeof value === "boolean") return value;
   return cellText(value);
 }

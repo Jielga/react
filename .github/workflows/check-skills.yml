@@ -33,12 +33,12 @@ name: Check Skills
 on:
   pull_request:
     paths:
-      - 'skills/**'
-      - '**/skills/**'
-      - '_artifacts/**'
-      - '**/_artifacts/**'
+      - "skills/**"
+      - "**/skills/**"
+      - "_artifacts/**"
+      - "**/_artifacts/**"
   schedule:
-    - cron: '0 6 * * 1' # Mondays, 06:00 UTC
+    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
   workflow_dispatch: {}
 
 permissions:

@@ -73,9 +73,7 @@ export function CellSelection() {
         <SegmentedControl
           size="xs"
           value={mode}
-          onChange={(value) =>
-            setMode(value as TMDataGridCellSelectionMode)
-          }
+          onChange={(value) => setMode(value as TMDataGridCellSelectionMode)}
           data={MODES as unknown as Array<{ value: string; label: string }>}
         />
         <Code>

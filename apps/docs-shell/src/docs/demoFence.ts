@@ -73,7 +73,9 @@ export function parseDemoFence(body: string): DemoBlockDemo {
   const height = fields.get("height");
 
   if (height !== undefined && !/^\d+$/.test(height)) {
-    throw new Error(`Demo fence: height must be a whole number, got "${height}".`);
+    throw new Error(
+      `Demo fence: height must be a whole number, got "${height}".`,
+    );
   }
 
   const extraSources = fields.get("extraSources");
@@ -93,8 +95,7 @@ export function parseDemoFence(body: string): DemoBlockDemo {
 }
 
 export type DocsSegment =
-  | { kind: "prose"; markdown: string }
-  | { kind: "demo"; demo: DemoBlockDemo };
+  { kind: "prose"; markdown: string } | { kind: "demo"; demo: DemoBlockDemo };
 
 type FenceOpening = { marker: string; info: string };
 

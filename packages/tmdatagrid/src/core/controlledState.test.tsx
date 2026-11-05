@@ -91,7 +91,10 @@ describe("stabilizeControlledState", () => {
   it("keeps last render's object when every slice says the same thing", () => {
     const previous = { columnVisibility: { city: false }, sorting: [] };
     expect(
-      stabilizeControlledState({ columnVisibility: { city: false }, sorting: [] }, previous),
+      stabilizeControlledState(
+        { columnVisibility: { city: false }, sorting: [] },
+        previous,
+      ),
     ).toBe(previous);
   });
 

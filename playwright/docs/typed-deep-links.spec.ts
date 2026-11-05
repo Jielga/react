@@ -5,7 +5,8 @@ import { expect, test } from "../support/test";
 
 const route = "/docs/typed-deep-links";
 
-const gridIn = (block: Locator) => new DataGrid(block.locator("[data-dg-root]"));
+const gridIn = (block: Locator) =>
+  new DataGrid(block.locator("[data-dg-root]"));
 
 /** The demo router's address, as its address bar shows it. */
 const addressOf = (block: Locator) => block.locator("[data-address]");
@@ -13,7 +14,10 @@ const addressOf = (block: Locator) => block.locator("[data-address]");
 test("a typed link opens the grid on its filters and sort, through the router", async ({
   page,
 }) => {
-  const block = await openDemo(page, { route, file: "recipes/RouterDeepLinks.tsx" });
+  const block = await openDemo(page, {
+    route,
+    file: "recipes/RouterDeepLinks.tsx",
+  });
   await gridIn(block).expectRowCount(200);
 
   await block.locator('[data-link="home"]').click();
@@ -40,7 +44,10 @@ test("a typed link opens the grid on its filters and sort, through the router", 
 test("each link keeps its own state when the grid is left and reopened", async ({
   page,
 }) => {
-  const block = await openDemo(page, { route, file: "recipes/RouterDeepLinks.tsx" });
+  const block = await openDemo(page, {
+    route,
+    file: "recipes/RouterDeepLinks.tsx",
+  });
   await block.locator('[data-link="home"]').click();
   await block.locator('[data-link="departments"]').click();
   await gridIn(block).expectRowCount(50);
@@ -50,8 +57,13 @@ test("each link keeps its own state when the grid is left and reopened", async (
   await gridIn(block).expectRowCount(200);
 });
 
-test("a JSURL2 router writes the param without percent escapes", async ({ page }) => {
-  const block = await openDemo(page, { route, file: "recipes/ReadableSearch.tsx" });
+test("a JSURL2 router writes the param without percent escapes", async ({
+  page,
+}) => {
+  const block = await openDemo(page, {
+    route,
+    file: "recipes/ReadableSearch.tsx",
+  });
   await block.locator('[data-link="home"]').click();
   await block.locator('[data-link="departments"]').click();
   await gridIn(block).expectRowCount(50);

@@ -15,7 +15,11 @@ export function MapStatus({ failed, loadingLabel, errorText }: MapStatusProps) {
           {errorText}
         </div>
       ) : (
-        <div className={classes.spinner} role="status" aria-label={loadingLabel} />
+        <div
+          className={classes.spinner}
+          role="status"
+          aria-label={loadingLabel}
+        />
       )}
     </div>
   );

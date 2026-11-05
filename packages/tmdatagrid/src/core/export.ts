@@ -109,9 +109,7 @@ export type TMDataGridExportValueGetter = (args: {
  * the selected ones among those, or a list of your own.
  */
 export type TMDataGridExportRows<TData extends RowData> =
-  | "all"
-  | "selected"
-  | ReadonlyArray<Row<TMDataGridFeatures, TData>>;
+  "all" | "selected" | ReadonlyArray<Row<TMDataGridFeatures, TData>>;
 
 /** Where an export goes: a downloaded file, or the clipboard (Ctrl+C and Copy). */
 export type TMDataGridExportTarget = "file" | "clipboard";
@@ -252,7 +250,9 @@ function escapeField(value: string, separator: string): string {
 /** Rows of text as lines, `separator` between fields and CRLF between rows. */
 function toDelimited(lines: Array<Array<string>>, separator: string): string {
   return lines
-    .map((row) => row.map((value) => escapeField(value, separator)).join(separator))
+    .map((row) =>
+      row.map((value) => escapeField(value, separator)).join(separator),
+    )
     .join("\r\n");
 }
 
@@ -466,7 +466,8 @@ function selectColumns(
 ): Array<ErasedColumn> {
   const all = allLeafColumns(table).filter(isExportedColumn);
   if (columns === "all") return all;
-  if (columns === "visible") return all.filter((column) => column.getIsVisible());
+  if (columns === "visible")
+    return all.filter((column) => column.getIsVisible());
   const wanted = new Set(columns);
   return all.filter((column) => wanted.has(column.id));
 }
@@ -723,11 +724,18 @@ export type TMDataGridClipboardTextOptions = {
  */
 export function toClipboardText(
   data: TMDataGridExportData | Array<Array<string>>,
-  { decimalComma = true, escapeFormulas = true }: TMDataGridClipboardTextOptions = {},
+  {
+    decimalComma = true,
+    escapeFormulas = true,
+  }: TMDataGridClipboardTextOptions = {},
 ): string {
   const lines = Array.isArray(data)
     ? data
-    : textRows(data, { includeHeaders: false }, { decimalComma, escapeFormulas });
+    : textRows(
+        data,
+        { includeHeaders: false },
+        { decimalComma, escapeFormulas },
+      );
   return toDelimited(lines, "\t");
 }
 

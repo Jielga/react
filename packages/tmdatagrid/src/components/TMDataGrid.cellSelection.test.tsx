@@ -125,9 +125,10 @@ describe("cell selection", () => {
   it("leaves the body's controls alone when cell selection is off", () => {
     renderGridUi();
 
-    expect(
-      within(bodyRows()[0]!).getByRole("checkbox"),
-    ).not.toHaveAttribute("tabindex", "-1");
+    expect(within(bodyRows()[0]!).getByRole("checkbox")).not.toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
   });
 
   it("is one tab stop for the whole body", async () => {
@@ -405,7 +406,7 @@ describe("cell selection", () => {
     expect(renderedRowIds().indexOf("3")).not.toBe(2);
   });
 
-  it("selects nothing but the focused cell under \"single\"", async () => {
+  it('selects nothing but the focused cell under "single"', async () => {
     const user = userEvent.setup();
     renderGridUi({ cellSelection: "single" });
 
@@ -493,7 +494,7 @@ describe("cell selection - ranges", () => {
     ]);
   });
 
-  it("extends the rectangle and the row selection with one Shift+click under selectionMode \"row\"", async () => {
+  it('extends the rectangle and the row selection with one Shift+click under selectionMode "row"', async () => {
     const user = userEvent.setup();
     renderGridUi({ cellSelection: "range", selectionMode: "row" });
 
@@ -754,9 +755,7 @@ describe("cell selection - ranges", () => {
     await user.click(cellAt(0, 2));
     fireEvent.contextMenu(cellAt(0, 2));
 
-    expect(
-      await screen.findByRole("menuitem", { name: "Copy" }),
-    ).toBeEnabled();
+    expect(await screen.findByRole("menuitem", { name: "Copy" })).toBeEnabled();
     expect(
       screen.queryByRole("menuitem", { name: "Download as CSV" }),
     ).not.toBeInTheDocument();
@@ -867,12 +866,10 @@ describe("cell selection - ranges", () => {
     expect(
       await screen.findByRole("menuitem", { name: "Copy" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: "Open" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Open" })).toBeInTheDocument();
   });
 
-  it("has no menu of its own under \"single\"", async () => {
+  it('has no menu of its own under "single"', async () => {
     const user = userEvent.setup();
     renderGridUi({ cellSelection: "single" });
 
@@ -904,4 +901,3 @@ describe("cell selection - ranges", () => {
     ).not.toBeChecked();
   });
 });
-

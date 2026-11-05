@@ -63,10 +63,12 @@ describe("resolveCellMove", () => {
       move("ArrowRight", { from: { rowIndex: 5, columnIndex: 3 } }),
     ).toEqual({ rowIndex: 5, columnIndex: 3 });
     // A page past the end stops at the last row rather than overshooting it.
-    expect(move("PageDown", { from: { rowIndex: 9, columnIndex: 2 } })).toEqual({
-      rowIndex: 9,
-      columnIndex: 2,
-    });
+    expect(move("PageDown", { from: { rowIndex: 9, columnIndex: 2 } })).toEqual(
+      {
+        rowIndex: 9,
+        columnIndex: 2,
+      },
+    );
   });
 
   it("leaves keys that are not navigation alone", () => {
@@ -133,9 +135,24 @@ describe("getNextEditableCell", () => {
 
 describe("isSameCell", () => {
   it("compares by ids, not by identity", () => {
-    expect(isSameCell({ rowId: "3", columnId: "name" }, { rowId: "3", columnId: "name" })).toBe(true);
-    expect(isSameCell({ rowId: "3", columnId: "name" }, { rowId: "4", columnId: "name" })).toBe(false);
-    expect(isSameCell({ rowId: "3", columnId: "name" }, { rowId: "3", columnId: "age" })).toBe(false);
+    expect(
+      isSameCell(
+        { rowId: "3", columnId: "name" },
+        { rowId: "3", columnId: "name" },
+      ),
+    ).toBe(true);
+    expect(
+      isSameCell(
+        { rowId: "3", columnId: "name" },
+        { rowId: "4", columnId: "name" },
+      ),
+    ).toBe(false);
+    expect(
+      isSameCell(
+        { rowId: "3", columnId: "name" },
+        { rowId: "3", columnId: "age" },
+      ),
+    ).toBe(false);
   });
 
   it("treats null as a cell of its own", () => {

@@ -15,7 +15,10 @@ function renderHeader(site: string | null) {
 
 beforeEach(() => {
   // Offline: every runtime read falls back to what the build knows.
-  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.reject(new Error("offline"))),
+  );
 });
 
 describe("SiteHeader", () => {
@@ -28,7 +31,9 @@ describe("SiteHeader", () => {
 
   it("links every registered site, and the index of all of them", async () => {
     renderHeader("tmdatagrid");
-    await userEvent.click(screen.getByRole("button", { name: "Switch package" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Switch package" }),
+    );
 
     const menu = screen.getByRole("menu");
     for (const site of BUNDLED_SITES) {

@@ -11,7 +11,10 @@ export function DocsIndexPage() {
       <Stack gap="xl" p={{ base: "sm", md: "xl" }} maw={1100} mx="auto">
         <Stack gap={4}>
           <Title order={1}>Documentation</Title>
-          <Text c="dimmed">One page per topic: what it does, a live demo, and every prop and type it owns.</Text>
+          <Text c="dimmed">
+            One page per topic: what it does, a live demo, and every prop and
+            type it owns.
+          </Text>
         </Stack>
 
         {docsSections().map(({ section, pages }) => {
@@ -24,7 +27,14 @@ export function DocsIndexPage() {
                 {pages.map((page) => {
                   const demos = findDemoFences(page.source).length;
                   return (
-                    <Card key={page.id} component={Link} to={docsPageHref(page)} withBorder padding="md" radius="sm">
+                    <Card
+                      key={page.id}
+                      component={Link}
+                      to={docsPageHref(page)}
+                      withBorder
+                      padding="md"
+                      radius="sm"
+                    >
                       <Text fw={600} size="sm">
                         {page.label}
                       </Text>

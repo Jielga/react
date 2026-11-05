@@ -7,7 +7,9 @@ import type { ComponentType } from "react";
 
 type DemoModule = Record<string, unknown>;
 
-const demoModules = import.meta.glob<DemoModule>("./demos/**/*.tsx", { eager: true });
+const demoModules = import.meta.glob<DemoModule>("./demos/**/*.tsx", {
+  eager: true,
+});
 
 const demoSources = import.meta.glob<string>("./demos/**/*.tsx", {
   query: "?raw",
@@ -34,12 +36,17 @@ function findComponent(module: DemoModule, file: string): ComponentType {
 }
 
 /** `file` is relative to `demos/`, for example `"pins/PinLabels.tsx"` */
-export function loadDemo(file: string): { Component: ComponentType; source: string } {
+export function loadDemo(file: string): {
+  Component: ComponentType;
+  source: string;
+} {
   const key = `./demos/${file}`;
   const module = demoModules[key];
   const source = demoSources[key];
   if (!module || source === undefined) {
-    throw new Error(`Unknown demo "${file}". Expected a file at apps/nordic-map-docs/src/examples/demos/${file}.`);
+    throw new Error(
+      `Unknown demo "${file}". Expected a file at apps/nordic-map-docs/src/examples/demos/${file}.`,
+    );
   }
   return { Component: findComponent(module, file), source };
 }
@@ -48,7 +55,9 @@ export function loadDemo(file: string): { Component: ComponentType; source: stri
 export function loadSharedSource(file: string): string {
   const source = sharedSources[`./${file}`];
   if (source === undefined) {
-    throw new Error(`Unknown shared source "${file}". Expected a file at apps/nordic-map-docs/src/examples/${file}.`);
+    throw new Error(
+      `Unknown shared source "${file}". Expected a file at apps/nordic-map-docs/src/examples/${file}.`,
+    );
   }
   return source;
 }

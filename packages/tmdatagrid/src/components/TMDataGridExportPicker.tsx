@@ -51,13 +51,13 @@ export function TMDataGridExportPicker() {
     <Modal
       opened={request !== null}
       onClose={() => ui.actions.closeExportPicker()}
-      title={
-        format && labels.exportPickerTitle(format.extension.toUpperCase())
-      }
+      title={format && labels.exportPickerTitle(format.extension.toUpperCase())}
       size={MODAL_WIDTH[size]}
       closeButtonProps={{ size: CLOSE_BUTTON_SIZE[controlSize] }}
       classNames={{ title: classes.title }}
-      styles={{ title: { fontSize: `var(--mantine-font-size-${controlSize})` } }}
+      styles={{
+        title: { fontSize: `var(--mantine-font-size-${controlSize})` },
+      }}
     >
       {request && <PickerForm request={request} />}
     </Modal>

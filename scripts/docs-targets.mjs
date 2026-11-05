@@ -55,7 +55,9 @@ function showJson(ref, path) {
 function versionAt(ref, site) {
   const path = `${site.dir}/package.json`;
   const manifest = ref ? showJson(ref, path) : readJson(path);
-  return manifest?.name === site.packages[0] ? (manifest.version ?? null) : null;
+  return manifest?.name === site.packages[0]
+    ? (manifest.version ?? null)
+    : null;
 }
 
 /**

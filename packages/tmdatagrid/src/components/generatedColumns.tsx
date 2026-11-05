@@ -6,7 +6,11 @@ import {
   DetailsHeader,
 } from "./TMDataGridDetailsColumn";
 import { EDIT_COLUMN_ID, EditLaneCell } from "./TMDataGridEditColumn";
-import { GROUP_COLUMN_ID, GroupCell, GroupHeader } from "./TMDataGridGroupColumn";
+import {
+  GROUP_COLUMN_ID,
+  GroupCell,
+  GroupHeader,
+} from "./TMDataGridGroupColumn";
 import {
   SELECT_COLUMN_ID,
   SelectAllHeader,

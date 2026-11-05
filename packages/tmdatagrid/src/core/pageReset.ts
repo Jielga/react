@@ -33,10 +33,7 @@ import { isFilterActive, isTMDataGridFilterValue } from "./filterOperators";
  * measured over the ungrouped rows before the group was made.
  */
 export type TMDataGridQuerySlice =
-  | "columnFilters"
-  | "globalFilter"
-  | "sorting"
-  | "grouping";
+  "columnFilters" | "globalFilter" | "sorting" | "grouping";
 
 /** What the reset reads and writes - the table, narrowed to that. */
 export type TMDataGridQueryTable = {

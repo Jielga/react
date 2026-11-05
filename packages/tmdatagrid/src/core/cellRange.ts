@@ -53,12 +53,7 @@ export function resolveRangeBounds({
   const focusRow = rowIndexOf(range.focus.rowId);
   const anchorColumn = columnIndexOf(range.anchor.columnId);
   const focusColumn = columnIndexOf(range.focus.columnId);
-  if (
-    anchorRow < 0 ||
-    focusRow < 0 ||
-    anchorColumn < 0 ||
-    focusColumn < 0
-  ) {
+  if (anchorRow < 0 || focusRow < 0 || anchorColumn < 0 || focusColumn < 0) {
     return null;
   }
 
@@ -94,9 +89,7 @@ export function isWithinBounds(
 /** How many cells the rectangle covers. `0` for no range at all. */
 export function boundsCellCount(bounds: TMDataGridRangeBounds | null): number {
   if (bounds === null) return 0;
-  return (
-    (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1)
-  );
+  return (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1);
 }
 
 /**

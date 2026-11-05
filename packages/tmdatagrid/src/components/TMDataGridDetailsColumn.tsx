@@ -109,7 +109,10 @@ export function DetailsHeader<TData extends RowData>({
         )
       }
     >
-      <span className={classes.chevron} data-expanded={allExpanded || undefined}>
+      <span
+        className={classes.chevron}
+        data-expanded={allExpanded || undefined}
+      >
         <ChevronRightIcon size={16} stroke={1.6} />
       </span>
     </UnstyledButton>

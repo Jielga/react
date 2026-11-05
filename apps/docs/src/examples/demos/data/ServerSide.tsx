@@ -1,6 +1,10 @@
 import { Badge } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
-import type { OnChangeFn, PaginationState, SortingState } from "@tanstack/react-table";
+import type {
+  OnChangeFn,
+  PaginationState,
+  SortingState,
+} from "@tanstack/react-table";
 import {
   createTMDataGridColumnHelper,
   TMDataGrid,

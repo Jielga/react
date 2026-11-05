@@ -12,7 +12,9 @@ const prepared = new WeakMap<Polygon | MultiPolygon, Prepared>();
 /** The box around the area on the sphere, which includes the bulge of edges that are great circles */
 function boxOf(geometry: Polygon | MultiPolygon): LonLatBox | null {
   const [[west, south], [east, north]] = geoBounds(geometry);
-  return [west, south, east, north].every(Number.isFinite) ? { west, south, east, north } : null;
+  return [west, south, east, north].every(Number.isFinite)
+    ? { west, south, east, north }
+    : null;
 }
 
 function prepare(geometry: Polygon | MultiPolygon): Prepared {

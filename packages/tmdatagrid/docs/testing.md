@@ -490,10 +490,7 @@ export class DataGrid {
   }
 
   async expectRowCount(count: number): Promise<void> {
-    await expect(this.grid).toHaveAttribute(
-      "data-dg-row-count",
-      String(count),
-    );
+    await expect(this.grid).toHaveAttribute("data-dg-row-count", String(count));
   }
 
   async expectSettled(): Promise<void> {

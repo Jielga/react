@@ -197,7 +197,8 @@ export function readFeatureFlags<TData extends RowData>(
   // address "the focused cell", which only exists under cell selection. An
   // explicit `cellSelection` still wins, `"range"` included.
   const cellSelectionMode =
-    options.cellSelection ?? (options.editing !== undefined ? "single" : "none");
+    options.cellSelection ??
+    (options.editing !== undefined ? "single" : "none");
   // `"highlight"` is the master-detail mode: no selection to speak of, so the
   // checkbox column and the click-to-select behaviour both fall away. Otherwise
   // `enableRowSelection` still has the final say, including its predicate form.
@@ -217,7 +218,8 @@ export function readFeatureFlags<TData extends RowData>(
     selectionMode,
     selectColumn:
       rowSelection &&
-      (selectionMode === "checkbox" || selectionMode === "checkboxAndHighlight"),
+      (selectionMode === "checkbox" ||
+        selectionMode === "checkboxAndHighlight"),
     rowClickSelects: rowSelection && selectionMode === "row",
     multiRowSelection: options.enableMultiRowSelection !== false,
     // In "row" mode the highlight *is* the feedback for a click, so it is on.
@@ -237,8 +239,7 @@ export function readFeatureFlags<TData extends RowData>(
     editMode: options.editing?.mode ?? null,
     editDraft: options.editing?.draft === true,
     editNewRowsSticky:
-      options.editing?.draft === true &&
-      options.editing.newRowsSticky === true,
+      options.editing?.draft === true && options.editing.newRowsSticky === true,
     rowNumbers: options.enableRowNumbers === true,
     // A predicate counts as on - some rows may still pin.
     rowPinning:
@@ -308,8 +309,12 @@ export function getGridCapabilities(
   features: TMDataGridFeatureFlags,
 ): TMDataGridCapabilities {
   const columns = table.getAllLeafColumns();
-  const any = (predicate: (capabilities: TMDataGridColumnCapabilities) => boolean) =>
-    columns.some((column) => predicate(getColumnCapabilities(column, features)));
+  const any = (
+    predicate: (capabilities: TMDataGridColumnCapabilities) => boolean,
+  ) =>
+    columns.some((column) =>
+      predicate(getColumnCapabilities(column, features)),
+    );
 
   return {
     canSortAny: any((c) => c.canSort),

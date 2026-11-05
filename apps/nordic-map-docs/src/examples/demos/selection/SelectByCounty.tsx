@@ -1,5 +1,9 @@
 import { Stack, Text } from "@mantine/core";
-import { loadSwedenCounties, NordicMap, swedenOsmSource } from "@jielga/nordic-map";
+import {
+  loadSwedenCounties,
+  NordicMap,
+  swedenOsmSource,
+} from "@jielga/nordic-map";
 import type { MapArea } from "@jielga/nordic-map";
 import { useEffect, useState } from "react";
 import { cities } from "../../data/cities.ts";
@@ -23,7 +27,9 @@ export function SelectByCounty() {
   return (
     <Stack h="100%" gap="xs">
       <Text size="sm" truncate>
-        {names.length === 0 ? "No cities selected" : `${names.length} selected: ${names.join(", ")}`}
+        {names.length === 0
+          ? "No cities selected"
+          : `${names.length} selected: ${names.join(", ")}`}
       </Text>
       <div style={{ flex: 1, minHeight: 0 }}>
         <NordicMap

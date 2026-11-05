@@ -10,7 +10,10 @@ import {
   useTMDataGridContext,
 } from "../TMDataGridContext";
 import type { TMDataGridColumnLayout } from "./TMDataGridTable";
-import { getColumnCapabilities, getGridCapabilities } from "../core/capabilities";
+import {
+  getColumnCapabilities,
+  getGridCapabilities,
+} from "../core/capabilities";
 import { autosizeColumn } from "../core/autosize";
 import { isNode } from "../core/dom";
 import {
@@ -53,9 +56,7 @@ import { TMDataGridMenuColumns } from "./TMDataGridMenu";
 import { type TMDataGridFeatures, openColumnFilter } from "../useTMDataGrid";
 
 /** The table as the header cell sees it, after the context type erasure. */
-type TMDataGridTableInstance = ReturnType<
-  typeof useTMDataGridContext
->["table"];
+type TMDataGridTableInstance = ReturnType<typeof useTMDataGridContext>["table"];
 
 export type TMDataGridHeader = Header<
   TMDataGridFeatures,
@@ -543,7 +544,8 @@ export function TMDataGridHeaderCell({
   // so the two can never disagree about which headers have one. A control
   // lane's header is itself a control (select-all, expand-all), so it carries
   // no column menu, and a right-click there falls through to the browser's.
-  const hasMenu = isLeaf && finalItems.length > 0 && !isControlColumn(column.id);
+  const hasMenu =
+    isLeaf && finalItems.length > 0 && !isControlColumn(column.id);
 
   const cellClass = [
     classes.headerCell,
@@ -748,7 +750,9 @@ export function TMDataGridHeaderCell({
                   // Held visible for the right-click menu too: that one opens at
                   // the pointer and is portaled, so the hover that revealed the
                   // actions is lost the moment the pointer enters the dropdown.
-                  data-pinned-visible={menuOpened || contextMenuOpened || undefined}
+                  data-pinned-visible={
+                    menuOpened || contextMenuOpened || undefined
+                  }
                   variant="subtle"
                   color="gray"
                   size="xs"

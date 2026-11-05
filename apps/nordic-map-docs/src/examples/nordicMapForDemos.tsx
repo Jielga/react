@@ -1,6 +1,9 @@
 import { NordicMap as LibraryNordicMap } from "../../../../packages/nordic-map/src/index.ts";
 import type { NordicMapProps } from "../../../../packages/nordic-map/src/index.ts";
-import { demoMapLayerProps, useAppliedDemoMapSettings } from "./demoMapSettings.ts";
+import {
+  demoMapLayerProps,
+  useAppliedDemoMapSettings,
+} from "./demoMapSettings.ts";
 
 /*
  * What `@jielga/nordic-map` resolves to in this app, through vite.alias.ts and tsconfig.json's `paths`.
@@ -15,5 +18,7 @@ export function NordicMap<T = unknown>(props: NordicMapProps<T>) {
   if (!settings) {
     return <LibraryNordicMap {...props} />;
   }
-  return <LibraryNordicMap {...props} {...demoMapLayerProps({ settings, props })} />;
+  return (
+    <LibraryNordicMap {...props} {...demoMapLayerProps({ settings, props })} />
+  );
 }

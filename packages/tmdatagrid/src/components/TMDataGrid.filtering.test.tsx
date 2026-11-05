@@ -181,7 +181,9 @@ describe("filter pills", () => {
 
     await user.click(part("filter-pill-remove", { columnId: "id" }));
 
-    expect(queryPart("filter-pill", { columnId: "id" })).not.toBeInTheDocument();
+    expect(
+      queryPart("filter-pill", { columnId: "id" }),
+    ).not.toBeInTheDocument();
     expect(gridRowCount()).toBe(testRows.length);
   });
 
@@ -197,7 +199,12 @@ describe("filter pills", () => {
   });
 
   it("writes values in the configured language, options by their label", () => {
-    type PillRow = { id: number; active: boolean; status: string; tags: string[] };
+    type PillRow = {
+      id: number;
+      active: boolean;
+      status: string;
+      tags: string[];
+    };
     const helper = createTMDataGridColumnHelper<PillRow>();
     const columns = helper.columns([
       helper.accessor("active", { header: "Aktiv", meta: { type: "boolean" } }),
@@ -242,7 +249,9 @@ describe("filter pills", () => {
     }
     renderWithMantine(<PillGrid />);
 
-    expect(part("filter-pill", { columnId: "active" })).toHaveTextContent("Aktiv: Nej");
+    expect(part("filter-pill", { columnId: "active" })).toHaveTextContent(
+      "Aktiv: Nej",
+    );
     expect(part("filter-pill", { columnId: "status" })).toHaveTextContent(
       "Status är ingen av Ledig",
     );
@@ -275,7 +284,10 @@ describe("Search", () => {
     renderWithMantine(<SearchGrid />);
     expect(gridRowCount()).toBe(testRows.length);
 
-    await user.type(screen.getByRole("textbox", { name: "Search rows" }), "Anna");
+    await user.type(
+      screen.getByRole("textbox", { name: "Search rows" }),
+      "Anna",
+    );
 
     const matches = testRows.filter((row) => row.name === "Anna").length;
     expect(gridRowCount()).toBe(matches);
@@ -285,11 +297,16 @@ describe("Search", () => {
     const user = userEvent.setup();
     renderWithMantine(<SearchGrid />);
 
-    await user.type(screen.getByRole("textbox", { name: "Search rows" }), "Anna");
+    await user.type(
+      screen.getByRole("textbox", { name: "Search rows" }),
+      "Anna",
+    );
     await user.click(screen.getByRole("button", { name: "Clear search" }));
 
     expect(gridRowCount()).toBe(testRows.length);
-    expect(screen.getByRole("textbox", { name: "Search rows" })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Search rows" })).toHaveValue(
+      "",
+    );
   });
 
   it("mirrors an external globalFilter write into the input", async () => {
@@ -305,9 +322,9 @@ describe("Search", () => {
     result.current.table.setGlobalFilter("Erik");
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("textbox", { name: "Search rows" }),
-      ).toHaveValue("Erik"),
+      expect(screen.getByRole("textbox", { name: "Search rows" })).toHaveValue(
+        "Erik",
+      ),
     );
   });
 
@@ -320,7 +337,12 @@ describe("Search", () => {
 });
 
 describe("typed columns in the filter panel", () => {
-  type TypedRow = { id: number; status: string; active: boolean; hired: string };
+  type TypedRow = {
+    id: number;
+    status: string;
+    active: boolean;
+    hired: string;
+  };
 
   const typedRows: TypedRow[] = [
     { id: 1, status: "Paid", active: true, hired: "2026-01-15" },
@@ -443,7 +465,12 @@ describe("typed columns in the filter panel", () => {
 });
 
 describe("filter controls", () => {
-  type ControlRow = { id: number; status: string; active: boolean; hired: string };
+  type ControlRow = {
+    id: number;
+    status: string;
+    active: boolean;
+    hired: string;
+  };
 
   const controlRows: ControlRow[] = [
     { id: 1, status: "Paid", active: true, hired: "2026-01-15" },
@@ -454,7 +481,10 @@ describe("filter controls", () => {
 
   // A custom control sees only the bare value; the grid wraps it with the
   // current operator on the way into filter state.
-  const StatusPicker: TMDataGridFilterControlComponent = ({ value, onChange }) => (
+  const StatusPicker: TMDataGridFilterControlComponent = ({
+    value,
+    onChange,
+  }) => (
     <input
       aria-label="Status picker"
       value={typeof value === "string" ? value : ""}

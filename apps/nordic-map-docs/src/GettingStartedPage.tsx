@@ -21,8 +21,9 @@ export function GettingStartedPage() {
             Nordic Map
           </Title>
           <Text c="dimmed" size="lg">
-            An offline map of Sweden for React, with GPS pins, labels, clusters, areas and paths. The map data ships with
-            the package, so no tile server or API key is needed.
+            An offline map of Sweden for React, with GPS pins, labels, clusters,
+            areas and paths. The map data ships with the package, so no tile
+            server or API key is needed.
           </Text>
           <Group gap="sm">
             <Button component={Link} to="/docs">
@@ -31,7 +32,11 @@ export function GettingStartedPage() {
             <Button component={Link} to="/playground" variant="default">
               Open the playground
             </Button>
-            <Button component="a" href="https://github.com/Jielga/react/tree/main/packages/nordic-map" variant="default">
+            <Button
+              component="a"
+              href="https://github.com/Jielga/react/tree/main/packages/nordic-map"
+              variant="default"
+            >
               GitHub
             </Button>
           </Group>

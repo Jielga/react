@@ -12,7 +12,9 @@ export function SingleSelection() {
   return (
     <Stack h="100%" gap="xs">
       <Text size="sm">
-        {city ? `${city.label}: ${city.data?.population.toLocaleString("sv-SE")} inhabitants` : "Click a city"}
+        {city
+          ? `${city.label}: ${city.data?.population.toLocaleString("sv-SE")} inhabitants`
+          : "Click a city"}
       </Text>
       <div style={{ flex: 1, minHeight: 0 }}>
         <NordicMap

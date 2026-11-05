@@ -1,5 +1,10 @@
 import { Button, ColorInput, Group, Stack, Text } from "@mantine/core";
-import { colorFields, darkColors, lightColors, sameColors } from "./mapColors.ts";
+import {
+  colorFields,
+  darkColors,
+  lightColors,
+  sameColors,
+} from "./mapColors.ts";
 import type { MapColors } from "./mapColors.ts";
 
 type ColorControlsProps = {

@@ -1,4 +1,10 @@
-import { act, render, renderHook, screen, within } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  within,
+} from "@testing-library/react";
 import type userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import {
@@ -91,8 +97,11 @@ export const partSelector = (name: string, key: PartKey = {}) =>
     ? ""
     : `[data-column-id="${CSS.escape(key.columnId)}"]`);
 
-export const parts = (name: string, key?: PartKey, scope: ParentNode = document) =>
-  Array.from(scope.querySelectorAll<HTMLElement>(partSelector(name, key)));
+export const parts = (
+  name: string,
+  key?: PartKey,
+  scope: ParentNode = document,
+) => Array.from(scope.querySelectorAll<HTMLElement>(partSelector(name, key)));
 
 /** The one matching element, or `null` - for `not.toBeInTheDocument()`. */
 export const queryPart = (

@@ -65,7 +65,12 @@ function publicExportNames(source: string): Array<string> {
       const entry = raw.trim().replace(/^type\s+/, "");
       if (entry === "") continue;
       // `a as b` exports `b`.
-      names.add(entry.split(/\s+as\s+/).at(-1)!.trim());
+      names.add(
+        entry
+          .split(/\s+as\s+/)
+          .at(-1)!
+          .trim(),
+      );
     }
   }
   for (const [, name] of source.matchAll(

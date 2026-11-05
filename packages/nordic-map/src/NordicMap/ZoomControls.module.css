@@ -40,7 +40,10 @@
 }
 
 .button:disabled {
-  color: var(--nordic-map-control-disabled-color, var(--_control-disabled-color));
+  color: var(
+    --nordic-map-control-disabled-color,
+    var(--_control-disabled-color)
+  );
   cursor: default;
 }
 

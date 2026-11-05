@@ -1,4 +1,10 @@
-import { Box, type BoxProps, Button, Pill, UnstyledButton } from "@mantine/core";
+import {
+  Box,
+  type BoxProps,
+  Button,
+  Pill,
+  UnstyledButton,
+} from "@mantine/core";
 import type { RowData } from "@tanstack/react-table";
 import { useSelector } from "@tanstack/react-store";
 import classes from "./TMDataGridFilterPills.module.css";
@@ -136,7 +142,10 @@ export function TMDataGridFilterPills<TData extends RowData>({
                   filter: value,
                   operatorLabels: labels.operators,
                   options: erasedColumn
-                    ? resolveColumnOptions({ table: erased, column: erasedColumn })
+                    ? resolveColumnOptions({
+                        table: erased,
+                        column: erasedColumn,
+                      })
                     : undefined,
                   labels,
                 })}

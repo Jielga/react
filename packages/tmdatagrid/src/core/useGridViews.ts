@@ -4,7 +4,10 @@ import { shallow } from "@tanstack/store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TMDataGridFeatures } from "../useTMDataGrid";
 import { sameStateValue } from "./controlledState";
-import { SETTINGS_STATE_SLICES, type TMDataGridSettingsSlice } from "./persistence";
+import {
+  SETTINGS_STATE_SLICES,
+  type TMDataGridSettingsSlice,
+} from "./persistence";
 import {
   captureViewState,
   createViewId,
@@ -68,9 +71,7 @@ export function useGridViews({
   restoredSettings: boolean;
   applyState: (state: TMDataGridViewState) => void;
   readState: () => TMDataGridViewState;
-  tableStore: Parameters<
-    typeof useSelector<TableState<TMDataGridFeatures>>
-  >[0];
+  tableStore: Parameters<typeof useSelector<TableState<TMDataGridFeatures>>>[0];
   /** The leaf column ids in definition order, generated lanes included. */
   columnIds: ReadonlyArray<string>;
 }): TMDataGridViewsApi {
@@ -273,8 +274,7 @@ export function useGridViews({
   );
   const active = list.find((entry) => entry.id === activeId) ?? null;
   const modified =
-    active !== null &&
-    isViewModified(active.state, layout, columnIds, slices);
+    active !== null && isViewModified(active.state, layout, columnIds, slices);
 
   return useMemo<TMDataGridViewsApi>(
     () => ({

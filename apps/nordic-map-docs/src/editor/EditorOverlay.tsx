@@ -71,7 +71,9 @@ function pathOf(points: (ScreenPoint | null)[], closed: boolean): string {
 }
 
 function sameRef(a: VertexRef | null, b: VertexRef): boolean {
-  return a !== null && a.part === b.part && a.ring === b.ring && a.index === b.index;
+  return (
+    a !== null && a.part === b.part && a.ring === b.ring && a.index === b.index
+  );
 }
 
 /** The handles of the selected area, the ring being drawn, and the snap marker, in an SVG over the map */
@@ -107,7 +109,9 @@ export function EditorOverlay({
     const measure = () => {
       const { width, height } = svg.getBoundingClientRect();
       setSize((current) => {
-        return current.width === width && current.height === height ? current : { width, height };
+        return current.width === width && current.height === height
+          ? current
+          : { width, height };
       });
     };
     measure();
@@ -125,7 +129,9 @@ export function EditorOverlay({
       return;
     }
     const listener = (event: WheelEvent) => {
-      const target = svg.parentElement?.querySelector('[aria-roledescription="map"]');
+      const target = svg.parentElement?.querySelector(
+        '[aria-roledescription="map"]',
+      );
       if (target) {
         event.preventDefault();
         target.dispatchEvent(new WheelEvent("wheel", event));
@@ -142,16 +148,37 @@ export function EditorOverlay({
     return handle?.project({ lon: point[0], lat: point[1] }) ?? null;
   };
 
-  function localPoint(event: { clientX: number; clientY: number }): ScreenPoint {
+  function localPoint(event: {
+    clientX: number;
+    clientY: number;
+  }): ScreenPoint {
     const rect = svgRef.current?.getBoundingClientRect();
-    return rect ? { x: event.clientX - rect.left, y: event.clientY - rect.top } : { x: event.clientX, y: event.clientY };
+    return rect
+      ? { x: event.clientX - rect.left, y: event.clientY - rect.top }
+      : { x: event.clientX, y: event.clientY };
   }
 
-  function targetFor({ point, free, indexes }: { point: ScreenPoint; free: boolean; indexes: SnapIndex[] }): { at: LonLat; snap: Snap | null } | null {
+  function targetFor({
+    point,
+    free,
+    indexes,
+  }: {
+    point: ScreenPoint;
+    free: boolean;
+    indexes: SnapIndex[];
+  }): { at: LonLat; snap: Snap | null } | null {
     if (!handle) {
       return null;
     }
-    const snap = snapping && !free ? findSnap({ pointer: point, indexes, projection: handle, radius: SNAP_RADIUS }) : null;
+    const snap =
+      snapping && !free
+        ? findSnap({
+            pointer: point,
+            indexes,
+            projection: handle,
+            radius: SNAP_RADIUS,
+          })
+        : null;
     if (snap) {
       return { at: snap.at, snap };
     }
@@ -159,14 +186,27 @@ export function EditorOverlay({
     return position ? { at: [position.lon, position.lat], snap: null } : null;
   }
 
-  function startDrag({ event, ref, insert }: { event: ReactPointerEvent<SVGCircleElement>; ref: VertexRef; insert: boolean }) {
+  function startDrag({
+    event,
+    ref,
+    insert,
+  }: {
+    event: ReactPointerEvent<SVGCircleElement>;
+    ref: VertexRef;
+    insert: boolean;
+  }) {
     if (!parts || (event.pointerType === "mouse" && event.button !== 0)) {
       return;
     }
     event.preventDefault();
     event.stopPropagation();
-    const dragged = insert ? undefined : (vertexAt({ parts, ref }) ?? undefined);
-    const ownIndex = buildSnapIndex({ shapes: [parts, ...otherShapes], exclude: dragged });
+    const dragged = insert
+      ? undefined
+      : (vertexAt({ parts, ref }) ?? undefined);
+    const ownIndex = buildSnapIndex({
+      shapes: [parts, ...otherShapes],
+      exclude: dragged,
+    });
     drag.current = {
       ref,
       insert,
@@ -181,16 +221,26 @@ export function EditorOverlay({
         return;
       }
       const point = localPoint(moveEvent);
-      if (!current.moved && Math.hypot(point.x - current.start.x, point.y - current.start.y) < CLICK_SLOP) {
+      if (
+        !current.moved &&
+        Math.hypot(point.x - current.start.x, point.y - current.start.y) <
+          CLICK_SLOP
+      ) {
         return;
       }
       current.moved = true;
-      const target = targetFor({ point, free: moveEvent.altKey, indexes: current.indexes });
+      const target = targetFor({
+        point,
+        free: moveEvent.altKey,
+        indexes: current.indexes,
+      });
       if (!target) {
         return;
       }
       setDragSnap(target.snap);
-      const from = current.insert ? insertVertex({ parts: current.base, ref: current.ref, at: target.at }) : current.base;
+      const from = current.insert
+        ? insertVertex({ parts: current.base, ref: current.ref, at: target.at })
+        : current.base;
       onPreview(moveVertex({ parts: from, ref: current.ref, to: target.at }));
     };
     const end = (endEvent: PointerEvent) => {
@@ -203,13 +253,26 @@ export function EditorOverlay({
       if (!current) {
         return;
       }
-      const target = current.moved && endEvent.type === "pointerup" ? targetFor({ point: localPoint(endEvent), free: endEvent.altKey, indexes: current.indexes }) : null;
+      const target =
+        current.moved && endEvent.type === "pointerup"
+          ? targetFor({
+              point: localPoint(endEvent),
+              free: endEvent.altKey,
+              indexes: current.indexes,
+            })
+          : null;
       if (current.moved) {
         if (!target) {
           onCancel();
           return;
         }
-        const from = current.insert ? insertVertex({ parts: current.base, ref: current.ref, at: target.at }) : current.base;
+        const from = current.insert
+          ? insertVertex({
+              parts: current.base,
+              ref: current.ref,
+              at: target.at,
+            })
+          : current.base;
         onCommit(moveVertex({ parts: from, ref: current.ref, to: target.at }));
         onSelectVertex(current.ref);
         return;
@@ -223,7 +286,13 @@ export function EditorOverlay({
         const a = ring?.[current.ref.index - 1];
         const b = ring?.[current.ref.index % ring.length];
         if (a && b) {
-          onCommit(insertVertex({ parts: current.base, ref: current.ref, at: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }));
+          onCommit(
+            insertVertex({
+              parts: current.base,
+              ref: current.ref,
+              at: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+            }),
+          );
           onSelectVertex(current.ref);
         }
         return;
@@ -244,7 +313,13 @@ export function EditorOverlay({
     }) ?? [];
   const margin = 20;
   const onScreen = (point: ScreenPoint | null): point is ScreenPoint => {
-    return point !== null && point.x >= -margin && point.y >= -margin && point.x <= size.width + margin && point.y <= size.height + margin;
+    return (
+      point !== null &&
+      point.x >= -margin &&
+      point.y >= -margin &&
+      point.x <= size.width + margin &&
+      point.y <= size.height + margin
+    );
   };
   let visibleCount = 0;
   for (const ring of rings) {
@@ -256,7 +331,12 @@ export function EditorOverlay({
   const drawn = drawing?.map(project) ?? [];
   const drawSnap =
     drawing && pointer && handle && snapping && !pointer.free
-      ? findSnap({ pointer: pointer.point, indexes: drawIndexes, projection: handle, radius: SNAP_RADIUS })
+      ? findSnap({
+          pointer: pointer.point,
+          indexes: drawIndexes,
+          projection: handle,
+          radius: SNAP_RADIUS,
+        })
       : null;
   const next = drawSnap ? project(drawSnap.at) : (pointer?.point ?? null);
   const last = drawn.at(-1) ?? null;
@@ -267,14 +347,25 @@ export function EditorOverlay({
   return (
     <svg ref={svgRef} className={classes.overlay} data-editor-overlay="">
       {rings.map(({ partIndex, ringIndex, points }) => {
-        return <path key={`${partIndex}-${ringIndex}`} className={classes.outline} d={pathOf(points, true)} />;
+        return (
+          <path
+            key={`${partIndex}-${ringIndex}`}
+            className={classes.outline}
+            d={pathOf(points, true)}
+          />
+        );
       })}
 
       {showHandles &&
         rings.map(({ partIndex, ringIndex, points }) => {
           return points.map((point, index) => {
             const nextPoint = points[(index + 1) % points.length] ?? null;
-            if (!onScreen(point) || !nextPoint || Math.hypot(nextPoint.x - point.x, nextPoint.y - point.y) < MIN_MIDPOINT_EDGE) {
+            if (
+              !onScreen(point) ||
+              !nextPoint ||
+              Math.hypot(nextPoint.x - point.x, nextPoint.y - point.y) <
+                MIN_MIDPOINT_EDGE
+            ) {
               return null;
             }
             const ref = { part: partIndex, ring: ringIndex, index: index + 1 };
@@ -321,8 +412,18 @@ export function EditorOverlay({
       {drawing && (
         <>
           <path className={classes.drawn} d={pathOf(drawn, false)} />
-          {last && next && <path className={classes.rubberBand} d={pathOf([last, next], false)} />}
-          {drawing.length >= 3 && first && next && <path className={classes.rubberBand} d={pathOf([next, first], false)} />}
+          {last && next && (
+            <path
+              className={classes.rubberBand}
+              d={pathOf([last, next], false)}
+            />
+          )}
+          {drawing.length >= 3 && first && next && (
+            <path
+              className={classes.rubberBand}
+              d={pathOf([next, first], false)}
+            />
+          )}
           {drawn.map((point, index) => {
             if (!point) {
               return null;
@@ -353,7 +454,9 @@ export function EditorOverlay({
 
       {snapPoint && (
         <circle
-          className={snap?.kind === "vertex" ? classes.snapVertex : classes.snapEdge}
+          className={
+            snap?.kind === "vertex" ? classes.snapVertex : classes.snapEdge
+          }
           cx={snapPoint.x}
           cy={snapPoint.y}
           r={8}
@@ -363,7 +466,12 @@ export function EditorOverlay({
       )}
 
       {parts && drawing === null && !showHandles && (
-        <text className={classes.hint} x={size.width / 2} y={28} textAnchor="middle">
+        <text
+          className={classes.hint}
+          x={size.width / 2}
+          y={28}
+          textAnchor="middle"
+        >
           Zoom in to edit the points of this area
         </text>
       )}

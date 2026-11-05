@@ -27,7 +27,9 @@ function rewindRings(rings: Position[][]): Position[][] {
  * d3-geo reads a ring on the sphere, and takes a counterclockwise outer ring as everything outside it, which
  * fills the whole map. GeoJSON (RFC 7946) winds the other way, so polygons are rewound before drawing.
  */
-export function rewindPolygon<T extends Polygon | MultiPolygon>(geometry: T): T {
+export function rewindPolygon<T extends Polygon | MultiPolygon>(
+  geometry: T,
+): T {
   if (geometry.type === "Polygon") {
     return { ...geometry, coordinates: rewindRings(geometry.coordinates) };
   }

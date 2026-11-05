@@ -209,9 +209,7 @@ export {
   type TMDataGridAggregationName,
 } from "./core/summary";
 export { autosizeColumn } from "./core/autosize";
-export {
-  type TMDataGridCellPosition,
-} from "./core/cellNavigation";
+export { type TMDataGridCellPosition } from "./core/cellNavigation";
 export {
   resolveRangeBounds,
   type ResolveRangeBoundsArgs,

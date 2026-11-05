@@ -76,10 +76,7 @@ describe("the standalone version switcher", () => {
     const values = [...(document.querySelector("select")?.options ?? [])].map(
       (option) => option.value,
     );
-    expect(values).toEqual([
-      "/react/docs/columns",
-      "/react/next/docs/columns",
-    ]);
+    expect(values).toEqual(["/react/docs/columns", "/react/next/docs/columns"]);
   });
 
   it("reads the page out of a copy served from a subdirectory", async () => {
@@ -88,10 +85,7 @@ describe("the standalone version switcher", () => {
     const values = [...(document.querySelector("select")?.options ?? [])].map(
       (option) => option.value,
     );
-    expect(values).toEqual([
-      "/react/docs/columns",
-      "/react/next/docs/columns",
-    ]);
+    expect(values).toEqual(["/react/docs/columns", "/react/next/docs/columns"]);
   });
 
   it("stays out of the way when there is nothing to switch to", async () => {

@@ -11,7 +11,7 @@
   --code-bg: var(--mantine-color-gray-0);
 }
 
-:root[data-mantine-color-scheme='dark'] {
+:root[data-mantine-color-scheme="dark"] {
   --code-bg: var(--mantine-color-dark-8);
 }
 
@@ -21,7 +21,13 @@
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.55;
@@ -40,7 +46,7 @@ body {
 .intro h1 {
   font-size: 2rem;
   margin: 0 0 0.5rem;
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 .tagline {
@@ -102,7 +108,7 @@ pre {
 }
 
 code {
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 p code,
@@ -143,7 +149,7 @@ button.secondary {
   align-items: center;
 }
 
-input[type='text'] {
+input[type="text"] {
   font: inherit;
   background: var(--surface);
   color: var(--text);
@@ -208,7 +214,7 @@ input[type='text'] {
 }
 
 .panel-separator:hover,
-.panel-separator[data-resize='active'] {
+.panel-separator[data-resize="active"] {
   background: var(--accent);
 }
 
@@ -228,7 +234,7 @@ input[type='text'] {
   color: var(--text-muted);
 }
 
-.filters-form input[type='text'],
+.filters-form input[type="text"],
 .filters-form select {
   display: block;
   width: 100%;
@@ -291,7 +297,13 @@ input[type='text'] {
    file) are mirrored into the popup by the library, so it just works. */
 .popup-panel {
   padding: 1rem 1.25rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 .popup-panel h2 {

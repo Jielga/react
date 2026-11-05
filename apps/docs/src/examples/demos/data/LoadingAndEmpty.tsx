@@ -9,10 +9,7 @@ type State = "loaded" | "loading" | "empty";
 export function LoadingAndEmpty() {
   const [state, setState] = useState<State>("empty");
 
-  const data = useMemo(
-    () => (state === "loaded" ? EMPLOYEES : []),
-    [state],
-  );
+  const data = useMemo(() => (state === "loaded" ? EMPLOYEES : []), [state]);
 
   const meta = useMemo(
     // The first load, when there is nothing on screen yet: the grid shows its

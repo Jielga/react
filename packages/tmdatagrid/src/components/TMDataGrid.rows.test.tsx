@@ -76,7 +76,9 @@ describe("row pinning", () => {
           </button>
           <button
             type="button"
-            onClick={() => setData((rows) => rows.filter((row) => row.id !== 1))}
+            onClick={() =>
+              setData((rows) => rows.filter((row) => row.id !== 1))
+            }
           >
             Remove 1
           </button>
@@ -155,12 +157,12 @@ describe("row pinning", () => {
     const predicate = renderGrid({
       enableRowPinning: (row) => row.original.id !== 2,
     });
-    expect(
-      predicate.result.current.table.getRow("1", true).getCanPin(),
-    ).toBe(true);
-    expect(
-      predicate.result.current.table.getRow("2", true).getCanPin(),
-    ).toBe(false);
+    expect(predicate.result.current.table.getRow("1", true).getCanPin()).toBe(
+      true,
+    );
+    expect(predicate.result.current.table.getRow("2", true).getCanPin()).toBe(
+      false,
+    );
 
     const grouped = renderGrid({ enableRowPinning: true });
     act(() => {
@@ -178,9 +180,9 @@ describe("row selection", () => {
   it("selects a row from its checkbox", async () => {
     const user = userEvent.setup();
     renderGridUi();
-    const [firstRow] = screen.getAllByRole("row").filter((row) =>
-      row.hasAttribute("data-row-id"),
-    );
+    const [firstRow] = screen
+      .getAllByRole("row")
+      .filter((row) => row.hasAttribute("data-row-id"));
 
     await user.click(within(firstRow).getByRole("checkbox"));
 
@@ -196,15 +198,14 @@ describe("row selection", () => {
     // asserted here: the cell padding grows with `size` and would squeeze the
     // box out of its fixed 36px track at `xl`. The attribute is what the CSS
     // hangs off, so it is what the test pins down.
-    expect(header("__select__")).toHaveAttribute(
-      "data-control-column",
-      "true",
-    );
+    expect(header("__select__")).toHaveAttribute("data-control-column", "true");
     expect(within(firstRow).getAllByRole("cell")[0]).toHaveAttribute(
       "data-control-column",
       "true",
     );
-    expect(within(firstRow).getAllByRole("cell")[1]).not.toHaveAttribute("data-control-column");
+    expect(within(firstRow).getAllByRole("cell")[1]).not.toHaveAttribute(
+      "data-control-column",
+    );
   });
 
   it("drops the checkbox column in row selection mode", () => {
@@ -218,9 +219,9 @@ describe("row selection", () => {
   it("selects on row click in row selection mode", async () => {
     const user = userEvent.setup();
     renderGridUi({ selectionMode: "row" });
-    const [firstRow] = screen.getAllByRole("row").filter((row) =>
-      row.hasAttribute("data-row-id"),
-    );
+    const [firstRow] = screen
+      .getAllByRole("row")
+      .filter((row) => row.hasAttribute("data-row-id"));
 
     await user.click(firstRow);
 
@@ -231,9 +232,7 @@ describe("row selection", () => {
 describe("row context menu", () => {
   /** Right-clicks the Name cell of a row. Cell 0 is the checkbox column. */
   const contextClickName = (rowIndex: number) =>
-    fireEvent.contextMenu(
-      within(bodyRows()[rowIndex]).getAllByRole("cell")[2],
-    );
+    fireEvent.contextMenu(within(bodyRows()[rowIndex]).getAllByRole("cell")[2]);
 
   it("opens the menu for the right-clicked row and cell", async () => {
     const targets: string[] = [];
@@ -447,7 +446,9 @@ describe("grouping", () => {
     await clickMenuItem(user, "Group", "Ungroup City");
 
     expect(header("city")).toBeInTheDocument();
-    expect(queryPart("header", { columnId: "__group__" })).not.toBeInTheDocument();
+    expect(
+      queryPart("header", { columnId: "__group__" }),
+    ).not.toBeInTheDocument();
     expect(bodyRows()).toHaveLength(12);
   });
 
@@ -456,7 +457,9 @@ describe("grouping", () => {
     renderGridUi();
 
     await clickMenuItem(user, "City", "Group by City");
-    const groupBoxes = screen.getAllByRole("checkbox", { name: "Select group" });
+    const groupBoxes = screen.getAllByRole("checkbox", {
+      name: "Select group",
+    });
     expect(groupBoxes).toHaveLength(3);
 
     await user.click(groupBoxes[0]!);
@@ -577,7 +580,9 @@ describe("grouping and the pager", () => {
     // Still there - a footer that vanished would read as a bug rather than as a
     // mode the grid is in.
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeDisabled();
     expect(screen.getByText("Grouped · all 12 rows")).toBeInTheDocument();
   });
 
@@ -632,7 +637,9 @@ describe("grouping and the row context menu", () => {
     // reason group rows sit out `onRowClick`.
     fireEvent.contextMenu(within(bodyRows()[0]!).getAllByRole("cell")[2]!);
 
-    expect(screen.queryByRole("menuitem", { name: "Open" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: "Open" }),
+    ).not.toBeInTheDocument();
     expect(seen).toEqual([]);
     expect(bodyRows()[0]).not.toHaveAttribute("data-context-menu", "true");
   });
@@ -657,7 +664,6 @@ describe("grouping and the row context menu", () => {
     ).toBeInTheDocument();
   });
 });
-
 
 describe("row details", () => {
   const renderDetails = ({ row }: TMDataGridDetailsArgs<TestRow>) => (
@@ -686,8 +692,8 @@ describe("row details", () => {
       false,
     );
     expect(
-      renderGrid({ renderDetails }).result.current.table
-        .getRow("1")
+      renderGrid({ renderDetails })
+        .result.current.table.getRow("1")
         .getCanExpand(),
     ).toBe(true);
   });
@@ -879,7 +885,9 @@ describe("row details", () => {
     // `toggleAllRowsExpanded` writes would have opened all three groups too -
     // and the grid would be showing fifteen rows rather than three.
     expect(gridRowCount()).toBe(3);
-    expect(bodyRows().every((row) => row.dataset.grouped === "true")).toBe(true);
+    expect(bodyRows().every((row) => row.dataset.grouped === "true")).toBe(
+      true,
+    );
 
     // The panels are there all the same, under the rows inside the group.
     await user.click(screen.getByRole("button", { name: "Expand Stockholm" }));
@@ -897,7 +905,9 @@ describe("row details", () => {
     await user.click(screen.getByRole("button", { name: "City column menu" }));
     await user.click(screen.getByRole("menuitem", { name: "Group by City" }));
     await user.click(screen.getByRole("button", { name: "Group column menu" }));
-    await user.click(screen.getByRole("menuitem", { name: "Expand all groups" }));
+    await user.click(
+      screen.getByRole("menuitem", { name: "Expand all groups" }),
+    );
 
     // The mirror of the case above: an item that says "groups" must not open
     // every panel in the grid.
@@ -926,4 +936,3 @@ describe("row details", () => {
     expect(screen.queryByText(/^Details for/)).not.toBeInTheDocument();
   });
 });
-

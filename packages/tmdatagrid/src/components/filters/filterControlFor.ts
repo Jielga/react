@@ -1,5 +1,8 @@
 import type { Column } from "@tanstack/react-table";
-import { resolveColumnOptions, type TMDataGridOption } from "../../core/columnOptions";
+import {
+  resolveColumnOptions,
+  type TMDataGridOption,
+} from "../../core/columnOptions";
 import { getColumnFilterControl, getColumnType } from "../../core/columnUtils";
 import type { TMDataGridFilterControlComponent } from "../../core/filterControls";
 import type { TMDataGridRowData } from "../../TMDataGridContext";

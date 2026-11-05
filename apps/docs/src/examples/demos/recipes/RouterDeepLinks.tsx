@@ -54,7 +54,10 @@ function Links() {
         data-link="departments"
         search={employeesLink.search({
           filters: {
-            department: { operator: "isAnyOf", value: ["Design", "Engineering"] },
+            department: {
+              operator: "isAnyOf",
+              value: ["Design", "Engineering"],
+            },
           },
         })}
       >
@@ -77,7 +80,9 @@ function Links() {
         to="/employees"
         data-link="hired"
         search={employeesLink.search({
-          filters: { hired: { operator: "onOrAfter", value: new Date(2024, 0, 1) } },
+          filters: {
+            hired: { operator: "onOrAfter", value: new Date(2024, 0, 1) },
+          },
           sorting: [{ id: "hired", desc: false }],
         })}
       >
@@ -90,7 +95,10 @@ function Links() {
       >
         Search for "anna"
       </AnchorLink>
-      <AnchorLink<typeof router, "/", "/employees"> to="/employees" data-link="none">
+      <AnchorLink<typeof router, "/", "/employees">
+        to="/employees"
+        data-link="none"
+      >
         All employees
       </AnchorLink>
     </Stack>

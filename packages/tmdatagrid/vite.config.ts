@@ -55,9 +55,7 @@ export default defineConfig({
     // `@jielga/tmdatagrid/styles.css`.
     cssCodeSplit: false,
     lib: {
-      entry: fileURLToPath(
-        new URL("./src/index.ts", import.meta.url),
-      ),
+      entry: fileURLToPath(new URL("./src/index.ts", import.meta.url)),
       formats: ["es"],
       fileName: () => "index.js",
       cssFileName: "styles",

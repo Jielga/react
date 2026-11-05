@@ -1,4 +1,13 @@
-import { Alert, Button, FileButton, Group, Modal, Stack, Text, Textarea } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  FileButton,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
 import { useState } from "react";
 import { parseAreas } from "./areaFiles.ts";
@@ -29,7 +38,10 @@ export function ImportDialog({
     <Modal opened={opened} onClose={close} title="Import areas" size="xl">
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
-          Paste a MapArea list, a TypeScript file exported from the area editor, or GeoJSON: a FeatureCollection, a Feature, or a Polygon or MultiPolygon. The areas are added to the ones you have; an id that is already taken gets a number.
+          Paste a MapArea list, a TypeScript file exported from the area editor,
+          or GeoJSON: a FeatureCollection, a Feature, or a Polygon or
+          MultiPolygon. The areas are added to the ones you have; an id that is
+          already taken gets a number.
         </Text>
         <Textarea
           aria-label="Areas to import"
@@ -40,7 +52,14 @@ export function ImportDialog({
           }}
           rows={14}
           placeholder='[{ "id": "north", "label": "North", "geometry": { "type": "Polygon", "coordinates": [...] } }]'
-          styles={{ input: { fontFamily: "var(--mantine-font-family-monospace)", fontSize: 12, whiteSpace: "pre", overflowWrap: "normal" } }}
+          styles={{
+            input: {
+              fontFamily: "var(--mantine-font-family-monospace)",
+              fontSize: 12,
+              whiteSpace: "pre",
+              overflowWrap: "normal",
+            },
+          }}
         />
         {error && <Alert color="red">{error}</Alert>}
         <Group justify="space-between">
@@ -57,7 +76,11 @@ export function ImportDialog({
           >
             {(props) => {
               return (
-                <Button variant="default" leftSection={<IconUpload size={16} />} {...props}>
+                <Button
+                  variant="default"
+                  leftSection={<IconUpload size={16} />}
+                  {...props}
+                >
                   Open a file
                 </Button>
               );

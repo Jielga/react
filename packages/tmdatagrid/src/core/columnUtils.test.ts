@@ -83,7 +83,10 @@ describe("getColumnDefaultOperator", () => {
 describe("getColumnOperators", () => {
   function columnWith(filter: Record<string, unknown>) {
     const columns = helper.columns([
-      helper.accessor("age", { header: "Age", meta: { type: "number", filter } }),
+      helper.accessor("age", {
+        header: "Age",
+        meta: { type: "number", filter },
+      }),
     ]);
     const api = erased(renderGrid({ columns } as never).result.current);
     return api.table.getColumn("age")!;
@@ -96,13 +99,20 @@ describe("getColumnOperators", () => {
   });
 
   it("narrows to meta.filter.operators in the type's order", () => {
-    const column = columnWith({ operators: ["greaterThan", "equals", "isEmpty"] });
-    expect(getColumnOperators(column)).toEqual(["equals", "greaterThan", "isEmpty"]);
+    const column = columnWith({
+      operators: ["greaterThan", "equals", "isEmpty"],
+    });
+    expect(getColumnOperators(column)).toEqual([
+      "equals",
+      "greaterThan",
+      "isEmpty",
+    ]);
   });
 
   it("drops operators the type does not offer, and falls back when nothing is left", () => {
-    expect(getColumnOperators(columnWith({ operators: ["contains", "equals"] })))
-      .toEqual(["equals"]);
+    expect(
+      getColumnOperators(columnWith({ operators: ["contains", "equals"] })),
+    ).toEqual(["equals"]);
     expect(getColumnOperators(columnWith({ operators: ["contains"] }))).toEqual(
       getOperatorsForType("number"),
     );
@@ -110,21 +120,28 @@ describe("getColumnOperators", () => {
 
   it("moves the default operator to the first offered one when the type's default is excluded", () => {
     expect(
-      getColumnDefaultOperator(columnWith({ operators: ["greaterThan", "lessThan"] })),
+      getColumnDefaultOperator(
+        columnWith({ operators: ["greaterThan", "lessThan"] }),
+      ),
     ).toBe("greaterThan");
     expect(
-      getColumnDefaultOperator(columnWith({ operators: ["greaterThan", "equals"] })),
+      getColumnDefaultOperator(
+        columnWith({ operators: ["greaterThan", "equals"] }),
+      ),
     ).toBe("equals");
     expect(
       getColumnDefaultOperator(
-        columnWith({ operators: ["greaterThan", "lessThan"], defaultOperator: "lessThan" }),
+        columnWith({
+          operators: ["greaterThan", "lessThan"],
+          defaultOperator: "lessThan",
+        }),
       ),
     ).toBe("lessThan");
   });
 });
 
 describe("showColumnSearch", () => {
-  it("reads `\"auto\"` as from six columns", () => {
+  it('reads `"auto"` as from six columns', () => {
     expect(showColumnSearch("auto", 5)).toBe(false);
     expect(showColumnSearch("auto", 6)).toBe(true);
   });

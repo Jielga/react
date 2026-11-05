@@ -58,7 +58,9 @@ function stringifySearch(search: Record<string, unknown>): string {
   const pairs = Object.entries(search).flatMap(([key, value]) =>
     value === undefined
       ? []
-      : [`${encodeURIComponent(key)}=${encodeURIComponent(toSearchValue(value))}`],
+      : [
+          `${encodeURIComponent(key)}=${encodeURIComponent(toSearchValue(value))}`,
+        ],
   );
   return pairs.length === 0 ? "" : `?${pairs.join("&")}`;
 }
@@ -81,7 +83,10 @@ function Links() {
         data-link="departments"
         search={employeesLink.search({
           filters: {
-            department: { operator: "isAnyOf", value: ["Design", "Engineering"] },
+            department: {
+              operator: "isAnyOf",
+              value: ["Design", "Engineering"],
+            },
           },
         })}
       >

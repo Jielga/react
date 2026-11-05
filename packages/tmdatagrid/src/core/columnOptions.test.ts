@@ -128,7 +128,11 @@ describe("resolveColumnOptions", () => {
       [],
     );
     expect(
-      resolveColumnOptions({ table: api.table, column: bare, fallback: "faceted" }),
+      resolveColumnOptions({
+        table: api.table,
+        column: bare,
+        fallback: "faceted",
+      }),
     ).toEqual([{ value: "Malmö" }, { value: "Stockholm" }]);
   });
 });

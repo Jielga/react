@@ -11,7 +11,10 @@ import { GROUP_COLUMN_ID } from "../components/TMDataGridGroupColumn";
 import { ROW_NUMBER_COLUMN_ID } from "../components/TMDataGridRowNumberColumn";
 import { SELECT_COLUMN_ID } from "../components/TMDataGridSelectColumn";
 import type { TMDataGridRowData } from "../TMDataGridContext";
-import type { TMDataGridColumnMeta, TMDataGridFeatures } from "../useTMDataGrid";
+import type {
+  TMDataGridColumnMeta,
+  TMDataGridFeatures,
+} from "../useTMDataGrid";
 import type { TMDataGridFilterControlComponent } from "./filterControls";
 
 /**
@@ -108,7 +111,9 @@ export function isColumnEditableForRow(
   return true;
 }
 
-export function getColumnAlign(column: ColumnLike): "left" | "right" | "center" {
+export function getColumnAlign(
+  column: ColumnLike,
+): "left" | "right" | "center" {
   return column.columnDef.meta?.align ?? "left";
 }
 

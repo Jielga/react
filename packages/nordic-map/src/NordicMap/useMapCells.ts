@@ -6,7 +6,13 @@ import { rewindPolygon } from "./geometry.ts";
 import { viewBox } from "./mapProjection.ts";
 import type { MapProjection } from "./mapProjection.ts";
 import { cellKey, cellsInBox, levelForZoom } from "./mapSource.ts";
-import type { MapCell, MapLayers, MapSource, PlaceClass, RoadClass } from "./mapSource.ts";
+import type {
+  MapCell,
+  MapLayers,
+  MapSource,
+  PlaceClass,
+  RoadClass,
+} from "./mapSource.ts";
 
 /** A loaded cell, projected to map units and ready to draw */
 export type PreparedCell = {
@@ -16,7 +22,12 @@ export type PreparedCell = {
   borders: Path2D | null;
   roads: { roadClass: RoadClass; path: Path2D }[];
   roadLabels: { text: string; at: Point }[];
-  places: { name: string; at: Point; placeClass: PlaceClass; population: number }[];
+  places: {
+    name: string;
+    at: Point;
+    placeClass: PlaceClass;
+    population: number;
+  }[];
   /** Background land and borders around the map's own area. Only overview cells have them. */
   contextLand: Path2D | null;
   contextBorders: Path2D | null;
@@ -28,7 +39,15 @@ type Entry = { status: "ready"; cell: PreparedCell } | { status: "failed" };
 
 const roadClasses: RoadClass[] = ["regional", "national", "european"];
 
-function prepareCell({ key, layers, projection }: { key: string; layers: MapLayers; projection: MapProjection }): PreparedCell {
+function prepareCell({
+  key,
+  layers,
+  projection,
+}: {
+  key: string;
+  layers: MapLayers;
+  projection: MapProjection;
+}): PreparedCell {
   const toPath = geoPath(projection.projection);
   const toPath2D = (geometries: Geometry[]) => {
     if (geometries.length === 0) {
@@ -41,8 +60,13 @@ function prepareCell({ key, layers, projection }: { key: string; layers: MapLaye
   // Custom sources may wind their polygons either way, and d3-geo fills the whole map for the wrong one
   const land = layers.land.map(rewindPolygon);
   const outline: Geometry[] = [...land, ...layers.borders];
-  const [[minX, minY], [maxX, maxY]] = toPath.bounds({ type: "GeometryCollection", geometries: outline });
-  const bounds = [minX, minY, maxX, maxY].every(Number.isFinite) ? { minX, minY, maxX, maxY } : null;
+  const [[minX, minY], [maxX, maxY]] = toPath.bounds({
+    type: "GeometryCollection",
+    geometries: outline,
+  });
+  const bounds = [minX, minY, maxX, maxY].every(Number.isFinite)
+    ? { minX, minY, maxX, maxY }
+    : null;
 
   return {
     key,
@@ -67,7 +91,16 @@ function prepareCell({ key, layers, projection }: { key: string; layers: MapLaye
     }),
     places: (layers.places ?? []).flatMap((place) => {
       const at = projection.project(place.at);
-      return at ? [{ name: place.name, at, placeClass: place.placeClass, population: place.population ?? 0 }] : [];
+      return at
+        ? [
+            {
+              name: place.name,
+              at,
+              placeClass: place.placeClass,
+              population: place.population ?? 0,
+            },
+          ]
+        : [];
     }),
     contextLand: toPath2D((layers.context?.land ?? []).map(rewindPolygon)),
     contextBorders: toPath2D(layers.context?.borders ?? []),
@@ -77,7 +110,9 @@ function prepareCell({ key, layers, projection }: { key: string; layers: MapLaye
 
 function parseKey(key: string): MapCell | null {
   const [level, x, y] = key.split("/").map(Number);
-  return level === undefined || x === undefined || y === undefined ? null : { level, x, y };
+  return level === undefined || x === undefined || y === undefined
+    ? null
+    : { level, x, y };
 }
 
 const noEntries: ReadonlyMap<string, Entry> = new Map();
@@ -92,11 +127,17 @@ function useLoadedCells({
   projection: MapProjection;
   cells: MapCell[];
 }): ReadonlyMap<string, Entry> {
-  const [store, setStore] = useState<{ source: MapSource; entries: ReadonlyMap<string, Entry> }>({
+  const [store, setStore] = useState<{
+    source: MapSource;
+    entries: ReadonlyMap<string, Entry>;
+  }>({
     source,
     entries: noEntries,
   });
-  const requested = useRef<{ source: MapSource; keys: Set<string> }>({ source, keys: new Set() });
+  const requested = useRef<{ source: MapSource; keys: Set<string> }>({
+    source,
+    keys: new Set(),
+  });
   const wantedKeys = cells.map(cellKey).join(",");
 
   useEffect(() => {
@@ -112,13 +153,17 @@ function useLoadedCells({
       keys.add(key);
       const save = (entry: Entry) => {
         setStore((previous) => {
-          const base = previous.source === source ? previous.entries : noEntries;
+          const base =
+            previous.source === source ? previous.entries : noEntries;
           return { source, entries: new Map(base).set(key, entry) };
         });
       };
       source.loadCell(cell).then(
         (layers) => {
-          save({ status: "ready", cell: prepareCell({ key, layers, projection }) });
+          save({
+            status: "ready",
+            cell: prepareCell({ key, layers, projection }),
+          });
         },
         (error: unknown) => {
           console.error(`Could not load map cell ${key}`, error);
@@ -131,14 +176,26 @@ function useLoadedCells({
   return store.source === source ? store.entries : noEntries;
 }
 
-function readyCells({ entries, cells }: { entries: ReadonlyMap<string, Entry>; cells: MapCell[] }): PreparedCell[] {
+function readyCells({
+  entries,
+  cells,
+}: {
+  entries: ReadonlyMap<string, Entry>;
+  cells: MapCell[];
+}): PreparedCell[] {
   return cells.flatMap((cell) => {
     const entry = entries.get(cellKey(cell));
     return entry?.status === "ready" ? [entry.cell] : [];
   });
 }
 
-function allSettled({ entries, cells }: { entries: ReadonlyMap<string, Entry>; cells: MapCell[] }): boolean {
+function allSettled({
+  entries,
+  cells,
+}: {
+  entries: ReadonlyMap<string, Entry>;
+  cells: MapCell[];
+}): boolean {
   return cells.every((cell) => {
     return entries.has(cellKey(cell));
   });
@@ -161,7 +218,9 @@ export function useOverviewCells({
   const entries = useLoadedCells({ source, projection, cells });
   // Stable between renders, so what is built from the cells is only rebuilt when they change
   return useMemo(() => {
-    return allSettled({ entries, cells }) ? readyCells({ entries, cells }) : null;
+    return allSettled({ entries, cells })
+      ? readyCells({ entries, cells })
+      : null;
   }, [entries, cells]);
 }
 
@@ -187,7 +246,12 @@ export function useDetailCells({
   // A bit larger than the view, so cells just outside it are ready when panning
   const box =
     camera && frame && level > 0
-      ? viewBox({ camera, frame, projection, margin: Math.max(frame.size.width, frame.size.height) * 0.25 })
+      ? viewBox({
+          camera,
+          frame,
+          projection,
+          margin: Math.max(frame.size.width, frame.size.height) * 0.25,
+        })
       : null;
 
   // From the wanted level down to level 1, the cells that cover the view
@@ -198,14 +262,21 @@ export function useDetailCells({
     }
   }
 
-  const entries = useLoadedCells({ source, projection, cells: candidates[0] ?? [] });
+  const entries = useLoadedCells({
+    source,
+    projection,
+    cells: candidates[0] ?? [],
+  });
   const loaded = candidates.find((cells) => {
     return allSettled({ entries, cells });
   });
   // The camera changes every frame, but the cells to draw rarely do. Keep the same array while they stay the same.
   const loadedKey = loaded ? loaded.map(cellKey).join(",") : "";
   return useMemo(() => {
-    const cells = loadedKey === "" ? [] : loadedKey.split(",").flatMap((key) => parseKey(key) ?? []);
+    const cells =
+      loadedKey === ""
+        ? []
+        : loadedKey.split(",").flatMap((key) => parseKey(key) ?? []);
     return cells.length > 0 ? readyCells({ entries, cells }) : overview;
   }, [entries, loadedKey, overview]);
 }

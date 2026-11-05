@@ -6,7 +6,10 @@ export type MapColorScheme = "light" | "dark" | "auto";
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 function subscribe(onChange: () => void): () => void {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
     return () => {};
   }
   const query = window.matchMedia(DARK_QUERY);
@@ -17,7 +20,11 @@ function subscribe(onChange: () => void): () => void {
 }
 
 function prefersDark(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(DARK_QUERY).matches;
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(DARK_QUERY).matches
+  );
 }
 
 /** The scheme to draw with. `auto` reads the system setting, and follows it when it changes. */

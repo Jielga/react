@@ -1,6 +1,6 @@
-import { MantineThemeProvider, Portal } from '@mantine/core'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { MantineThemeProvider, Portal } from "@mantine/core";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 /**
  * Keep Mantine portals (menus, popovers, modals, tooltips) in the window
@@ -25,12 +25,12 @@ import type { ReactNode } from 'react'
  * redirected by this wrapper - see the popup-content skill.
  */
 export function SameWindowPortals({ children }: { children: ReactNode }) {
-  const probeRef = useRef<HTMLDivElement>(null)
-  const [target, setTarget] = useState<HTMLElement | null>(null)
+  const probeRef = useRef<HTMLDivElement>(null);
+  const [target, setTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    setTarget(probeRef.current?.ownerDocument.body ?? null)
-  }, [])
+    setTarget(probeRef.current?.ownerDocument.body ?? null);
+  }, []);
 
   const theme = useMemo(
     () => ({
@@ -39,13 +39,13 @@ export function SameWindowPortals({ children }: { children: ReactNode }) {
       },
     }),
     [target],
-  )
+  );
 
   return (
-    <div ref={probeRef} style={{ display: 'contents' }}>
+    <div ref={probeRef} style={{ display: "contents" }}>
       <MantineThemeProvider inherit theme={theme}>
         {children}
       </MantineThemeProvider>
     </div>
-  )
+  );
 }

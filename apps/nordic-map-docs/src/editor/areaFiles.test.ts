@@ -39,20 +39,39 @@ describe("areaFiles", () => {
 
   it("writes MapArea JSON with each coordinates list on one line", () => {
     const json = exportAreas({ areas: [north], format: "json" });
-    expect(json).toContain('"coordinates": [[[17.12346,63],[20,63],[20,65],[17.12346,63]]]');
+    expect(json).toContain(
+      '"coordinates": [[[17.12346,63],[20,63],[20,65],[17.12346,63]]]',
+    );
     expect(JSON.parse(json)).toEqual([
       {
         id: "north",
         label: "North",
         fill: north.fill,
-        geometry: { type: "Polygon", coordinates: [[[17.12346, 63], [20, 63], [20, 65], [17.12346, 63]]] },
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [17.12346, 63],
+              [20, 63],
+              [20, 65],
+              [17.12346, 63],
+            ],
+          ],
+        },
       },
     ]);
   });
 
   it("leaves areas without a shape out of the export", () => {
-    const empty: EditorArea = { id: "empty", label: "", fill: north.fill, parts: [] };
-    expect(JSON.parse(exportAreas({ areas: [empty, north], format: "json" }))).toHaveLength(1);
+    const empty: EditorArea = {
+      id: "empty",
+      label: "",
+      fill: north.fill,
+      parts: [],
+    };
+    expect(
+      JSON.parse(exportAreas({ areas: [empty, north], format: "json" })),
+    ).toHaveLength(1);
   });
 
   it("reads a Feature and a bare geometry, and takes the label from a name", () => {
@@ -61,12 +80,34 @@ describe("areaFiles", () => {
         type: "Feature",
         id: 7,
         properties: { name: "Seven" },
-        geometry: { type: "Polygon", coordinates: [[[1, 1], [2, 1], [2, 2], [1, 1]]] },
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [1, 1],
+              [2, 1],
+              [2, 2],
+              [1, 1],
+            ],
+          ],
+        },
       }),
     );
     expect(feature[0]).toMatchObject({ id: "7", label: "Seven" });
 
-    const bare = parsed(JSON.stringify({ type: "Polygon", coordinates: [[[1, 1], [2, 1], [2, 2], [1, 1]]] }));
+    const bare = parsed(
+      JSON.stringify({
+        type: "Polygon",
+        coordinates: [
+          [
+            [1, 1],
+            [2, 1],
+            [2, 2],
+            [1, 1],
+          ],
+        ],
+      }),
+    );
     expect(bare[0]?.id).toBe("area-1");
   });
 
@@ -84,13 +125,32 @@ describe("areaFiles", () => {
       input: JSON.stringify({
         type: "FeatureCollection",
         features: [
-          { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [1, 1] } },
-          { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[[1, 1], [2, 1], [2, 2]]] } },
+          {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "Point", coordinates: [1, 1] },
+          },
+          {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [1, 1],
+                  [2, 1],
+                  [2, 2],
+                ],
+              ],
+            },
+          },
         ],
       }),
     });
     expect(result).toMatchObject({ skipped: 1 });
     expect(parseAreas({ input: "not json" })).toHaveProperty("error");
-    expect(parseAreas({ input: '{ "type": "Point", "coordinates": [1, 1] }' })).toHaveProperty("error");
+    expect(
+      parseAreas({ input: '{ "type": "Point", "coordinates": [1, 1] }' }),
+    ).toHaveProperty("error");
   });
 });

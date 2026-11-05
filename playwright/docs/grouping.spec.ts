@@ -13,9 +13,7 @@ test("the column menu groups rows and a group toggle collapses one", async ({
   // The demo starts grouped by department. Grouping takes the column out of
   // the grid, so its Ungroup item is on the menu of the tree column.
   const treeMenu = await grid.openColumnMenu("__group__");
-  await treeMenu
-    .getByRole("menuitem", { name: "Ungroup Department" })
-    .click();
+  await treeMenu.getByRole("menuitem", { name: "Ungroup Department" }).click();
   await expect(groupRows).toHaveCount(0);
 
   const menu = await grid.openColumnMenu("location");

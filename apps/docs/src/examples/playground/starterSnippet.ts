@@ -96,7 +96,9 @@ export function buildStarterSnippet({
   const selectionOff =
     selectionMode === "highlight" || !options.enableRowSelection;
 
-  for (const key of Object.keys(OPTION_DEFAULTS) as Array<StarterSnippetOption>) {
+  for (const key of Object.keys(
+    OPTION_DEFAULTS,
+  ) as Array<StarterSnippetOption>) {
     const value = options[key];
     if (value === OPTION_DEFAULTS[key]) continue;
     // `"highlight"` already means no selection; saying it twice reads as though

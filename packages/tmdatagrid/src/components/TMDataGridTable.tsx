@@ -24,7 +24,10 @@ import {
 } from "react";
 import classes from "./TMDataGridTable.module.css";
 import sticky from "./sticky.module.css";
-import { type TMDataGridRowData, useTMDataGridContext } from "../TMDataGridContext";
+import {
+  type TMDataGridRowData,
+  useTMDataGridContext,
+} from "../TMDataGridContext";
 import {
   TMDataGridFilterPopup,
   TMDataGridFilterSidebar,
@@ -53,10 +56,7 @@ import {
 import { useSettledTableState } from "../core/useSettledTableState";
 import { isInputElement } from "../core/dom";
 import { draftCellContext } from "../core/draftCellContext";
-import {
-  getEditFieldName,
-  type TMDataGridEditState,
-} from "../core/editEngine";
+import { getEditFieldName, type TMDataGridEditState } from "../core/editEngine";
 import {
   getNextEditableCell,
   resolveCellMove,
@@ -231,7 +231,12 @@ export type TMDataGridCellNav = {
    * Which sides of the rectangle this cell is on, or `null` when it is not in
    * one. The outline is drawn per cell - see {@link boundsEdges}.
    */
-  edges: { top: boolean; bottom: boolean; left: boolean; right: boolean } | null;
+  edges: {
+    top: boolean;
+    bottom: boolean;
+    left: boolean;
+    right: boolean;
+  } | null;
 };
 
 /**
@@ -312,12 +317,16 @@ function TMDataGridBodyCell({
   const isDirty = useSelector(edit.store, (state) => {
     if (fieldName === null) return false;
     const projection = state.rows[cellRowId];
-    return projection !== undefined && projection.dirtyFields.includes(fieldName);
+    return (
+      projection !== undefined && projection.dirtyFields.includes(fieldName)
+    );
   });
   const isInvalid = useSelector(edit.store, (state) => {
     if (fieldName === null) return false;
     const projection = state.rows[cellRowId];
-    return projection !== undefined && projection.errorFields.includes(fieldName);
+    return (
+      projection !== undefined && projection.errorFields.includes(fieldName)
+    );
   });
   // The whole draft, not one field: a computed or custom renderer may read any
   // field off the row, so every data cell of a drafted row repaints together
@@ -389,7 +398,9 @@ function TMDataGridBodyCell({
       onContextMenu={onContextMenu}
       className={[
         classes.bodyCell,
-        layout.isBoundary && layout.pinnedAt === "left" ? sticky.stickyLeft : "",
+        layout.isBoundary && layout.pinnedAt === "left"
+          ? sticky.stickyLeft
+          : "",
         layout.isBoundary && layout.pinnedAt === "right"
           ? sticky.stickyRight
           : "",
@@ -580,8 +591,7 @@ export type TMDataGridCellEventArgs<TData extends RowData> = {
  * TMDataGridTableProps.rowStyle}.
  */
 export type TMDataGridRowStyle =
-  | CSSProperties
-  | (CSSProperties & Record<`--${string}`, string | number>);
+  CSSProperties | (CSSProperties & Record<`--${string}`, string | number>);
 
 export type TMDataGridTableProps<TData extends RowData> = {
   /**
@@ -610,8 +620,7 @@ export type TMDataGridTableProps<TData extends RowData> = {
    * own row class.
    */
   rowClassName?:
-    | string
-    | ((row: Row<TMDataGridFeatures, TData>) => string | undefined);
+    string | ((row: Row<TMDataGridFeatures, TData>) => string | undefined);
   /**
    * Inline style for a body row. To colour a row, set `--row-bg` rather than
    * `background`: the row's own background, its sticky pinned cells and the
@@ -1045,7 +1054,10 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     const entryBlock = grid.querySelector<HTMLElement>("[data-dg-entry-block]");
     if (entryBlock === null) return;
     const measure = () =>
-      grid.style.setProperty("--dg-entry-height", `${entryBlock.offsetHeight}px`);
+      grid.style.setProperty(
+        "--dg-entry-height",
+        `${entryBlock.offsetHeight}px`,
+      );
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(entryBlock);
@@ -1096,7 +1108,10 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     measureElement: (element, _entry, instance) =>
       element.getBoundingClientRect().height ||
       instance.options.estimateSize(instance.indexFromElement(element)),
-    getItemKey: useCallback((index: number) => rows[index]?.id ?? index, [rows]),
+    getItemKey: useCallback(
+      (index: number) => rows[index]?.id ?? index,
+      [rows],
+    ),
     overscan,
     initialRect: { height: 600, width: 1200 },
     /**
@@ -1371,8 +1386,8 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
    */
   const columnLayout = new Map<string, TMDataGridColumnLayout>();
   const widthOf = (columnId: string) =>
-    columnTracks[orderedColumns.findIndex((c) => c.id === columnId)]?.minWidth ??
-    0;
+    columnTracks[orderedColumns.findIndex((c) => c.id === columnId)]
+      ?.minWidth ?? 0;
 
   let leftOffset = 0;
   for (const column of leftLeafColumns) {
@@ -2368,8 +2383,9 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
       columnCount: orderedColumns.length,
       pageRows: Math.max(
         1,
-        Math.floor((scrollContainerRef.current?.clientHeight ?? 0) / rowHeight) -
-          1,
+        Math.floor(
+          (scrollContainerRef.current?.clientHeight ?? 0) / rowHeight,
+        ) - 1,
       ),
     });
     if (next === null) return;
@@ -2380,7 +2396,9 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     // A move landing on this cell again - clamped at an edge, or onto a column
     // this cell covers - changes nothing, the rectangle included.
     const landing =
-      spans === null ? next.columnIndex : spanAnchorIndex(spans, next.columnIndex);
+      spans === null
+        ? next.columnIndex
+        : spanAnchorIndex(spans, next.columnIndex);
     if (next.rowIndex === rowIndex && landing === columnIndex) return;
     // Shift extends the rectangle instead of collapsing it - the same key that
     // extends a text selection, a file list and a spreadsheet range.
@@ -2549,8 +2567,6 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
     contextMenuRow !== undefined &&
     !contextMenuRow.getIsGrouped();
 
-
-
   /**
    * The built-in half of the menu: what to do with the cells that are selected.
    *
@@ -2559,7 +2575,9 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
    * would be a menu about nothing much - Ctrl+C still copies it.
    */
   const cellMenuContent =
-    cellRangeSelection && contextMenuTarget !== null && selectionBounds !== null ? (
+    cellRangeSelection &&
+    contextMenuTarget !== null &&
+    selectionBounds !== null ? (
       <>
         <Menu.Label>{labels.cellCount(selectedCellCount)}</Menu.Label>
         <Menu.Item
@@ -2575,7 +2593,9 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
               onClick={exportSelection}
             >
               {typeof labels.exportCells === "function"
-                ? labels.exportCells(exportOptions.format.extension.toUpperCase())
+                ? labels.exportCells(
+                    exportOptions.format.extension.toUpperCase(),
+                  )
                 : labels.exportCells}
             </Menu.Item>
             {/* Stays open on click: it is the setting the item above reads, and
@@ -2636,19 +2656,15 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
    * When the consumer takes the composition over, what they returned is the
    * entire menu.
    */
-  const contextMenuContent = tookOverMenu
-    ? rowMenuContent
-    : cellMenuContent === null && rowMenuContent === null
-      ? null
-      : (
-          <>
-            {cellMenuContent}
-            {cellMenuContent !== null && rowMenuContent !== null && (
-              <Menu.Divider />
-            )}
-            {rowMenuContent}
-          </>
-        );
+  const contextMenuContent = tookOverMenu ? (
+    rowMenuContent
+  ) : cellMenuContent === null && rowMenuContent === null ? null : (
+    <>
+      {cellMenuContent}
+      {cellMenuContent !== null && rowMenuContent !== null && <Menu.Divider />}
+      {rowMenuContent}
+    </>
+  );
 
   /**
    * Which edges the scroll position is currently at. Seeded "at top-left",
@@ -2846,400 +2862,417 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
                 ariaRowIndex: number,
                 pinnedAt?: "top" | "bottom",
               ) => {
-              const isGroupRow = row.getIsGrouped();
-              const isInteractive = rowGesturesFor(row);
-              // The hover tint promises that the row answers the pointer, so
-              // by default it follows the gestures the row takes: the ones
-              // behind `isInteractive`, and the context menu - which a group
-              // row sits out as well, see the row's onContextMenu below.
-              const highlightsOnHover =
-                highlightOnHover ??
-                (isInteractive ||
-                  (renderRowContextMenu !== undefined && !isGroupRow));
-              const rowCells = [
-                ...row.getStartVisibleCells(),
-                ...row.getCenterVisibleCells(),
-                ...row.getEndVisibleCells(),
-              ];
-              const rowEditing = isRowEditing(row);
-              const spans = colSpansOf(row);
-              // Cell selection takes the body's tab stop off the row and puts
-              // it on a cell - two stops per row would make Tab a way of
-              // walking the grid, which is what the arrow keys are for. Space
-              // on a cell keeps the selection reachable; see handleGridKeyDown.
-              const takesKeyboard =
-                !isGroupRow &&
-                !cellSelection &&
-                (selectsOnRowClick || features.highlightRow);
-              return (
-                <div
-                  key={row.id}
-                  role="row"
-                  aria-rowindex={ariaRowIndex}
-                  data-dg-part="row"
-                  data-row-id={row.id}
-                  // Only measured when details are on: without them every row
-                  // is exactly `rowHeight`, and the estimate above is already
-                  // the answer - so a plain grid keeps its ResizeObserver-free
-                  // body. `measureElement` is a stable instance method and
-                  // returns nothing, so it can be the ref itself.
-                  //
-                  // `data-index` is how the virtualizer maps the observed
-                  // element back to its item. The panel is inside this element,
-                  // so what gets measured is the row *and* its detail, which
-                  // is why no second virtual item is needed.
-                  data-index={
-                    renderDetails && viewIndex >= 0 ? viewIndex : undefined
-                  }
-                  ref={
-                    renderDetails && viewIndex >= 0
-                      ? virtualizer.measureElement
-                      : undefined
-                  }
-                  // The tree's own rows. `data-grouped` rather than a class, to
-                  // match how the rest of the row's state is published - and so
-                  // a consumer can restyle them without reaching into modules.
-                  data-grouped={isGroupRow || undefined}
-                  data-depth={row.depth}
-                  // Which edge block the row sits in, for styling hooks.
-                  data-pinned={pinnedAt}
-                  // Gated on the flag, not just on `getIsSelected()`: under
-                  // `"highlight"` there is no selection, but `rowSelection` may
-                  // still hold ids from before the mode changed - TanStack never
-                  // prunes it - and a row must not report itself selected in a
-                  // mode where selecting is not a thing.
-                  data-selected={
-                    (features.rowSelection && row.getIsSelected()) || undefined
-                  }
-                  // Being selected is state; painting it is a display choice, so
-                  // the two are separate attributes.
-                  data-selected-bg={
-                    (features.rowSelection &&
-                      features.showSelectedBackground &&
-                      row.getIsSelected()) ||
-                    undefined
-                  }
-                  // The highlighted row is its own concept, so its own attribute
-                  // pair - `data-highlighted` / `aria-current` against
-                  // `data-selected` / `aria-selected` for selection. Under
-                  // `"checkboxAndHighlight"` a row can carry both.
-                  //
-                  // Not `data-active`: header cells already use that for
-                  // sorted-or-filtered, and Mantine puts it on its own controls,
-                  // so a consumer styling or querying rows by it would cast far
-                  // wider than they meant to.
-                  data-highlighted={
-                    (features.highlightRow && row.id === highlightedRowId) ||
-                    undefined
-                  }
-                  // Marked deleted under draft: struck through and inert
-                  // until saveDrafts reports it, or the mark is toggled back.
-                  data-deleted={
-                    (deletedRowIds.length > 0 && deletedRowIds.includes(row.id)) ||
-                    undefined
-                  }
-                  // Carrying a dirty draft - the row-level face of the cells'
-                  // own data-dirty markers, for row-scoped styling.
-                  data-dirty={editDirtyRowIdSet.has(row.id) || undefined}
-                  // Committed into the draft store, waiting for Save. A
-                  // committed entry row is one too - it is in the body
-                  // because it is committed - and carries `data-new` besides.
-                  data-draft={
-                    editDraftRowIdSet.has(row.id) ||
-                    newRowIdSet.has(row.id) ||
-                    undefined
-                  }
-                  // An entered row not yet in `data`, committed into the draft
-                  // store and sorted, filtered and grouped with the rest.
-                  data-new={newRowIdSet.has(row.id) || undefined}
-                  // The menu is anchored to the rowgroup, so Mantine's own
-                  // `data-expanded` lands there rather than on a row. This is
-                  // what says which row the open menu is about.
-                  data-context-menu={
-                    (contextMenuContent !== null &&
-                      contextMenuTarget?.rowId === row.id) ||
-                    undefined
-                  }
-                  data-selects-on-click={
-                    (selectsOnRowClick && !isGroupRow) || undefined
-                  }
-                  data-highlight-on-hover={highlightsOnHover || undefined}
-                  aria-selected={
-                    features.rowSelection ? row.getIsSelected() : undefined
-                  }
-                  aria-current={
-                    features.highlightRow && row.id === highlightedRowId
-                      ? true
-                      : undefined
-                  }
-                  // From the row's position in the whole view, so the stripes
-                  // survive the virtualizer's moving window - see the prop.
-                  data-striped={
-                    (striped && viewIndex >= 0 && viewIndex % 2 === 1) || undefined
-                  }
-                  className={[classes.bodyRow, rowClassNameFor(row)]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={{
-                    minHeight: rowHeight,
-                    cursor: isInteractive ? "pointer" : undefined,
-                    ...rowStyleFor(row),
-                  }}
-                  // Keyboard parity with the checkbox the row replaces.
-                  tabIndex={takesKeyboard ? 0 : undefined}
-                  // Shift-click extends the browser's text selection across
-                  // every row it passes. `user-select: none` would fix that too,
-                  // but would also stop cell values being copied, so it is
-                  // prevented on the one gesture that causes it.
-                  onMouseDown={
-                    selectsOnRowClick && !isGroupRow
-                      ? (event) => {
-                          if (event.shiftKey) event.preventDefault();
-                        }
-                      : undefined
-                  }
-                  onClick={
-                    isInteractive
-                      ? (event) =>
-                          handleRowActivate(row, {
-                            toggle: event.ctrlKey || event.metaKey,
-                            extend: event.shiftKey,
-                          })
-                      : undefined
-                  }
-                  onKeyDown={
-                    takesKeyboard
-                      ? (event) => {
-                          if (event.key !== " " && event.key !== "Enter") return;
-                          if (event.target !== event.currentTarget) return;
-                          event.preventDefault();
-                          // Space/Enter toggle rather than replace, so a
-                          // keyboard-only user can still build a selection.
-                          handleRowActivate(row, {
-                            toggle: true,
-                            extend: event.shiftKey,
-                          });
-                        }
-                      : undefined
-                  }
-                  // Bubbles to the rowgroup, where the menu opens - so the row
-                  // is recorded before the dropdown is built.
-                  //
-                  // A group row records itself only for the cell menu, which is
-                  // about the cells it covers. `renderRowContextMenu` is still never
-                  // called for one: TanStack builds a group row on its first
-                  // child's record, so a render prop reaching for `row.original`
-                  // would be handed a real employee that has nothing to do with
-                  // the group - see where the content is built. The browser menu
-                  // stays suppressed over them either way.
-                  onContextMenu={
-                    (renderRowContextMenu && !isGroupRow) || cellRangeSelection
-                      ? () => {
-                          contextMenuRowRef.current = row.id;
-                        }
-                      : undefined
-                  }
-                >
-                  {rowCells.map((cell, cellIndex) => {
-                    // Covered by a spanning cell to its left - see colSpansOf.
-                    if (spans !== null && spans[cellIndex] === 0) return null;
-                    const colSpan = spans?.[cellIndex] ?? 1;
-                    const lastIndex = cellIndex + colSpan - 1;
-                    const isEditingCell =
-                      (editActive !== null &&
-                        editActive.rowId === row.id &&
-                        editActive.columnId === cell.column.id) ||
-                      (rowEditing && edit.canEditCell(row, cell.column));
-                    return (
-                    <TMDataGridBodyCell
-                      key={cell.id}
-                      cell={cell}
-                      rowHeight={rowHeight}
-                      colSpan={colSpan}
-                      layout={
-                        colSpan > 1
-                          ? spanLayout(cellIndex, lastIndex)
-                          : layoutFor(cell.column.id)
-                      }
-                      contentOverride={
-                        rowNumberById !== null &&
-                        cell.column.id === ROW_NUMBER_COLUMN_ID
-                          ? rowNumberById.get(row.id)
-                          : undefined
-                      }
-                      highlightNeedles={matchNeedles?.get(cell.column.id)}
-                      editor={
-                        isEditingCell ? (
-                          <TMDataGridCellEditor
-                            cell={cell}
-                            row={row}
-                            takeSeedText={takeEditSeed}
-                            onClose={(close) =>
-                              handleEditorClose(
-                                { rowId: row.id, columnId: cell.column.id },
-                                close,
-                              )
-                            }
-                          />
-                        ) : undefined
-                      }
-                      onClick={
-                        onCellClick && !isGroupRow
-                          ? (event) =>
-                              onCellClick(cellEventArgs(cell, row, event))
-                          : undefined
-                      }
-                      onDoubleClick={
-                        (features.editing || onCellDoubleClick) && !isGroupRow
-                          ? (event) => {
-                              onCellDoubleClick?.(
-                                cellEventArgs(cell, row, event),
-                              );
-                              if (!features.editing) return;
-                              if (!edit.canEditCell(row, cell.column)) return;
-                              openEditor({
-                                rowId: row.id,
-                                columnId: cell.column.id,
-                              });
-                            }
-                          : undefined
-                      }
-                      // The cells come out in the same left → centre → right
-                      // order as `orderedColumns`, which is what lets the index
-                      // here stand for the column index everywhere else.
-                      nav={
-                        cellSelection
-                          ? {
-                              rowId: row.id,
-                              columnIndex: cellIndex + 1,
-                              // A spanning cell stands for every column it
-                              // covers, wherever the focus was put.
-                              focused: isFocusedWithin(
-                                row.id,
-                                cellIndex,
-                                lastIndex,
-                              ),
-                              // Focusable by click and by the grid, never by
-                              // Tab - the guards are the way in. See
-                              // `tabStopCell`.
-                              tabIndex: -1,
-                              // "Selected" means "in the block Ctrl+C would
-                              // take" - which under `"single"` is the one cell
-                              // the user is standing on. A spanning cell is in
-                              // it by its first column alone - see
-                              // isWithinBounds.
-                              selected: cellRangeSelection
-                                ? isWithinBounds(rangeBounds, viewIndex, cellIndex)
-                                : isFocusedWithin(row.id, cellIndex, lastIndex),
-                              edges: boundsEdges(
-                                rangeBounds,
-                                viewIndex,
-                                cellIndex,
-                                lastIndex,
-                              ),
-                            }
-                          : undefined
-                      }
-                      onFocus={
-                        cellSelection
-                          ? () =>
-                              ui.actions.setFocusedCell({
-                                rowId: row.id,
-                                columnId: cell.column.id,
-                              })
-                          : undefined
-                      }
-                      onMouseDown={
-                        cellRangeSelection
-                          ? (event) => {
-                              // Right-click is the menu's; the middle button is
-                              // the browser's.
-                              if (event.button !== 0) return;
-                              // Pressing a control in the cell - a checkbox, a
-                              // chevron, a button a renderer put there - is not
-                              // a selection gesture, and a block the user built
-                              // should not pay for it. The focus still follows
-                              // the press, through the bubbling `onFocus`, so
-                              // the cursor ends up on the row acted on; only
-                              // the range survives.
-                              const pressed = event.target as HTMLElement;
-                              const control =
-                                pressed === event.currentTarget
-                                  ? null
-                                  : pressed.closest(FOCUSABLE_IN_CELL);
-                              if (
-                                control !== null &&
-                                event.currentTarget.contains(control)
-                              ) {
-                                return;
-                              }
-                              // Shift+click would otherwise smear the browser's
-                              // own text selection across everything between
-                              // the two cells.
-                              if (event.shiftKey) event.preventDefault();
-                              wantsCellFocusRef.current = true;
-                              startRangeDrag(
-                                { rowId: row.id, columnId: cell.column.id },
-                                { extend: event.shiftKey },
-                              );
-                            }
-                          : undefined
-                      }
-                      // Only bound while a drag is running, so the other 99% of
-                      // the time the body carries no pointer handlers per cell.
-                      onMouseEnter={
-                        cellRangeSelection && isDraggingRange
-                          ? () =>
-                              setRangeTo(
-                                { rowId: row.id, columnId: cell.column.id },
-                                { extend: true },
-                              )
-                          : undefined
-                      }
-                      onContextMenu={
-                        renderRowContextMenu || cellRangeSelection || onCellContextMenu
-                          ? (event) => {
-                              contextMenuColumnRef.current = cell.column.id;
-                              if (isGroupRow) return;
-                              onCellContextMenu?.(
-                                cellEventArgs(cell, row, event),
-                              );
-                            }
-                          : undefined
-                      }
-                    />
-                    );
-                  })}
+                const isGroupRow = row.getIsGrouped();
+                const isInteractive = rowGesturesFor(row);
+                // The hover tint promises that the row answers the pointer, so
+                // by default it follows the gestures the row takes: the ones
+                // behind `isInteractive`, and the context menu - which a group
+                // row sits out as well, see the row's onContextMenu below.
+                const highlightsOnHover =
+                  highlightOnHover ??
+                  (isInteractive ||
+                    (renderRowContextMenu !== undefined && !isGroupRow));
+                const rowCells = [
+                  ...row.getStartVisibleCells(),
+                  ...row.getCenterVisibleCells(),
+                  ...row.getEndVisibleCells(),
+                ];
+                const rowEditing = isRowEditing(row);
+                const spans = colSpansOf(row);
+                // Cell selection takes the body's tab stop off the row and puts
+                // it on a cell - two stops per row would make Tab a way of
+                // walking the grid, which is what the arrow keys are for. Space
+                // on a cell keeps the selection reachable; see handleGridKeyDown.
+                const takesKeyboard =
+                  !isGroupRow &&
+                  !cellSelection &&
+                  (selectsOnRowClick || features.highlightRow);
+                return (
+                  <div
+                    key={row.id}
+                    role="row"
+                    aria-rowindex={ariaRowIndex}
+                    data-dg-part="row"
+                    data-row-id={row.id}
+                    // Only measured when details are on: without them every row
+                    // is exactly `rowHeight`, and the estimate above is already
+                    // the answer - so a plain grid keeps its ResizeObserver-free
+                    // body. `measureElement` is a stable instance method and
+                    // returns nothing, so it can be the ref itself.
+                    //
+                    // `data-index` is how the virtualizer maps the observed
+                    // element back to its item. The panel is inside this element,
+                    // so what gets measured is the row *and* its detail, which
+                    // is why no second virtual item is needed.
+                    data-index={
+                      renderDetails && viewIndex >= 0 ? viewIndex : undefined
+                    }
+                    ref={
+                      renderDetails && viewIndex >= 0
+                        ? virtualizer.measureElement
+                        : undefined
+                    }
+                    // The tree's own rows. `data-grouped` rather than a class, to
+                    // match how the rest of the row's state is published - and so
+                    // a consumer can restyle them without reaching into modules.
+                    data-grouped={isGroupRow || undefined}
+                    data-depth={row.depth}
+                    // Which edge block the row sits in, for styling hooks.
+                    data-pinned={pinnedAt}
+                    // Gated on the flag, not just on `getIsSelected()`: under
+                    // `"highlight"` there is no selection, but `rowSelection` may
+                    // still hold ids from before the mode changed - TanStack never
+                    // prunes it - and a row must not report itself selected in a
+                    // mode where selecting is not a thing.
+                    data-selected={
+                      (features.rowSelection && row.getIsSelected()) ||
+                      undefined
+                    }
+                    // Being selected is state; painting it is a display choice, so
+                    // the two are separate attributes.
+                    data-selected-bg={
+                      (features.rowSelection &&
+                        features.showSelectedBackground &&
+                        row.getIsSelected()) ||
+                      undefined
+                    }
+                    // The highlighted row is its own concept, so its own attribute
+                    // pair - `data-highlighted` / `aria-current` against
+                    // `data-selected` / `aria-selected` for selection. Under
+                    // `"checkboxAndHighlight"` a row can carry both.
+                    //
+                    // Not `data-active`: header cells already use that for
+                    // sorted-or-filtered, and Mantine puts it on its own controls,
+                    // so a consumer styling or querying rows by it would cast far
+                    // wider than they meant to.
+                    data-highlighted={
+                      (features.highlightRow && row.id === highlightedRowId) ||
+                      undefined
+                    }
+                    // Marked deleted under draft: struck through and inert
+                    // until saveDrafts reports it, or the mark is toggled back.
+                    data-deleted={
+                      (deletedRowIds.length > 0 &&
+                        deletedRowIds.includes(row.id)) ||
+                      undefined
+                    }
+                    // Carrying a dirty draft - the row-level face of the cells'
+                    // own data-dirty markers, for row-scoped styling.
+                    data-dirty={editDirtyRowIdSet.has(row.id) || undefined}
+                    // Committed into the draft store, waiting for Save. A
+                    // committed entry row is one too - it is in the body
+                    // because it is committed - and carries `data-new` besides.
+                    data-draft={
+                      editDraftRowIdSet.has(row.id) ||
+                      newRowIdSet.has(row.id) ||
+                      undefined
+                    }
+                    // An entered row not yet in `data`, committed into the draft
+                    // store and sorted, filtered and grouped with the rest.
+                    data-new={newRowIdSet.has(row.id) || undefined}
+                    // The menu is anchored to the rowgroup, so Mantine's own
+                    // `data-expanded` lands there rather than on a row. This is
+                    // what says which row the open menu is about.
+                    data-context-menu={
+                      (contextMenuContent !== null &&
+                        contextMenuTarget?.rowId === row.id) ||
+                      undefined
+                    }
+                    data-selects-on-click={
+                      (selectsOnRowClick && !isGroupRow) || undefined
+                    }
+                    data-highlight-on-hover={highlightsOnHover || undefined}
+                    aria-selected={
+                      features.rowSelection ? row.getIsSelected() : undefined
+                    }
+                    aria-current={
+                      features.highlightRow && row.id === highlightedRowId
+                        ? true
+                        : undefined
+                    }
+                    // From the row's position in the whole view, so the stripes
+                    // survive the virtualizer's moving window - see the prop.
+                    data-striped={
+                      (striped && viewIndex >= 0 && viewIndex % 2 === 1) ||
+                      undefined
+                    }
+                    className={[classes.bodyRow, rowClassNameFor(row)]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={{
+                      minHeight: rowHeight,
+                      cursor: isInteractive ? "pointer" : undefined,
+                      ...rowStyleFor(row),
+                    }}
+                    // Keyboard parity with the checkbox the row replaces.
+                    tabIndex={takesKeyboard ? 0 : undefined}
+                    // Shift-click extends the browser's text selection across
+                    // every row it passes. `user-select: none` would fix that too,
+                    // but would also stop cell values being copied, so it is
+                    // prevented on the one gesture that causes it.
+                    onMouseDown={
+                      selectsOnRowClick && !isGroupRow
+                        ? (event) => {
+                            if (event.shiftKey) event.preventDefault();
+                          }
+                        : undefined
+                    }
+                    onClick={
+                      isInteractive
+                        ? (event) =>
+                            handleRowActivate(row, {
+                              toggle: event.ctrlKey || event.metaKey,
+                              extend: event.shiftKey,
+                            })
+                        : undefined
+                    }
+                    onKeyDown={
+                      takesKeyboard
+                        ? (event) => {
+                            if (event.key !== " " && event.key !== "Enter")
+                              return;
+                            if (event.target !== event.currentTarget) return;
+                            event.preventDefault();
+                            // Space/Enter toggle rather than replace, so a
+                            // keyboard-only user can still build a selection.
+                            handleRowActivate(row, {
+                              toggle: true,
+                              extend: event.shiftKey,
+                            });
+                          }
+                        : undefined
+                    }
+                    // Bubbles to the rowgroup, where the menu opens - so the row
+                    // is recorded before the dropdown is built.
+                    //
+                    // A group row records itself only for the cell menu, which is
+                    // about the cells it covers. `renderRowContextMenu` is still never
+                    // called for one: TanStack builds a group row on its first
+                    // child's record, so a render prop reaching for `row.original`
+                    // would be handed a real employee that has nothing to do with
+                    // the group - see where the content is built. The browser menu
+                    // stays suppressed over them either way.
+                    onContextMenu={
+                      (renderRowContextMenu && !isGroupRow) ||
+                      cellRangeSelection
+                        ? () => {
+                            contextMenuRowRef.current = row.id;
+                          }
+                        : undefined
+                    }
+                  >
+                    {rowCells.map((cell, cellIndex) => {
+                      // Covered by a spanning cell to its left - see colSpansOf.
+                      if (spans !== null && spans[cellIndex] === 0) return null;
+                      const colSpan = spans?.[cellIndex] ?? 1;
+                      const lastIndex = cellIndex + colSpan - 1;
+                      const isEditingCell =
+                        (editActive !== null &&
+                          editActive.rowId === row.id &&
+                          editActive.columnId === cell.column.id) ||
+                        (rowEditing && edit.canEditCell(row, cell.column));
+                      return (
+                        <TMDataGridBodyCell
+                          key={cell.id}
+                          cell={cell}
+                          rowHeight={rowHeight}
+                          colSpan={colSpan}
+                          layout={
+                            colSpan > 1
+                              ? spanLayout(cellIndex, lastIndex)
+                              : layoutFor(cell.column.id)
+                          }
+                          contentOverride={
+                            rowNumberById !== null &&
+                            cell.column.id === ROW_NUMBER_COLUMN_ID
+                              ? rowNumberById.get(row.id)
+                              : undefined
+                          }
+                          highlightNeedles={matchNeedles?.get(cell.column.id)}
+                          editor={
+                            isEditingCell ? (
+                              <TMDataGridCellEditor
+                                cell={cell}
+                                row={row}
+                                takeSeedText={takeEditSeed}
+                                onClose={(close) =>
+                                  handleEditorClose(
+                                    { rowId: row.id, columnId: cell.column.id },
+                                    close,
+                                  )
+                                }
+                              />
+                            ) : undefined
+                          }
+                          onClick={
+                            onCellClick && !isGroupRow
+                              ? (event) =>
+                                  onCellClick(cellEventArgs(cell, row, event))
+                              : undefined
+                          }
+                          onDoubleClick={
+                            (features.editing || onCellDoubleClick) &&
+                            !isGroupRow
+                              ? (event) => {
+                                  onCellDoubleClick?.(
+                                    cellEventArgs(cell, row, event),
+                                  );
+                                  if (!features.editing) return;
+                                  if (!edit.canEditCell(row, cell.column))
+                                    return;
+                                  openEditor({
+                                    rowId: row.id,
+                                    columnId: cell.column.id,
+                                  });
+                                }
+                              : undefined
+                          }
+                          // The cells come out in the same left → centre → right
+                          // order as `orderedColumns`, which is what lets the index
+                          // here stand for the column index everywhere else.
+                          nav={
+                            cellSelection
+                              ? {
+                                  rowId: row.id,
+                                  columnIndex: cellIndex + 1,
+                                  // A spanning cell stands for every column it
+                                  // covers, wherever the focus was put.
+                                  focused: isFocusedWithin(
+                                    row.id,
+                                    cellIndex,
+                                    lastIndex,
+                                  ),
+                                  // Focusable by click and by the grid, never by
+                                  // Tab - the guards are the way in. See
+                                  // `tabStopCell`.
+                                  tabIndex: -1,
+                                  // "Selected" means "in the block Ctrl+C would
+                                  // take" - which under `"single"` is the one cell
+                                  // the user is standing on. A spanning cell is in
+                                  // it by its first column alone - see
+                                  // isWithinBounds.
+                                  selected: cellRangeSelection
+                                    ? isWithinBounds(
+                                        rangeBounds,
+                                        viewIndex,
+                                        cellIndex,
+                                      )
+                                    : isFocusedWithin(
+                                        row.id,
+                                        cellIndex,
+                                        lastIndex,
+                                      ),
+                                  edges: boundsEdges(
+                                    rangeBounds,
+                                    viewIndex,
+                                    cellIndex,
+                                    lastIndex,
+                                  ),
+                                }
+                              : undefined
+                          }
+                          onFocus={
+                            cellSelection
+                              ? () =>
+                                  ui.actions.setFocusedCell({
+                                    rowId: row.id,
+                                    columnId: cell.column.id,
+                                  })
+                              : undefined
+                          }
+                          onMouseDown={
+                            cellRangeSelection
+                              ? (event) => {
+                                  // Right-click is the menu's; the middle button is
+                                  // the browser's.
+                                  if (event.button !== 0) return;
+                                  // Pressing a control in the cell - a checkbox, a
+                                  // chevron, a button a renderer put there - is not
+                                  // a selection gesture, and a block the user built
+                                  // should not pay for it. The focus still follows
+                                  // the press, through the bubbling `onFocus`, so
+                                  // the cursor ends up on the row acted on; only
+                                  // the range survives.
+                                  const pressed = event.target as HTMLElement;
+                                  const control =
+                                    pressed === event.currentTarget
+                                      ? null
+                                      : pressed.closest(FOCUSABLE_IN_CELL);
+                                  if (
+                                    control !== null &&
+                                    event.currentTarget.contains(control)
+                                  ) {
+                                    return;
+                                  }
+                                  // Shift+click would otherwise smear the browser's
+                                  // own text selection across everything between
+                                  // the two cells.
+                                  if (event.shiftKey) event.preventDefault();
+                                  wantsCellFocusRef.current = true;
+                                  startRangeDrag(
+                                    { rowId: row.id, columnId: cell.column.id },
+                                    { extend: event.shiftKey },
+                                  );
+                                }
+                              : undefined
+                          }
+                          // Only bound while a drag is running, so the other 99% of
+                          // the time the body carries no pointer handlers per cell.
+                          onMouseEnter={
+                            cellRangeSelection && isDraggingRange
+                              ? () =>
+                                  setRangeTo(
+                                    { rowId: row.id, columnId: cell.column.id },
+                                    { extend: true },
+                                  )
+                              : undefined
+                          }
+                          onContextMenu={
+                            renderRowContextMenu ||
+                            cellRangeSelection ||
+                            onCellContextMenu
+                              ? (event) => {
+                                  contextMenuColumnRef.current = cell.column.id;
+                                  if (isGroupRow) return;
+                                  onCellContextMenu?.(
+                                    cellEventArgs(cell, row, event),
+                                  );
+                                }
+                              : undefined
+                          }
+                        />
+                      );
+                    })}
 
-                  {/* A second grid row inside the row element, on the same
+                    {/* A second grid row inside the row element, on the same
                       subgrid tracks - which is what lets one measurement cover
                       both. A cell spanning every column rather than a row of
                       its own, so the row keeps holding exactly one row's worth
                       of content and `aria-rowcount` still counts records. */}
-                  {showsDetails(row) && (
-                    <div
-                      role="cell"
-                      aria-colspan={orderedColumns.length}
-                      data-dg-part="details"
-                      data-row-id={row.id}
-                      className={classes.detailsCell}
-                      // The row underneath may select, highlight or open a
-                      // context menu. A panel is content, not part of that
-                      // gesture surface - and stopping the right-click here is
-                      // what leaves the browser's own menu working for a link
-                      // or an input inside it.
-                      onClick={(event) => event.stopPropagation()}
-                      onContextMenu={(event) => event.stopPropagation()}
-                    >
-                      {/* No cast back to `TData`: the context erased the row
+                    {showsDetails(row) && (
+                      <div
+                        role="cell"
+                        aria-colspan={orderedColumns.length}
+                        data-dg-part="details"
+                        data-row-id={row.id}
+                        className={classes.detailsCell}
+                        // The row underneath may select, highlight or open a
+                        // context menu. A panel is content, not part of that
+                        // gesture surface - and stopping the right-click here is
+                        // what leaves the browser's own menu working for a link
+                        // or an input inside it.
+                        onClick={(event) => event.stopPropagation()}
+                        onContextMenu={(event) => event.stopPropagation()}
+                      >
+                        {/* No cast back to `TData`: the context erased the row
                           type, and the renderer reaching this point was typed
                           against the consumer's own at the `useTMDataGrid`
                           call. */}
-                      {renderDetails?.({ table, row })}
-                    </div>
-                  )}
-                </div>
-              );
+                        {renderDetails?.({ table, row })}
+                      </div>
+                    )}
+                  </div>
+                );
               };
 
               return (
@@ -3359,9 +3392,7 @@ export function TMDataGridTable<TData extends RowData = TMDataGridRowData>({
           {hasSummaryRow && (
             <div
               role="row"
-              aria-rowindex={
-                rows.length + pinnedRowCount + headerRowCount + 1
-              }
+              aria-rowindex={rows.length + pinnedRowCount + headerRowCount + 1}
               // Also what the height measurement above looks for. One
               // attribute serves both now that the part name *is* the
               // published contract rather than a testing-only alias.

@@ -45,14 +45,20 @@ All from the repository root.
 | `bun run test` | Vitest once, every workspace project (`test:watch` to iterate) |
 | `bun run test:e2e` | Playwright, Chromium: the grid docs-site specs, the component specs, the popup demo specs, the nordic-map site specs and the index page specs (`--project=docs`, `components`, `popup`, `nordic-map` or `home` for one of them) |
 | `bun run lint` | oxlint - types are **not** checked here |
+| `bun run format` | Prettier over everything but Markdown, written in place |
+| `bun run format:check` | The same, reporting instead of writing |
 | `bun run check:skills` | `intent validate` over every package's `skills/*/SKILL.md` |
 | `bun run typecheck` | `tsc -b` over every project |
 | `bun run build:lib` | Every published package into its `dist/`, each after the packages it depends on |
 | `bun run build:docs` | Every docs site and the index page, each into its `apps/<app>/dist/` |
 | `bun run build` | Both |
 
-The pre-commit hook runs lint, both checks above, the typecheck, the changeset check, and `build:lib` when a `packages/*/src/` path changed.
+The pre-commit hook runs lint, the format check, the skills check, the typecheck, the changeset check, and `build:lib` when a `packages/*/src/` path changed.
 Run those before committing rather than discovering them at the hook.
+
+All code is formatted by Prettier with its defaults, and CI fails on anything else.
+Markdown is left out in `.prettierignore`: the docs tests and the skill line limit read those files by exact row and line.
+A `// @ts-expect-error` covers only the next line, so when Prettier splits a call the directive goes above the line that holds the error.
 
 Run intent through `scripts/intent.mjs`, never `npx intent`.
 Two installed packages declare a bin by that name and the one that wins is an install-order accident; the wrong one crashes on startup.
