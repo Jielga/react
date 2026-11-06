@@ -139,7 +139,6 @@ export function stabilizeControlledState(
     const nextValue = (next as Record<string, unknown>)[key];
     const previousValue = (previous as Record<string, unknown>)[key];
     if (hasOwn(previous, key) && sameStateValue(nextValue, previousValue)) {
-      // Unchanged contents: keep the object the table already holds.
       stabilized[key] = previousValue;
     } else {
       stabilized[key] = nextValue;
@@ -169,8 +168,6 @@ export function findFrozenStateSlices(
   )
     .filter(
       ([slice, handler]) =>
-        // Undefined-valued keys are removed before the table sees them; the
-        // slice is not controlled.
         (state as Record<string, unknown>)[slice] !== undefined &&
         (options as Record<string, unknown>)[handler] === undefined &&
         options.atoms?.[slice] === undefined,

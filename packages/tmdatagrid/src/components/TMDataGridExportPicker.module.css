@@ -31,9 +31,6 @@
   padding: calc(var(--mantine-spacing-xs) / 2) 0;
 }
 
-/* Each column is one full-width row: the label stretches over the free space
-   so the whole row toggles the box, and the row highlights on hover like a
-   menu item. */
 .row {
   padding: 0 var(--mantine-spacing-sm);
 }

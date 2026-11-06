@@ -17,7 +17,6 @@ export function DgRangeSliderFilter(args: TMDataGridFilterControlArgs) {
     return <TMDataGridFilterValueInput {...args} />;
   }
 
-  // Bounds from the faceted index - the min and max actually in the data.
   const numbers: number[] = [];
   for (const key of column.getFacetedUniqueValues().keys()) {
     const numeric = Number(key);

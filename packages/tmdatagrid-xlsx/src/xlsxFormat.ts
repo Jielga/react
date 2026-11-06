@@ -59,13 +59,9 @@ function cellText(value: unknown): string {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? "" : dateText(value);
   }
-  // A multiSelect cell holds an array of values; a spreadsheet cell holds one
-  // string, so the elements are joined the way they read on screen.
   if (Array.isArray(value)) {
     return value.map((entry) => cellText(entry)).join(", ");
   }
-  // An object in a cell is a shape the addon cannot know. JSON at least keeps
-  // what was there, where `String(value)` would write "[object Object]".
   if (typeof value === "object") {
     try {
       return JSON.stringify(value);
@@ -126,7 +122,6 @@ export function xlsxFormat({
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet(sheetName);
 
-      // The longest text seen per column, header included, for `autoWidth`.
       const widths = data.headers.map((header) =>
         includeHeaders ? header.length : 0,
       );

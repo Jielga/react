@@ -94,7 +94,6 @@ export function deferControlledStateSyncPublishes<TState>(
         return;
       }
       queueMicrotask(() => {
-        // The subscriber may have unmounted between the write and the flush.
         if (live) next(value);
       });
     });

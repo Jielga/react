@@ -95,8 +95,7 @@ export function EditLaneCell<TData extends RowData>({
       state.newRows.find((newRow) => newRow.tempId === rowId)?.committed ===
       true,
   );
-  // Parked: the row passed its submit and is waiting for the save. A subset
-  // of the open rows, so it is asked about first - the two overlap.
+  // Asked first: parked rows are a subset of the open rows.
   const isCommitted = useSelector(edit.store, (state) =>
     state.committedRowIds.includes(rowId),
   );
@@ -109,8 +108,6 @@ export function EditLaneCell<TData extends RowData>({
   const hasErrors =
     projection !== undefined &&
     (projection.hasRowError || projection.errorFields.length > 0);
-  // The row's own message first - a pathless issue is about the row - then
-  // the first field's, which is what a failed commit left behind.
   const rowError = hasErrors
     ? (firstErrorText(edit.getForm(rowId)?.state.errors ?? []) ??
       projection.errorMessages[0]?.message ??
@@ -137,9 +134,6 @@ export function EditLaneCell<TData extends RowData>({
     </Tooltip>
   ) : null;
 
-  // An entry row: ✓ enters it - an add, or a park under `editing.draft` -
-  // and ✕ discards the entry. A parked entry waits for the save as a value
-  // row: marked new, re-openable, still discardable.
   if (isNew) {
     if (isConfirmedNew) {
       return (
@@ -218,7 +212,6 @@ export function EditLaneCell<TData extends RowData>({
     );
   }
 
-  // A deletion mark is a draft like any other - restorable in place.
   if (isMarkedDeleted) {
     return (
       <Group gap={0} wrap="nowrap">
@@ -249,16 +242,14 @@ export function EditLaneCell<TData extends RowData>({
     );
   }
 
-  // The pencil means "this row edits"; a row that does not gets nothing.
   if (!edit.canEditRow(row as never)) return null;
 
   if (projection?.isSubmitting) {
     return <Loader size="xs" aria-label={labels.loading} />;
   }
 
-  // Parked in the draft store: the mark, and the way back out. No trash
-  // beside the revert - the two undo-shaped icons were too easy to mistake
-  // for one another, so a drafted row reverts first, then deletes.
+  // No trash beside the revert: the two undo-shaped icons were too easy to
+  // mistake for one another.
   if (isCommitted) {
     return (
       <Group gap={0} wrap="nowrap">
@@ -316,9 +307,8 @@ export function EditLaneCell<TData extends RowData>({
     );
   }
 
-  // An open row is a form, and its save and cancel are the form's last two
-  // fields: Tab walks into them from the last editor. The closed lane's
-  // controls stay out of the tab order like every other control in a cell.
+  // An open row's save and cancel are the form's last two fields: Tab walks
+  // into them from the last editor.
   const save = (
     <ActionIcon
       variant="subtle"

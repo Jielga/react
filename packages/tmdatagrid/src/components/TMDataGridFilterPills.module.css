@@ -1,5 +1,3 @@
-/* Wraps rather than scrolls: the pills are a summary, and a summary that goes
-   off-screen is not one. */
 .filterPills {
   display: flex;
   align-items: center;
@@ -7,11 +5,10 @@
   gap: var(--mantine-spacing-xs);
 }
 
-/* Mantine's dark-scheme pill is `dark-7` - the same colour as the body - so a
-   pill sitting on the page rather than inside a `PillsInput` disappears. Both
-   schemes are restated here so the two stay a pair, with a border to keep the
-   shape readable against any surface. Scoped through `.filterPills` for the
-   specificity to beat Mantine's own rule whichever stylesheet loads last. */
+/* Mantine's dark-scheme pill is `dark-7`, the same colour as the body, so a
+   pill on the page rather than inside a `PillsInput` disappears. Scoped through
+   `.filterPills` for the specificity to beat Mantine's own rule whichever
+   stylesheet loads last. */
 .filterPills .pill {
   background-color: var(--mantine-color-gray-1);
   color: var(--mantine-color-black);
@@ -24,8 +21,6 @@
   border-color: var(--mantine-color-dark-3);
 }
 
-/* The label is a button so a pill can be clicked back open, but it must read as
-   part of the pill - Mantine's own label styles carry the font. */
 .pillLabel {
   font: inherit;
   color: inherit;

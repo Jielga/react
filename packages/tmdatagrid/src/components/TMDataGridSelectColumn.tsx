@@ -92,22 +92,15 @@ export function SelectRowCheckbox<TData extends RowData>({
 }: {
   row: Row<TMDataGridFeatures, TData>;
 }) {
-  // Cells render inside the grid's provider, so the checkbox can reach the
-  // chrome store - it needs the shift-click pivot, and the feature flags to know
-  // which row model a range is measured over.
   const { ui, features, labels, edit } = useTMDataGridContext();
   const tabIndex = useBodyControlTabIndex();
   const isGroupRow = row.subRows.length > 0;
-  // A deletion mark makes the row unselectable (see `enableRowSelection` in
-  // the hook), and the box below reads that through `getCanSelect`. The
-  // mark lives in the edit store, so the subscription is what re-renders
-  // the box when it lands - the row and cell identities do not change.
+  // The mark lives in the edit store and the row and cell identities do not
+  // change, so this subscription is what re-renders the box when it lands.
   useSelector(edit.store, (state) => state.deletedRowIds.includes(row.id));
 
-  // A group row is never selected by id: `rowSelection` only holds the leaves,
-  // and TanStack's `getIsSelected()` is a plain lookup in that map. A group
-  // therefore asks about its descendants instead, so the box means "all of
-  // these" and goes indeterminate as soon as that stops being true.
+  // TanStack's `getIsSelected()` is a plain lookup in `rowSelection`, which
+  // holds only the leaves, so a group asks about its descendants.
   const selected = useSelector(row.table.store, () =>
     isGroupRow ? row.getIsAllSubRowsSelected() : row.getIsSelected(),
   );
@@ -115,19 +108,13 @@ export function SelectRowCheckbox<TData extends RowData>({
     row.getIsSomeSelected(),
   );
 
-  // The resolver expands a tick back out to the descendant ids; all the group
-  // case needs here is to know whether any of them may be selected at all.
   const selectableIds = getSelectableRowIds(row);
 
-  // Single-select has no way to express "this group": one box for several rows
-  // would either overrun the limit or lie about what it did.
   if (isGroupRow && !row.getCanMultiSelect()) return null;
 
   return (
     <Checkbox
       size="xs"
-      // See useBodyControlTabIndex: under cell selection Enter steps into the
-      // lane, the row's Tab walk reaches it, and Space on any cell ticks it.
       tabIndex={tabIndex}
       aria-label={isGroupRow ? labels.selectGroup : labels.selectRow}
       data-dg-part="select-row"
@@ -135,15 +122,10 @@ export function SelectRowCheckbox<TData extends RowData>({
       checked={selected}
       disabled={selectableIds.length === 0}
       indeterminate={someSelected && !selected}
-      // Every tick goes through the resolver, shift held or not - plain becomes
-      // a toggle that moves the pivot, so a later shift-click extends from the
-      // box the user last touched.
-      //
-      // All of it in `onChange`, not split with an `onClick`: React derives a
-      // checkbox's change event from the click, so the modifier keys ride along
-      // on the native event, and a `preventDefault()` in a click handler cannot
-      // stop the change from firing anyway. Trying to do the range in `onClick`
-      // silently loses the clicked row, which `onChange` then toggles back off.
+      // All of it in `onChange`, not split with an `onClick`: a
+      // `preventDefault()` in a click handler cannot stop the change from
+      // firing, so a range done in `onClick` loses the clicked row, which
+      // `onChange` then toggles back off.
       onChange={(event) => {
         const native = event.nativeEvent;
         const isMouse = isMouseEvent(native);
@@ -156,14 +138,11 @@ export function SelectRowCheckbox<TData extends RowData>({
             extend: isMouse && native.shiftKey,
           },
           selection: row.table.store.state.rowSelection,
-          // A checkbox is only ever additive - ticking one has never cleared
-          // the others, so `canReplaceSelection` stays false whatever is held.
           canReplaceSelection: false,
         });
         row.table.setRowSelection(resolved.selection);
         ui.actions.setSelectionAnchor(resolved.anchorRowId);
       }}
-      // A row can select on click too; the checkbox must not toggle twice.
       onClick={(event) => event.stopPropagation()}
     />
   );

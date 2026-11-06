@@ -52,7 +52,6 @@ export function TMDataGridMultiSelectEditor({
       w="100%"
       searchable
       {...inputProps}
-      // Portalled, as in the select editor: inside the cell it is clipped.
       size={size}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"

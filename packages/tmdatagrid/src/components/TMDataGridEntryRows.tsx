@@ -80,11 +80,6 @@ function EntryCell({
   });
   const editable =
     cell !== undefined && isEntryCellEditable(entryRow, column, edit);
-  // An open row's cells outside the editors follow the form as it is typed,
-  // as a body row's do: the column's renderer over a context reading the
-  // form's values - the whole row, so a computed cell repaints with any
-  // field. `undefined` for a committed row, whose values the entry table
-  // already holds as data, and for the lanes.
   const draftValues = useSelector(edit.store, (state) =>
     committed || isControlColumn(column.id)
       ? undefined
@@ -97,9 +92,6 @@ function EntryCell({
       data-align={getColumnAlign(column)}
       data-control-column={isControlColumn(column.id) || undefined}
       data-invalid={isInvalid || undefined}
-      // A committed row re-opens where it is double-clicked, the same
-      // gesture a body cell answers - and, like a body cell, a cell that
-      // takes no edit answers nothing.
       onDoubleClick={
         committed && editable
           ? () => edit.begin({ rowId: entryRow.id, columnId: column.id })
@@ -125,7 +117,6 @@ function EntryCell({
       }}
     >
       {cell === undefined ? null : column.id === EDIT_COLUMN_ID ? (
-        // The lane's cell - the entry row's controls.
         flexRender(cell.column.columnDef.cell, cell.getContext())
       ) : !committed && editable ? (
         <TMDataGridCellEditor
@@ -136,15 +127,9 @@ function EntryCell({
           inEntryBlock
         />
       ) : committed || !isControlColumn(column.id) ? (
-        // A value through the column's own renderer. Every cell of a row
-        // entered and awaiting Save all, over the draft the entry table was
-        // fed - and, while the row is open, every cell it does not open (a
-        // display column, `meta.edit.enabled` off), over the form as it is
-        // typed, as a body row in row mode shows them. Blank was how a
-        // calculated column or a button cell vanished the moment a
-        // committed row was reopened. The generated lanes stay blank while
-        // the row is open: a checkbox or a chevron there would act on the
-        // entry table's own state, which reaches nothing.
+        // The generated lanes stay blank while the row is open: a checkbox or a
+        // chevron there would act on the entry table's own state, which reaches
+        // nothing.
         <span className={classes.cellContent}>
           {flexRender(
             cell.column.columnDef.cell,
@@ -185,12 +170,8 @@ export function TMDataGridEntryRows({
 }) {
   const { table, edit, features } = useTMDataGridContext();
   const sticky = features.editNewRowsSticky;
-  // A row being *typed* into is always here - it exists nowhere else to
-  // scroll back to. A committed row is a body row, sorted and filtered with
-  // the rest (the hook feeds it to the table as `data`), unless
-  // `newRowsSticky` keeps it pinned here until the save. Only the rows the
-  // block renders go into its table: after an import `newRows` runs to
-  // thousands, every one of them committed and in the body.
+  // Only the rows the block renders go into its table: after an import
+  // `newRows` runs to thousands, all of them committed and in the body.
   const newRows = useSelector(
     edit.store,
     (state) =>
@@ -199,15 +180,10 @@ export function TMDataGridEntryRows({
         : state.newRows.filter((newRow) => !newRow.committed),
     { compare: shallow },
   );
-  // What a committed row renders from. It has no form - its values are the
-  // draft store's - and this is the same snapshot the table feeds a
-  // committed row in the body.
   const committedValues = useSelector(
     edit.store,
     (state) => state.committedValues,
   );
-  // The reopen gesture: `begin` on a committed entry row flips it back to
-  // editors and names the cell double-clicked - where the caret goes.
   const activeEntry = useSelector(edit.store, (state) =>
     state.active !== null &&
     state.newRows.some(
@@ -241,7 +217,6 @@ export function TMDataGridEntryRows({
     const editor = block.querySelector<HTMLElement>(
       `[data-dg-part="editor"][data-row-id="${CSS.escape(newest)}"]`,
     );
-    // Not mounted yet; the next render tries again, as the table's does.
     if (editor === null) return;
     focusedTempIdRef.current = newest;
     focusEditorContent(editor);
@@ -267,19 +242,11 @@ export function TMDataGridEntryRows({
         ? `[data-dg-part="editor"][data-row-id="${CSS.escape(activeEntry.rowId)}"][data-column-id="${CSS.escape(activeEntry.columnId)}"]`
         : `[data-dg-part="editor"][data-row-id="${CSS.escape(activeEntry.rowId)}"]`,
     );
-    // Not mounted yet; the next render tries again, as the add effect does.
     if (editor === null) return;
     focusedActiveRef.current = key;
     focusEditorContent(editor);
   });
 
-  // What the rows render over. A committed row is data: its values are the
-  // draft store's, which stand through a reopen. An open row's cells read
-  // the form itself - the editors directly, the rest through EntryCell's
-  // draft overlay - so its entry here gives the row an identity and a
-  // fallback: the committed values it was reopened from, else the seed
-  // frozen at addRow (the form's `defaultValues`, which a reopen keeps at
-  // the seed and writes the committed values over).
   const data = useMemo(
     () =>
       newRows.map(
@@ -318,8 +285,6 @@ export function TMDataGridEntryRows({
         data-row-id={entryRow.id}
         data-new
         data-committed={committed || undefined}
-        // The same marker body rows carry once committed, so one selector
-        // reaches everything parked in the draft store.
         data-draft={committed || undefined}
         className={classes.entryRow}
       >
