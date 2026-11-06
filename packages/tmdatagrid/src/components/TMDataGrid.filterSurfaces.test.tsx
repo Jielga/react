@@ -475,6 +475,64 @@ describe("filters.inHeader", () => {
   });
 });
 
+describe("the header funnel", () => {
+  // Module scope: `useTMDataGrid` memoizes on the columns reference.
+  const columns = (() => {
+    const helper = createTMDataGridColumnHelper<TestRow>();
+    return helper.columns([
+      helper.accessor("name", { header: "Name" }),
+      helper.accessor("city", { header: "City", enableColumnFilter: false }),
+    ]);
+  })();
+
+  /** A grid whose one filter was set from code, not through the UI. */
+  const renderFilteredOn = (columnId: string) =>
+    renderGridUi({
+      columns,
+      initialState: {
+        columnFilters: [
+          { id: columnId, value: { operator: "contains", value: "a" } },
+        ],
+      },
+    });
+
+  it("shows on a filtered column", () => {
+    renderFilteredOn("name");
+
+    expect(part("header-filter", { columnId: "name" })).toBeInTheDocument();
+  });
+
+  it("stays off a column the user cannot filter", () => {
+    renderFilteredOn("city");
+
+    expect(header("city")).toBeInTheDocument();
+    expect(
+      queryPart("header-filter", { columnId: "city" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("stays off a filterable column with no filter on it", () => {
+    renderGridUi({ columns });
+
+    expect(header("name")).toBeInTheDocument();
+    expect(
+      queryPart("header-filter", { columnId: "name" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens the column's filter on a click", async () => {
+    const user = userEvent.setup();
+    renderFilteredOn("name");
+    expect(queryPart("filter-popup")).not.toBeInTheDocument();
+
+    await user.click(part("header-filter", { columnId: "name" }));
+
+    expect(
+      part("filter-row", { columnId: "name" }, part("filter-popup")),
+    ).toBeInTheDocument();
+  });
+});
+
 /**
  * The header filter row is a header row like the group rows above it, so the
  * two have to stack rather than pin to the same edge - which is what surfaced
