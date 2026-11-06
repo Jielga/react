@@ -647,7 +647,7 @@ export function TMDataGridHeaderCell({
         <div className={classes.headerActions}>
           {/* Dropped under header filters, where the filled-in control below
               is both the indicator and the way in. */}
-          {isFiltered && !filters.inHeader && (
+          {column.getCanFilter() && isFiltered && !filters.inHeader && (
             <ActionIcon
               className={classes.headerAction}
               data-pinned-visible="true"
