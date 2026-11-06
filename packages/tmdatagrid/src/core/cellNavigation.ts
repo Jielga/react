@@ -82,8 +82,6 @@ export function resolveCellMove({
       return at(from.rowIndex + Math.max(pageRows, 1), from.columnIndex);
     case "PageUp":
       return at(from.rowIndex - Math.max(pageRows, 1), from.columnIndex);
-    // Ctrl+Home / Ctrl+End address the grid, plain Home / End the row - the
-    // convention every spreadsheet and APG's own grid pattern share.
     case "Home":
       return ctrlKey ? at(0, 0) : at(from.rowIndex, 0);
     case "End":

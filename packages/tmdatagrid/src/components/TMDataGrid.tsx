@@ -57,7 +57,6 @@ export type TMDataGridProps<TData extends RowData> = TMDataGridApi<TData> & {
   "data-testid"?: string;
 };
 
-// Documented on the `TMDataGrid` export below.
 // oxlint-disable-next-line react/only-export-components -- exported as the Object.assign compound `TMDataGrid`, which the rule cannot see as a component
 function TMDataGridRoot<TData extends RowData>({
   table,
@@ -134,7 +133,6 @@ function TMDataGridRoot<TData extends RowData>({
       <div
         id={id}
         data-testid={testId}
-        // The handle everything else scopes off - see the `data-testid` prop.
         data-dg-root
         data-size={size}
         className={[classes.root, className].filter(Boolean).join(" ")}
@@ -142,8 +140,6 @@ function TMDataGridRoot<TData extends RowData>({
       >
         {children}
       </div>
-      {/* Portaled by Mantine, so outside the root element; inside the
-          provider, since it reads the grid. */}
       <TMDataGridExportPicker />
     </TMDataGridContextProvider>
   );

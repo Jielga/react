@@ -1,20 +1,9 @@
-/* Boundary of a pinned column group. Shared, because the edge is cast by both
-   the header cell and every body cell in the same column - the two have to draw
-   an identical band or the seam shows at the header.
-
-   A box-shadow is drawn per cell, and its blur fades in at each cell's own top
-   and bottom edge - stacked down a column that reads as banding at every row
-   seam. Instead: a gradient pseudo element pinned to `top: 0; bottom: 0` so
-   consecutive cells butt together into one unbroken band.
-
+/* Boundary of a pinned column group. A box-shadow fades in at each cell's own
+   top and bottom edge, which reads as banding at every row seam, so a gradient
+   pseudo element pinned to `top: 0; bottom: 0` butts together into one band.
    The dark scheme is a second rule under Mantine's `data-mantine-color-scheme`
-   attribute, not the `light-dark` function: scripts/package-stylesheets.test.mjs
-   says why.
-
-   No border. A 1px line the colour of the grid's own borders drew a hard rule
-   between the pinned lanes and the data, so the pinned columns read as a
-   separate table rather than as part of this one - and at the system lanes,
-   which are only a control wide, it framed them like a sidebar. */
+   attribute, not the `light-dark` function:
+   scripts/package-stylesheets.test.mjs says why. */
 .stickyLeft::after,
 .stickyRight::after {
   content: "";
@@ -67,24 +56,15 @@
   );
 }
 
-/* The band says "there is more table under this lane". So it should only be
-   there while that is true: nothing is hidden at either end of the scroll, and
-   nothing at all is hidden by a grid narrow enough not to scroll.
-
-   Driven by the scroll position itself rather than by a listener writing a
-   class. A scroll-driven animation is evaluated on the compositor, so the band
-   tracks the scroll frame for frame without a single React render - and the
-   body re-renders on every scroll frame already, from virtualization.
-
-   `scroll(nearest inline)` resolves to `.scrollContainer`, the one horizontal
-   scroller above these cells. An inactive timeline - which is what a container
-   with nothing to scroll gives - leaves the base style in place, so `opacity:
-   0` inside this block is also the answer for a grid that does not scroll. */
+/* Only there while something is hidden under the lane. A scroll-driven
+   animation runs on the compositor, so the band tracks the scroll without a
+   listener or a render. `scroll(nearest inline)` resolves to
+   `.scrollContainer`. An inactive timeline, which is what a container with
+   nothing to scroll gives, leaves the base style in place, so `opacity: 0` is
+   also the answer for a grid that does not scroll. */
 @supports (animation-timeline: scroll()) {
   .stickyLeft::after,
   .stickyRight::after {
-    /* Distance over which the band arrives. Short enough to read as an edge
-       appearing under the lane rather than as a fade. */
     --dg-sticky-edge-range: 20px;
     opacity: 0;
     animation-timeline: scroll(nearest inline);
@@ -97,10 +77,6 @@
     animation-range: 0 var(--dg-sticky-edge-range);
   }
 
-  /* The mirror: on at rest, gone as the last column arrives. The range is
-     measured from the end, and `both` holds the first value everywhere before
-     it - so the band stays fully on until the scroller is within 20px of home.
-   */
   .stickyRight::after {
     animation-name: stickyEdgeOut;
     animation-range: calc(100% - var(--dg-sticky-edge-range)) 100%;
@@ -125,18 +101,11 @@
   }
 }
 
-/* The scrolled-under shadow: a soft band under the header, only while body
-   rows are actually beneath it. Worn by the last header row - the header/body
-   boundary - which is the filter row under `filters.inHeader` and the last
-   group row otherwise. Lives here rather than in either row's own module
-   because the two are in different modules and the boundary moves between
-   them.
-
-   A scroll-driven animation, like the pinned-lane gradients: the shadow tracks
-   the scroll on the compositor with no listener and no render, and an inactive
-   timeline (nothing to scroll) leaves `opacity: 0` standing, so a grid that
-   fits shows nothing. Where unsupported there is simply no shadow - the
-   header's border already draws the boundary. */
+/* The scrolled-under shadow, worn by the last header row: the filter row under
+   `filters.inHeader`, the last group row otherwise. It lives here because the
+   boundary moves between the two rows' modules. Scroll-driven like the
+   pinned-lane gradients; where unsupported there is no shadow, and the header's
+   border draws the boundary. */
 .headerBoundary::after {
   content: "";
   position: absolute;
@@ -155,7 +124,6 @@
   .headerBoundary::after {
     animation: dgHeaderShadow linear both;
     animation-timeline: scroll(nearest block);
-    /* Arrives over the first rows leaving, reads as depth not as a fade. */
     animation-range: 0px 24px;
   }
 }

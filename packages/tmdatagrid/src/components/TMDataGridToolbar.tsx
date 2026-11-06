@@ -152,22 +152,14 @@ export function TMDataGridFilterButton() {
         color={activeCount > 0 ? undefined : "gray"}
         size={controlSize}
         aria-label={labels.filters}
-        // Also what the panel's click-away handler tests for, so that a click
-        // here reads as a toggle rather than as a click outside.
         data-dg-part="filter-button"
         onClick={() => {
           if (opened) {
             ui.actions.closeFilterPanel();
             return;
           }
-          // Not `openColumnFilter`: that one honours header filters and
-          // focuses the header control instead of opening anything. This
-          // button's whole job is to open the surface it belongs to, which a
-          // grid may well have alongside header filters.
-          //
-          // Seeded only when the panel would otherwise be empty: with filters
-          // already in state it has rows to show, and seeding would stack a
-          // blank row on the first filterable column on top of them.
+          // Not `openColumnFilter`: that one honours header filters and focuses
+          // the header control instead of opening anything.
           const seedColumn =
             columnFilters.length === 0
               ? table

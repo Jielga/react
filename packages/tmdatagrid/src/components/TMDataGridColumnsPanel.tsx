@@ -111,10 +111,10 @@ export function TMDataGridColumnsPanel({
           indeterminate={shownCount > 0 && shownCount < columns.length}
           onChange={(event) => setAllVisible(event.currentTarget.checked)}
         />
-        {/* The whole layout, not only visibility: one reset with an honest
-            scope, stated in the tooltip. `table.resetColumnVisibility()` would
-            also be wrong under persistence - it resets to `initialState`,
-            which the mount built *from* the persisted payload. */}
+        {/* The whole layout, not only visibility.
+            `table.resetColumnVisibility()` would be wrong under persistence: it
+            resets to `initialState`, which the mount built from the persisted
+            payload. */}
         <Tooltip label={labels.columnsResetHint} withArrow>
           <Button
             variant="subtle"

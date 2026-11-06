@@ -35,8 +35,6 @@ export function GroupCell<TData extends RowData>({
   const tabIndex = useBodyControlTabIndex();
   const expanded = useSelector(row.table.store, () => row.getIsExpanded());
 
-  // Leaf rows keep the lane empty: their values are in the data columns, and
-  // the indent alone is what places them under their group.
   if (!row.getIsGrouped()) return null;
 
   // `groupingValue` is TanStack's map key, the value already turned into a
@@ -58,10 +56,7 @@ export function GroupCell<TData extends RowData>({
   return (
     <UnstyledButton
       className={classes.groupToggle}
-      // Padding rather than margin, so the whole indented width stays clickable.
       style={{ paddingInlineStart: row.depth * INDENT_STEP }}
-      // See useBodyControlTabIndex: under cell selection, reached by stepping
-      // into the cell or by the Tab walk within the row, not by the page.
       tabIndex={tabIndex}
       aria-expanded={expanded}
       aria-label={
@@ -69,8 +64,6 @@ export function GroupCell<TData extends RowData>({
       }
       data-dg-part="group-toggle"
       data-row-id={row.id}
-      // The row underneath may select or highlight on click; expanding is its
-      // own gesture and must not also trigger those.
       onClick={(event) => {
         event.stopPropagation();
         row.toggleExpanded();

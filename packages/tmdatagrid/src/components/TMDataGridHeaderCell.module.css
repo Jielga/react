@@ -21,17 +21,10 @@
   justify-content: center;
 }
 
-/* Same as the body cells: a control lane's header - the select-all box, the
-   expand-all chevron - sits in a fixed 36px track, which the text padding would
-   squeeze it out of at the larger sizes. */
 .headerCell[data-control-column="true"] {
   padding: 0;
 }
 
-/* A filtered column reads as active: its rows are a subset, and nothing else in
-   the header says so once the filter panel is closed. A sorted one is not
-   tinted - the arrow, pinned visible for as long as the sort lasts, already
-   says which column sorts and which way. */
 .headerCellFiltered .headerTitle {
   color: var(--mantine-primary-color-filled);
 }
@@ -44,8 +37,6 @@
   white-space: nowrap;
 }
 
-/* Right-aligned headers stay text so the ellipsis still works; centered ones
-   hold a control (the select-all checkbox), so they become a flex box. */
 .headerCell[data-align="right"] .headerTitle {
   text-align: right;
 }
@@ -63,17 +54,12 @@
   margin-left: auto;
 }
 
-/* Actions always reserve their width. On right-aligned columns they move to the
-   leading edge so the header text stays flush with the cell values below it. */
 .headerCell[data-align="right"] .headerActions {
   order: -1;
   margin-left: 0;
   margin-right: auto;
 }
 
-/* Idle actions are removed from layout, not just faded - reserving their width
-   would truncate header text that otherwise fits. Indicators that must stay
-   visible (active sort, active filter, open menu) set data-pinned-visible. */
 .headerAction {
   display: none;
 }
@@ -88,8 +74,6 @@
   cursor: pointer;
 }
 
-/* See the sort ActionIcon: an unsorted column's arrow is an invitation, not a
-   state, so it sits back until the pointer is on it. */
 .sortAction:not([data-sorted]) {
   opacity: 0.55;
 }
@@ -98,8 +82,6 @@
   opacity: 1;
 }
 
-/* Sort priority under multi-sort - "1", "2", … beside the arrow. Only rendered
-   while more than one column sorts, so a single sort stays as it always was. */
 .sortIndex {
   font-size: 10px;
   font-weight: 600;
@@ -109,9 +91,6 @@
   text-align: center;
 }
 
-/* Column reordering. The dragged header stays in place and dims - the browser
-   already carries a snapshot of it under the pointer - while the header being
-   dragged over draws a bar on the edge the column will land against. */
 .headerCellDragging {
   opacity: 0.4;
 }
@@ -136,7 +115,6 @@
   right: 0;
 }
 
-/* Doubles as the column divider seen between every header cell. */
 .columnSeparator {
   position: absolute;
   top: 25%;
@@ -149,11 +127,9 @@
   z-index: 1;
 }
 
-/* The last column's divider straddles inward instead. Half of a 10px box
-   hanging past the last track is 5px of scrollable overflow, which is a
-   permanent horizontal scrollbar under a grid whose columns fit exactly. The
-   grab area keeps its width, wholly inside the cell, and flex-end keeps the
-   visible line on the column edge where every other divider draws it. */
+/* The last column's divider straddles inward. Half of a 10px box hanging past
+   the last track is 5px of scrollable overflow, which is a permanent horizontal
+   scrollbar under a grid whose columns fit exactly. */
 .headerCell:last-child .columnSeparator {
   transform: none;
   justify-content: flex-end;
@@ -164,8 +140,6 @@
   touch-action: none;
 }
 
-/* The divider is a hover affordance, not permanent chrome - it only appears on
-   the header cell you are pointing at, or on the column being resized. */
 .columnSeparator::after {
   content: "";
   width: 1px;
@@ -187,7 +161,6 @@
   background-color: var(--mantine-primary-color-filled);
 }
 
-/* Marks the pin position a column is currently in. */
 .menuItemActive {
   background-color: var(--mantine-color-default-hover);
   font-weight: 600;

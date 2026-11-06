@@ -1,15 +1,14 @@
 import { useCreateStore, useSelector } from "@tanstack/react-store";
-import { shallow } from "@tanstack/store";
 import {
   type AccessorFn,
   type AccessorFnColumnDef,
   type AccessorKeyColumnDef,
   aggregationFns,
   type ColumnDef,
-  type ColumnHelper,
   columnFacetingFeature,
   columnFilteringFeature,
   columnGroupingFeature,
+  type ColumnHelper,
   columnOrderingFeature,
   columnPinningFeature,
   type ColumnPinningState,
@@ -29,13 +28,13 @@ import {
   type DisplayColumnDef,
   filterFns,
   getInitialTableState,
-  type GroupColumnDef,
   globalFilteringFeature,
+  type GroupColumnDef,
   type IdentifiedColumnDef,
   metaHelper,
   type Row,
-  type RowData,
   rowAggregationFeature,
+  type RowData,
   rowExpandingFeature,
   rowPaginationFeature,
   rowPinningFeature,
@@ -49,6 +48,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import type { Store } from "@tanstack/store";
+import { shallow } from "@tanstack/store";
 import {
   type MutableRefObject,
   type ReactNode,
@@ -60,45 +60,81 @@ import {
   useState,
 } from "react";
 import type { TMDataGridRowData } from "./TMDataGridContext";
+import { DETAILS_COLUMN_ID } from "./components/TMDataGridDetailsColumn";
+import { EDIT_COLUMN_ID } from "./components/TMDataGridEditColumn";
+import { GROUP_COLUMN_ID } from "./components/TMDataGridGroupColumn";
+import {
+  createRowNumberColumn,
+  ROW_NUMBER_COLUMN_ID,
+} from "./components/TMDataGridRowNumberColumn";
+import { SELECT_COLUMN_ID } from "./components/TMDataGridSelectColumn";
+import {
+  createDetailsColumn,
+  createEditColumn,
+  createGroupColumn,
+  createSelectColumn,
+} from "./components/generatedColumns";
+import {
+  readFeatureFlags,
+  type TMDataGridCellSelectionMode,
+  type TMDataGridFeatureFlags,
+  type TMDataGridSelectionMode,
+} from "./core/capabilities";
+import { isSameCell, type TMDataGridCellPosition } from "./core/cellNavigation";
+import type { TMDataGridCellRange } from "./core/cellRange";
 import type { TMDataGridOptionsSource } from "./core/columnOptions";
-import {
-  createEditEngine,
-  type TMDataGridEditApi,
-  type TMDataGridEditCommitArgs,
-  type TMDataGridSaveDraftsArgs,
-  type TMDataGridSaveDraftsResponse,
-  type TMDataGridEditEngineContext,
-  type TMDataGridColumnEditOptions,
-  type TMDataGridEditMode,
-  type TMDataGridRowAddArgs,
-  type TMDataGridRowDeleteArgs,
-  type TMDataGridRowValidators,
-  type TMDataGridTableValidators,
-} from "./core/editEngine";
-import {
-  emptyValueForOperator,
-  type TMDataGridColumnType,
-  type TMDataGridFilterOperator,
-  tmDataGridFilterFn,
-} from "./core/filterOperators";
 import {
   DEFAULT_COLUMN_MIN_SIZE,
   getColumnDefaultOperator,
   isControlColumn,
   isGeneratedColumn,
 } from "./core/columnUtils";
+import {
+  findFrozenStateSlices,
+  stabilizeControlledState,
+  withoutUndefinedSlices,
+} from "./core/controlledState";
+import {
+  beginControlledStateSync,
+  deferControlledStateSyncPublishes,
+  endControlledStateSync,
+} from "./core/controlledStateSync";
+import { registerDeletedRows } from "./core/deletedRows";
+import {
+  createEditEngine,
+  type TMDataGridColumnEditOptions,
+  type TMDataGridEditApi,
+  type TMDataGridEditCommitArgs,
+  type TMDataGridEditEngineContext,
+  type TMDataGridEditMode,
+  type TMDataGridRowAddArgs,
+  type TMDataGridRowDeleteArgs,
+  type TMDataGridRowValidators,
+  type TMDataGridSaveDraftsArgs,
+  type TMDataGridSaveDraftsResponse,
+  type TMDataGridTableValidators,
+} from "./core/editEngine";
+import {
+  registerExportDataMapper,
+  resolveExportOptions,
+  type TMDataGridExportDataMapper,
+  type TMDataGridExportOptions,
+  type TMDataGridExportPickerRequest,
+  type TMDataGridExportSettings,
+  type TMDataGridExportValueGetter,
+} from "./core/export";
 import type { TMDataGridColumnFilterOptions } from "./core/filterControls";
+import {
+  emptyValueForOperator,
+  type TMDataGridColumnType,
+  tmDataGridFilterFn,
+  type TMDataGridFilterOperator,
+} from "./core/filterOperators";
 import {
   resolveFilterOptions,
   type TMDataGridFiltersOptions,
   type TMDataGridFiltersSettings,
 } from "./core/filterSurface";
-import {
-  columnCanQuickSearch,
-  createFuzzyRankedSortedRowModel,
-  fuzzyGlobalFilterFn,
-  type TMDataGridQuickSearchMode,
-} from "./core/quickSearch";
 import {
   isFrozenSortStale,
   requestSortAgain,
@@ -110,6 +146,7 @@ import {
   type TMDataGridLabels,
   type TMDataGridLabelsOverride,
 } from "./core/labels";
+import { type TMDataGridQueryTable, withPageReset } from "./core/pageReset";
 import {
   collectLeafColumnIds,
   collectUrlExcludedColumnIds,
@@ -122,62 +159,25 @@ import {
   writePersistedState,
 } from "./core/persistence";
 import {
-  readFeatureFlags,
-  type TMDataGridCellSelectionMode,
-  type TMDataGridFeatureFlags,
-  type TMDataGridSelectionMode,
-} from "./core/capabilities";
-import { isSameCell, type TMDataGridCellPosition } from "./core/cellNavigation";
-import {
-  findFrozenStateSlices,
-  stabilizeControlledState,
-  withoutUndefinedSlices,
-} from "./core/controlledState";
-import {
-  beginControlledStateSync,
-  deferControlledStateSyncPublishes,
-  endControlledStateSync,
-} from "./core/controlledStateSync";
-import { registerDeletedRows } from "./core/deletedRows";
-import { resolveStartingView, useGridViews } from "./core/useGridViews";
-import {
-  captureViewState,
-  pickViewSlices,
-  type TMDataGridViewState,
-  type TMDataGridViewsApi,
-  type TMDataGridViewsOptions,
-} from "./core/views";
-import { withPageReset, type TMDataGridQueryTable } from "./core/pageReset";
-import type { TMDataGridCellRange } from "./core/cellRange";
+  columnCanQuickSearch,
+  createFuzzyRankedSortedRowModel,
+  fuzzyGlobalFilterFn,
+  type TMDataGridQuickSearchMode,
+} from "./core/quickSearch";
 import type {
   TMDataGridAccessorColumnId,
   TMDataGridColumnInfoHints,
   TMDataGridColumnInfoOf,
   TMDataGridTypedColumn,
 } from "./core/urlState";
+import { resolveStartingView, useGridViews } from "./core/useGridViews";
 import {
-  registerExportDataMapper,
-  resolveExportOptions,
-  type TMDataGridExportDataMapper,
-  type TMDataGridExportOptions,
-  type TMDataGridExportPickerRequest,
-  type TMDataGridExportSettings,
-  type TMDataGridExportValueGetter,
-} from "./core/export";
-import { SELECT_COLUMN_ID } from "./components/TMDataGridSelectColumn";
-import { GROUP_COLUMN_ID } from "./components/TMDataGridGroupColumn";
-import { DETAILS_COLUMN_ID } from "./components/TMDataGridDetailsColumn";
-import { EDIT_COLUMN_ID } from "./components/TMDataGridEditColumn";
-import {
-  createDetailsColumn,
-  createEditColumn,
-  createGroupColumn,
-  createSelectColumn,
-} from "./components/generatedColumns";
-import {
-  createRowNumberColumn,
-  ROW_NUMBER_COLUMN_ID,
-} from "./components/TMDataGridRowNumberColumn";
+  captureViewState,
+  pickViewSlices,
+  type TMDataGridViewsApi,
+  type TMDataGridViewsOptions,
+  type TMDataGridViewState,
+} from "./core/views";
 
 /**
  * How long the grid waits after the last state change before writing to
@@ -341,10 +341,6 @@ export const tmDataGridFeatures = tableFeatures({
 
   filteredRowModel: createFilteredRowModel(),
   groupedRowModel: createGroupedRowModel(),
-  // The sorted model plus the fuzzy quick search's rank ordering - see
-  // core/quickSearch.ts for when the ordering applies - and the held order of
-  // `sortMode: "frozen"`, see core/frozenSort.ts. The two never meet: the
-  // ranking applies only without a sort, the held order only with one.
   sortedRowModel: withFrozenSort(createFuzzyRankedSortedRowModel()),
   expandedRowModel: createExpandedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
@@ -457,9 +453,6 @@ export type TMDataGridColumnHelper<TData extends RowData> = {
 export function createTMDataGridColumnHelper<
   TData extends RowData,
 >(): TMDataGridColumnHelper<TData> {
-  // Same runtime helper. The features object registers one meta type for
-  // every table, so the row-typed meta exists only in this signature; the
-  // grid calls the callbacks with the rows of the table they belong to.
   return createColumnHelper<
     TMDataGridFeatures,
     TData
@@ -913,8 +906,6 @@ export type UseTMDataGridOptions<TData extends RowData> = Omit<
   (
     | { sortMode?: "live" }
     | {
-        // The whole union, not `"frozen"` alone: a mode held in a variable
-        // that may be either is accepted once there are ids.
         sortMode: TMDataGridSortMode;
         /**
          * Required under `sortMode: "frozen"`: the held order is keyed by row
@@ -1361,7 +1352,6 @@ function withTMDataGridDefaults<TData extends RowData>(
 export function useTMDataGrid<TData extends RowData>({
   persist,
   views: viewsOptions,
-  // Not TanStack options, so they are kept out of what `useTable` receives.
   labels: labelsOverride,
   enableColumnOrdering,
   enablePagination,
@@ -1384,14 +1374,9 @@ export function useTMDataGrid<TData extends RowData>({
   overscan = DEFAULT_OVERSCAN,
   ...options
 }: UseTMDataGridOptions<TData>): TMDataGridApi<TData> {
-  // The one place `editing` is unpacked - the engine and the flags keep their
-  // own vocabulary (`editMode`, `onEditCommit`), so the mapping lives here.
   const editMode = editing?.mode;
   const editDraft = editing?.draft === true;
 
-  // Derived up here, rather than just before the return, because the rest of the
-  // hook needs `selectColumn` - one place decides what each mode means.
-  //
   // Deliberately not memoized on `table`: the flags must re-derive whenever the
   // caller passes different options, and `table` keeps the same identity when
   // they do. See readFeatureFlags.
@@ -1407,10 +1392,7 @@ export function useTMDataGrid<TData extends RowData>({
     enableDownload,
   });
 
-  // Resolved on the override's identity, so a module-scope dictionary costs one
-  // merge for the lifetime of the grid.
   const labels = useMemo(() => mergeLabels(labelsOverride), [labelsOverride]);
-  // Field by field for the same reason as `filters` below.
   const {
     format: exportFormat,
     fileName: exportFileName,
@@ -1457,14 +1439,7 @@ export function useTMDataGrid<TData extends RowData>({
 
   const selectColumnEnabled = features.selectColumn;
   const groupColumnEnabled = features.grouping;
-  // The lane that opens the panels. Nothing to switch on: a grid with no
-  // `renderDetails` has nothing for it to open.
   const detailsColumnEnabled = renderDetails !== undefined;
-  // Row mode's Save sits at the end of the row - the lane is its chrome. It
-  // also appears wherever the trash can has somewhere to report to, and
-  // always under `draft`, where it is the change marker and the per-row
-  // revert - with or without `onSaveDrafts`, since the per-row fallback is a
-  // first-class configuration.
   const editColumnEnabled =
     editing !== undefined &&
     (editing.mode === "row" || editDraft || editing.onRowDelete !== undefined);
@@ -1478,17 +1453,12 @@ export function useTMDataGrid<TData extends RowData>({
   const editColumnLabel = labels.editColumnLabel;
   const rowNumberColumnLabel = labels.rowNumberColumnLabel;
   const rowNumbersEnabled = features.rowNumbers;
-  // A draft lane holds three controls (state icon, undo, trash) where the
-  // rest hold two - it gets the wider track.
   const editWideLane = editDraft;
 
-  // The generated lanes are structurally pinned, outermost first on each edge,
-  // and re-applied on top of anything restored: a snapshot cannot unpin one,
-  // and a snapshot taken before `detailsColumnPosition` changed cannot pin the
-  // details lane to the edge it has since left.
-  //
-  // Not gated on `enableColumnPinning`: that switch takes pinning away from the
-  // user, not from the grid's own lanes, which hold the edges either way.
+  // Re-applied on top of anything restored: a snapshot cannot unpin a lane, or
+  // pin the details lane to an edge it has since left. Not gated on
+  // `enableColumnPinning`: that switch takes pinning away from the user, not
+  // from the grid's own lanes.
   const structuralPinning = (
     restored: Partial<ColumnPinningState> | undefined,
   ): ColumnPinningState => {
@@ -1518,21 +1488,12 @@ export function useTMDataGrid<TData extends RowData>({
       options.columns as ReadonlyArray<TMDataGridColumnDef<TData>>,
     );
     // Every generated column is present whenever its feature is on, and the
-    // tree column hides itself while nothing is grouped. Adding it to the array
-    // only once a column is grouped would make the column list depend on table
-    // state, which is the one thing that cannot be a `useMemo` dependency here
-    // - the table is built from these columns.
-    //
-    // The order is the order they are pinned in, and it follows what each one
-    // is about: tick a row, find it in the tree the user grouped it into, then
-    // open it. The details chevron sits innermost on whichever edge it was
-    // given - last of the left lanes, or first of the right ones - because it
-    // acts on the record the lanes outside it have narrowed down to.
+    // tree column hides itself while nothing is grouped. The column list cannot
+    // depend on table state: the table is built from these columns.
     const detailsColumn = detailsColumnEnabled
       ? [createDetailsColumn<TData>(detailsColumnLabel)]
       : [];
     return [
-      // The gutter sits outside everything, the way a spreadsheet's does.
       ...(rowNumbersEnabled
         ? [createRowNumberColumn<TData>(rowNumberColumnLabel)]
         : []),
@@ -1545,7 +1506,6 @@ export function useTMDataGrid<TData extends RowData>({
       ...(detailsColumnPosition === "left" ? detailsColumn : []),
       ...base,
       ...(detailsColumnPosition === "right" ? detailsColumn : []),
-      // Last and pinned right - the row's Save belongs at the end of the row.
       ...(editColumnEnabled
         ? [createEditColumn<TData>(editColumnLabel, editWideLane)]
         : []),
@@ -1566,18 +1526,10 @@ export function useTMDataGrid<TData extends RowData>({
     editColumnLabel,
   ]);
 
-  // Leaf columns whose filter stays out of the `urlKey` param. Follows the
-  // columns, since the write subscription below outlives a column change.
   const urlExcludedColumnIds = useMemo(
     () => collectUrlExcludedColumnIds(columns),
     [columns],
   );
-  // What the table would start with if nothing were restored: TanStack's
-  // feature defaults under the consumer's `initialState`, with the grid's own
-  // page size. The `urlKey` param carries only the slices that differ from
-  // it, and an opted-out column keeps its filter from it on read. Only the
-  // data slices are used, so the layout part of the `initialState` recipe
-  // below is not repeated here. Read once on mount, like `initialState`.
   const [persistBaseline] = useState(() =>
     getInitialTableState(tmDataGridFeatures, {
       ...options.initialState,
@@ -1596,9 +1548,6 @@ export function useTMDataGrid<TData extends RowData>({
     }),
   );
 
-  // Whether storage gave back a layout. A first visit - nothing restored -
-  // starts on the `defaultView` preset, laid under the restored state the way
-  // `initialState` is, so the first paint already shows it.
   const restoredSettings = SETTINGS_STATE_SLICES.some(
     (slice) => persistedState[slice] !== undefined,
   );
@@ -1615,26 +1564,20 @@ export function useTMDataGrid<TData extends RowData>({
   });
   const startingViewState: TMDataGridViewState = startingView?.state ?? {};
 
-  // Restored grouping decides whether the tree column starts out visible, so a
-  // reload comes back to the tree the user left rather than to a hidden lane.
   const initialGrouping =
     persistedState.grouping ??
     startingViewState.grouping ??
     options.initialState?.grouping ??
     [];
 
-  // Current grouping state, feeding the tree column's entry in a controlled
-  // `columnVisibility` (below). A ref, not state: it is only read while
-  // building the options, and the store change that updates it re-renders the
-  // hook anyway. A controlled `grouping` takes precedence over the persisted
-  // one; grouping held in an external atom is not readable here and is
-  // corrected by the effect below with one extra write on mount.
+  // A ref, not state: it is only read while building the options, and the store
+  // change that updates it re-renders the hook anyway. Grouping held in an
+  // external atom is not readable here and is corrected by the effect below
+  // with one extra write on mount.
   const groupingActiveRef = useRef(
     (options.state?.grouping ?? initialGrouping).length > 0,
   );
 
-  // Removes keys set to `undefined` before TanStack writes them into the
-  // slice atoms; such a key means the slice is not controlled.
   const consumerState = withoutUndefinedSlices(options.state);
 
   // A controlled `columnVisibility` replaces the whole map on every options
@@ -1706,34 +1649,22 @@ export function useTMDataGrid<TData extends RowData>({
     [],
   );
 
-  // The edit engine. Built once per mount; everything it needs later - the
-  // table, the mode, the consumer's callbacks - is read through a ref updated
-  // every render, so forms created at `begin()` always call the latest
-  // `onEditCommit` (the onHighlightedRowChangeRef pattern, applied wholesale).
-  // Created ahead of the table because the table's `data` reads its store;
-  // the ref is filled in once the table exists, and the engine only reads it
-  // inside verbs, never while being built.
-  const editContextRef = useRef<TMDataGridEditEngineContext>(null as never);
-  // The engine is erased; the row type comes back on the way out, which is
-  // what makes `edit.addRow(values)` check against `TData`.
+  // Built once per mount, and created ahead of the table because the table's
+  // `data` reads its store. Everything it needs later is read through a ref
+  // updated every render, so forms created at `begin()` always call the latest
+  // `onEditCommit`.
+  const editContextRef = useRef<TMDataGridEditEngineContext<TData>>(
+    null as never,
+  );
   const [engine] = useState(() =>
     createEditEngine(() => editContextRef.current),
   );
-  const edit = engine as unknown as TMDataGridEditApi<TData>;
+  const edit: TMDataGridEditApi<TData> = engine;
 
-  // The rows as shown. Under `editing.draft` a committed row is a row like any
-  // other to the table: its draft replaces the consumer's record and a
-  // committed entry row is prepended, so sorting, filtering, grouping and
-  // aggregates all read the draft store's values. Rows still being typed
-  // into are not here - their values are undecided, and re-sorting under a
-  // caret is not something anyone wants. `newRowsSticky` keeps committed
-  // entry rows in the entry block, so those stay out too.
-  //
-  // Everything is keyed on identities the engine keeps stable while nothing
-  // is decided, so a keystroke in an open editor never rebuilds the model.
-  // `committedValues` rather than `committedRowIds`: the snapshot outlives a
-  // reopen, so a parked row being edited again keeps its place until the
-  // next commit or a cancel decides otherwise.
+  // Keyed on identities the engine keeps stable while nothing is decided, so a
+  // keystroke in an open editor never rebuilds the model. `committedValues`
+  // rather than `committedRowIds`: the snapshot outlives a reopen, so a parked
+  // row being edited again keeps its place.
   const editCommittedValues = useSelector(
     edit.store,
     (state) => state.committedValues,
@@ -1761,18 +1692,16 @@ export function useTMDataGrid<TData extends RowData>({
   consumerGetRowIdRef.current = options.getRowId;
   const shown = useMemo(() => {
     const consumerGetRowId = consumerGetRowIdRef.current;
-    const idOf = new Map<object, string>();
+    const idOf = new Map<TData, string>();
     const created: Array<TData> = [];
     for (const tempId of editCreatedIds) {
       const values = editCommittedValues[tempId];
       if (values === undefined) continue;
       idOf.set(values, tempId);
-      created.push(values as TData);
+      created.push(values);
     }
     const snapshots = Object.keys(editCommittedValues).length;
     if (snapshots === 0) return { rows: options.data, idOf };
-    // Every snapshot may stand in for a record; only the created ones are
-    // known not to. The rest are looked up by the record's own id.
     const rows =
       snapshots === created.length
         ? options.data
@@ -1782,7 +1711,7 @@ export function useTMDataGrid<TData extends RowData>({
             const values = editCommittedValues[rowId];
             if (values === undefined) return record;
             idOf.set(values, rowId);
-            return values as TData;
+            return values;
           });
     return {
       rows: created.length === 0 ? rows : [...created, ...rows],
@@ -1791,11 +1720,9 @@ export function useTMDataGrid<TData extends RowData>({
   }, [options.data, editCommittedValues, editCreatedIds]);
   const shownIdOfRef = useRef(shown.idOf);
   shownIdOfRef.current = shown.idOf;
-  // A stable id resolver over the merged rows. A draft answers the id of the
-  // record it stands in for - the consumer's `getRowId` never sees a draft
-  // object, so an editable id field cannot rename the row - and a created
-  // row answers its temp id. Everything else is the consumer's own, or
-  // TanStack's index fallback.
+  // A draft answers the id of the record it stands in for: the consumer's
+  // `getRowId` never sees a draft object, so an editable id field cannot rename
+  // the row.
   const shownGetRowId = useCallback(
     (record: TData, index: number, parent?: Row<TMDataGridFeatures, TData>) =>
       shownIdOfRef.current.get(record) ??
@@ -1804,13 +1731,7 @@ export function useTMDataGrid<TData extends RowData>({
     [],
   );
 
-  // Filled immediately after the call below. The query-change wrappers close
-  // over it rather than over `table`, since they are built as part of the
-  // options the table is constructed from.
   const tableRef = useRef<TMDataGridTable<TData>>(null as never);
-  // A narrower query invalidates the page the grid is on - see pageReset.ts.
-  // On by default everywhere: TanStack's own `autoResetPageIndex` is switched
-  // off below, since it also fires on every draft commit.
   const resetPage = resetPageOnQueryChange ?? true;
   const getQueryTable = useCallback(
     () => tableRef.current as unknown as TMDataGridQueryTable,
@@ -1845,27 +1766,18 @@ export function useTMDataGrid<TData extends RowData>({
       autoResetPageIndex: false,
       enableSorting: true,
       enableColumnResizing: true,
-      // The quick search's matcher. Fuzzy by default (Q4); `"contains"` keeps
-      // plain substring matching, and an explicit `globalFilterFn` in the
-      // options below overrides both - which also switches the rank ordering
-      // off, since it keys off this exact name.
+      // An explicit `globalFilterFn` in the options below also switches the
+      // rank ordering off, since it keys off this exact name.
       globalFilterFn:
         options.quickSearchMode === "contains"
           ? "includesString"
           : "tmDataGridFuzzy",
-      // Which columns the quick search reads - TanStack's rule, computed once
-      // per data change instead of once per call. See columnCanQuickSearch.
       getColumnCanGlobalFilter: columnCanQuickSearch,
-      // Grouping by a column takes it out of the grid, the way AG Grid does it:
-      // its values have moved into the tree column, so leaving it in place would
-      // show every row the same value it was grouped under. Overridable - pass
-      // `"reorder"` to keep the column and have it moved to the front instead.
       groupedColumnMode: "remove",
       ...options,
-      // The query slices, wrapped so a change also takes the grid back to the
-      // first page - see pageReset.ts. Spread conditionally: the keys carry a
-      // `makeStateUpdater` default, and an explicit `undefined` would overwrite
-      // it and leave the slice unwritable.
+      // Spread conditionally: the keys carry a `makeStateUpdater` default, and
+      // an explicit `undefined` would overwrite it and leave the slice
+      // unwritable.
       ...(resetPage
         ? {
             onColumnFiltersChange: withPageReset(
@@ -1897,17 +1809,14 @@ export function useTMDataGrid<TData extends RowData>({
           }
         : {}),
       defaultColumn,
-      // The rows as shown - see `shown` above. The consumer's own array passes
-      // through untouched while nothing is committed.
       data: shown.rows,
       getRowId: shownGetRowId,
-      // Row details ride on `expanded`, the same state the tree uses - but a data
-      // row answers `getCanExpand()` false, since TanStack's fallback is
-      // `subRows.length > 0`, so under `renderDetails` every row can expand.
-      // A consumer's own predicate decides the data rows, never a group row:
-      // TanStack builds a group row on its first child's record, and since 9.2
-      // `toggleExpanded` refuses a row that cannot expand - so a predicate
-      // rejecting that record would leave the group's chevron dead.
+      // A data row answers `getCanExpand()` false, since TanStack's fallback is
+      // `subRows.length > 0`. A consumer's predicate decides the data rows,
+      // never a group row: TanStack builds a group row on its first child's
+      // record, and since 9.2 `toggleExpanded` refuses a row that cannot
+      // expand, so a predicate rejecting that record would leave the group's
+      // chevron dead.
       ...(renderDetails !== undefined || options.getRowCanExpand !== undefined
         ? {
             getRowCanExpand: (row: Row<TMDataGridFeatures, TData>) =>
@@ -1924,11 +1833,9 @@ export function useTMDataGrid<TData extends RowData>({
         (typeof options.enableRowPinning === "function"
           ? options.enableRowPinning(row)
           : options.enableRowPinning === true),
-      // A deletion-marked row is not selectable: it is on its way out, and a
-      // bulk action over the selection must not see it. TanStack reads the
-      // predicate on every call, so the mark is checked live against the
-      // engine. Only under `editing.draft`, the one place marks exist; the
-      // consumer's own option keeps the final say, predicate form included.
+      // TanStack reads the predicate on every call, so the mark is checked live
+      // against the engine. A marked row is not selectable: a bulk action over
+      // the selection must not see it.
       ...(editDraft
         ? {
             enableRowSelection: (row: Row<TMDataGridFeatures, TData>) =>
@@ -1940,7 +1847,6 @@ export function useTMDataGrid<TData extends RowData>({
         : {}),
       features: tmDataGridFeatures,
       columns: columns as TableOptions<TMDataGridFeatures, TData>["columns"],
-      // The stabilized controlled state; `undefined` when nothing is controlled.
       state: controlledState,
       initialState: {
         ...options.initialState,
@@ -1952,8 +1858,6 @@ export function useTMDataGrid<TData extends RowData>({
             ...startingViewState.columnVisibility,
             ...persistedState.columnVisibility,
           }),
-          // Last word, because the tree column's visibility is not a user setting
-          // - it tracks the grouping state. See the effect below.
           ...(groupColumnEnabled
             ? { [GROUP_COLUMN_ID]: initialGrouping.length > 0 }
             : {}),
@@ -1977,29 +1881,22 @@ export function useTMDataGrid<TData extends RowData>({
     selectSettledState,
   );
   endControlledStateSync();
-  tableRef.current = table as unknown as TMDataGridTable<TData>;
+  tableRef.current = table;
   deferControlledStateSyncPublishes(table.store);
 
-  // The engine's view of this render - see the engine's creation above.
   editContextRef.current = {
-    table: table as unknown as TMDataGridTable<TMDataGridRowData>,
+    table,
     editMode: editMode ?? "cell",
     draft: editDraft,
     rowValidators: editing?.rowValidators,
-    tableValidators:
-      editing?.tableValidators as TMDataGridEditEngineContext["tableValidators"],
+    tableValidators: editing?.tableValidators,
     editableColumnIds: editing?.columns,
-    isRowEditable:
-      editing?.isRowEditable as TMDataGridEditEngineContext["isRowEditable"],
-    onEditCommit:
-      editing?.onCommit as TMDataGridEditEngineContext["onEditCommit"],
-    onSaveDrafts:
-      editing?.onSaveDrafts as TMDataGridEditEngineContext["onSaveDrafts"],
-    newRowDefaults:
-      editing?.newRowDefaults as TMDataGridEditEngineContext["newRowDefaults"],
-    onRowAdd: editing?.onRowAdd as TMDataGridEditEngineContext["onRowAdd"],
-    onRowDelete:
-      editing?.onRowDelete as TMDataGridEditEngineContext["onRowDelete"],
+    isRowEditable: editing?.isRowEditable,
+    onEditCommit: editing?.onCommit,
+    onSaveDrafts: editing?.onSaveDrafts,
+    newRowDefaults: editing?.newRowDefaults,
+    onRowAdd: editing?.onRowAdd,
+    onRowDelete: editing?.onRowDelete,
   };
 
   // Switching either axis mid-flight drops every draft: the policies disagree
@@ -2015,13 +1912,10 @@ export function useTMDataGrid<TData extends RowData>({
     edit.cancelAll();
   }, [editMode, editDraft, edit]);
 
-  // A refetch that drops a record takes the engine's state for it along -
-  // see forgetMissingRows. Not where the grid does not own the result set:
-  // there a row missing from `data` is on another page or filtered away
-  // server-side, not gone, and its draft has to wait for Save. Keyed on the
-  // rows as shown, which is what the core row model is built from.
-  // Through the ref, not `table`: `useTable` hands out a fresh copy of the
-  // table every render, and listing it would run this on every one.
+  // Not where the grid does not own the result set: there a row missing from
+  // `data` is on another page, and its draft has to wait for Save. Through the
+  // ref, not `table`: `useTable` hands out a fresh copy of the table every
+  // render, and listing it would run this on every one.
   const editingOn = editing !== undefined;
   const serverSideRows =
     options.manualPagination === true || options.manualFiltering === true;
@@ -2030,24 +1924,16 @@ export function useTMDataGrid<TData extends RowData>({
     engine.forgetMissingRows(tableRef.current.getCoreRowModel().rowsById);
   }, [shown.rows, editingOn, serverSideRows, engine]);
 
-  // Readers that hold the table and nothing else - `exportGrid` - still
-  // leave a deletion-marked row out. Keyed on
-  // the store, which every copy of the table shares, so once is enough.
   useEffect(
     () => registerDeletedRows(tableRef.current, engine.isRowDeleted),
     [engine],
   );
 
-  // The same arrangement for `mapExportData`, so `exportGrid` runs it too.
-  // Re-registered when its identity changes, which an inline arrow does every
-  // render - a map write, nothing more.
   useEffect(() => {
     if (!mapExportData) return;
     return registerExportDataMapper(tableRef.current, mapExportData);
   }, [mapExportData]);
 
-  // Editing without stable ids points every draft at whatever record slides
-  // into that index after a sort. Loud, once, in development.
   useEffect(() => {
     if (editing !== undefined && options.getRowId === undefined) {
       console.error(
@@ -2058,9 +1944,6 @@ export function useTMDataGrid<TData extends RowData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A frozen sort holds rows by id, and the index fallback hands a held place
-  // to whatever record a refetch puts at that index. Checked whenever the
-  // mode turns frozen, since the mode can be switched at run time.
   const frozenWithoutRowId =
     options.sortMode === "frozen" && options.getRowId === undefined;
   useEffect(() => {
@@ -2071,10 +1954,6 @@ export function useTMDataGrid<TData extends RowData>({
     }
   }, [frozenWithoutRowId]);
 
-  // A controlled slice without its `onXChange` cannot change: TanStack routes
-  // every write through the callback, and the next options sync restores the
-  // consumer's value. Warned once in development; `initialState` is the option
-  // for a starting value.
   useEffect(() => {
     for (const { slice, handler } of findFrozenStateSlices(options)) {
       console.warn(
@@ -2085,9 +1964,6 @@ export function useTMDataGrid<TData extends RowData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A slice listed under both `dataKey` and `urlKey` is handled by `urlKey`
-  // alone - see resolveKeys in persistence.ts. Reported once, because the
-  // consumer most likely expects the stored copy to still apply.
   useEffect(() => {
     for (const slice of findOverlappingSlices(persist)) {
       console.error(
@@ -2098,16 +1974,11 @@ export function useTMDataGrid<TData extends RowData>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The tree column appears with the first grouped column and goes away with
-  // the last, so an ungrouped grid looks exactly as it did before grouping
-  // existed. Driven from a subscription rather than by rebuilding the column
-  // array, because the array is what the table is built from - deriving it from
-  // table state would close the loop. Visibility is the one column property
-  // that can be changed after the fact without touching the definitions.
-  //
-  // Writing back into the store from its own subscriber is safe: the guard is
-  // on `grouping`'s identity, and the write does not touch it, so the callback
-  // it triggers short-circuits.
+  // Driven from a subscription rather than by rebuilding the column array,
+  // because the table is built from that array, so deriving it from table state
+  // would close the loop. Writing back into the store from its own subscriber
+  // is safe: the guard is on `grouping`'s identity, and the write does not
+  // touch it.
   useEffect(() => {
     if (!groupColumnEnabled) return;
     let previousGrouping = table.store.state.grouping;
@@ -2138,8 +2009,6 @@ export function useTMDataGrid<TData extends RowData>({
     const subscription = table.store.subscribe((state) => {
       if (state.grouping === previousGrouping) return;
       previousGrouping = state.grouping;
-      // Keeps the entry injected into a controlled `columnVisibility` (see
-      // requestedState) in sync with grouping.
       groupingActiveRef.current = state.grouping.length > 0;
       // On a controlled slice the write below round-trips through the
       // consumer's handler; the next render must forward it unstabilized.
@@ -2155,19 +2024,11 @@ export function useTMDataGrid<TData extends RowData>({
     return () => subscription.unsubscribe();
   }, [groupColumnEnabled, table]);
 
-  // Mirror every state change back to storage. Subscribing (rather than writing
-  // from an effect on a state snapshot) means nothing is missed, including
-  // changes made straight through the table API by the consumer.
-  //
-  // Writes are debounced because a state change can arrive on every pointer
-  // move - a resize drag under `columnResizeMode: "onChange"`, a range
-  // selection - and `setItem` serialises synchronously on the main thread. The
-  // trailing edge is enough: storage only has to agree with the table once the
-  // user stops.
-  //
-  // The `urlKey` inputs are read through a ref: the excluded columns follow
-  // the column defs, and re-subscribing on a column change would write once
-  // more for nothing.
+  // Subscribing rather than writing from an effect means nothing is missed,
+  // including changes made straight through the table API. Writes are debounced
+  // because a change can arrive on every pointer move and `setItem` serialises
+  // synchronously on the main thread. The `urlKey` inputs are read through a
+  // ref: re-subscribing on a column change would write once more for nothing.
   const urlPersistInputsRef = useRef({
     baseline: persistBaseline,
     excludedFilterColumnIds: urlExcludedColumnIds,
@@ -2199,8 +2060,6 @@ export function useTMDataGrid<TData extends RowData>({
       pending = null;
     };
 
-    // Where the grid was when it subscribed, to tell an unmount by navigation
-    // from an in-page one - see the cleanup.
     const subscribedPathname =
       typeof window === "undefined" ? null : window.location.pathname;
 
@@ -2231,14 +2090,10 @@ export function useTMDataGrid<TData extends RowData>({
 
   const ui = useCreateStore<TMDataGridUiState, TMDataGridUiActions>(
     {
-      // `useCreateStore` builds the store once per mount, so `defaultOpen` is
-      // read the way `initialState` is - a starting point, not a controller.
       filterPanelOpen: filters.defaultOpen,
       filterPanelColumnId: null,
       headerFilterColumnId: null,
       draggedColumnId: null,
-      // `useCreateStore` builds the store once per mount, so this is a genuine
-      // default rather than a value that would fight later clicks.
       highlightedRowId: defaultHighlightedRowId ?? null,
       selectionAnchorRowId: null,
       focusedCell: null,
@@ -2285,9 +2140,6 @@ export function useTMDataGrid<TData extends RowData>({
         ),
       setCellRange: (range) =>
         setState((prev) =>
-          // Same guard as above, and it matters more here: a drag publishes a
-          // new corner on every mouse move, and most of those land on the cell
-          // the range already ends at.
           isSameCell(prev.cellRange?.anchor ?? null, range?.anchor ?? null) &&
           isSameCell(prev.cellRange?.focus ?? null, range?.focus ?? null)
             ? prev
@@ -2296,19 +2148,12 @@ export function useTMDataGrid<TData extends RowData>({
     }),
   );
 
-  // `onHighlightedRowChange` is fired from a subscription rather than from the store
-  // action, so it covers every route to a new active row - a row click, and a
-  // consumer calling `setHighlightedRow` itself. Held in a ref because the store is
-  // built once and its actions would otherwise close over the first render's
-  // callback.
   const onHighlightedRowChangeRef = useRef(onHighlightedRowChange);
   useEffect(() => {
     onHighlightedRowChangeRef.current = onHighlightedRowChange;
   }, [onHighlightedRowChange]);
 
   useEffect(() => {
-    // Seeded from the current value so mounting with a `defaultHighlightedRowId`
-    // does not report a change that nothing made.
     let previous = ui.state.highlightedRowId;
     const subscription = ui.subscribe((state) => {
       if (state.highlightedRowId === previous) return;
@@ -2318,8 +2163,6 @@ export function useTMDataGrid<TData extends RowData>({
     return () => subscription.unsubscribe();
   }, [ui]);
 
-  // Same shape for the focused cell, and for the same reason: arrow keys, a
-  // click and `setFocusedCell` all have to report through one place.
   const onFocusedCellChangeRef = useRef(onFocusedCellChange);
   useEffect(() => {
     onFocusedCellChangeRef.current = onFocusedCellChange;
@@ -2328,8 +2171,6 @@ export function useTMDataGrid<TData extends RowData>({
   useEffect(() => {
     let previous = ui.state.focusedCell;
     const subscription = ui.subscribe((state) => {
-      // Identity is enough: `setFocusedCell` keeps the previous object when the
-      // cell has not changed, so a new one always means a new cell.
       if (state.focusedCell === previous) return;
       previous = state.focusedCell;
       onFocusedCellChangeRef.current?.(state.focusedCell);
@@ -2337,10 +2178,6 @@ export function useTMDataGrid<TData extends RowData>({
     return () => subscription.unsubscribe();
   }, [ui]);
 
-  // The same recipe the mount uses for `initialState`, minus the persisted
-  // layer - see the api's JSDoc for why TanStack's own resets cannot do this.
-  // Ref-and-stable-wrapper, like the edit engine's context: the recipe reads
-  // this render's flags, the callback identity never changes.
   const resetSettingsRef = useRef<() => void>(() => {});
   resetSettingsRef.current = () => {
     const initial = options.initialState;
@@ -2348,7 +2185,6 @@ export function useTMDataGrid<TData extends RowData>({
     table.setGrouping(grouping);
     table.setColumnVisibility({
       ...withoutControlColumnVisibility({ ...initial?.columnVisibility }),
-      // The tree lane's visibility tracks the grouping, never the user.
       ...(groupColumnEnabled ? { [GROUP_COLUMN_ID]: grouping.length > 0 } : {}),
     });
     table.setColumnSizing({ ...initial?.columnSizing });
@@ -2357,10 +2193,6 @@ export function useTMDataGrid<TData extends RowData>({
   };
   const resetSettings = useCallback(() => resetSettingsRef.current(), []);
 
-  // A view's slices laid onto the table: realigned against the columns that
-  // exist now, the control lanes kept out of the visibility map and pinned
-  // back on, the tree lane following the grouping - the same rules the mount
-  // and `resetSettings` follow. A slice the view does not hold is left alone.
   const applyViewState = (state: TMDataGridViewState) => {
     const view = realignToColumns(
       state,
@@ -2392,22 +2224,16 @@ export function useTMDataGrid<TData extends RowData>({
     columnIds: collectLeafColumnIds(columns),
   });
 
-  // Filled in by `TMDataGrid.Table` on every render, because only the body
-  // holds the virtualizer and the current view. Returns `false` until one is
-  // mounted, since there is nothing to scroll before then.
   const scrollerRef = useRef<TMDataGridScroller>(() => false);
   const scrollToRow = useCallback(
     (args: TMDataGridScrollToRowArgs) => scrollerRef.current(args),
     [],
   );
 
-  // The held order is not state TanStack knows about, so taking it again
-  // has to re-render the grid itself: bump the epoch the row model compares
-  // against, then render, and the next read of the sorted rows re-sorts.
-  //
-  // After any commit that is running: pressing the header's button blurs an
-  // open cell editor, which starts its commit, and a re-sort taken before
-  // that edit lands would be out of date again the moment it did.
+  // The held order is not state TanStack knows about, so taking it again has to
+  // re-render the grid itself. After any commit that is running: pressing the
+  // header's button blurs an open cell editor, which starts its commit, and a
+  // re-sort taken before that edit lands would be out of date again.
   const [, renderSortAgain] = useReducer((count: number) => count + 1, 0);
   const sortAgain = useCallback(() => {
     const run = () => {
@@ -2418,11 +2244,8 @@ export function useTMDataGrid<TData extends RowData>({
     if (settled === null) run();
     else void settled.then(run);
   }, [engine]);
-  // Derived on every render rather than subscribed to: everything that can
-  // make the held order stale - `data`, the draft store, the table state,
-  // `sortAgain` - already re-renders this hook. Not gated on
-  // `features.frozenSort`: the call also lets go of a hold that stopped
-  // applying.
+  // Not gated on `features.frozenSort`: the call also lets go of a hold that
+  // stopped applying.
   const sortStale = isFrozenSortStale(table);
 
   return {
@@ -2478,10 +2301,6 @@ export function openColumnFilter<TData extends RowData>(
 ): void {
   seedColumnFilter(api, columnId);
   if (api.filters.inHeader) {
-    // The header control is always visible, so there is nothing to open -
-    // only a column to point at. The header row watching this focuses it and
-    // scrolls it into view. The panel, if one is also showing, is left alone:
-    // it reads the other slot.
     api.ui.actions.focusHeaderFilter(columnId);
     return;
   }

@@ -19,7 +19,6 @@
   padding: 4px 6px 6px;
 }
 
-/* The selected view and its icon actions, on one row. */
 .selectedRow {
   display: flex;
   align-items: center;
@@ -35,7 +34,6 @@
   white-space: nowrap;
 }
 
-/* The Views item of the column menu: the selected name, the dot, the chevron. */
 .subValue {
   display: inline-flex;
   align-items: center;
@@ -68,7 +66,6 @@
 
 .panelViewsRow {
   display: flex;
-  /* The picker carries its label above it; the buttons line up with its input. */
   align-items: flex-end;
   gap: var(--mantine-spacing-xs);
 }

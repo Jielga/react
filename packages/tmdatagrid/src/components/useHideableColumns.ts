@@ -16,12 +16,6 @@ export function useHideableColumns() {
     (state) => state.columnVisibility,
   );
 
-  // Only what can actually be hidden. A column with `enableHiding: false` is
-  // left out rather than listed and disabled: a box that cannot be ticked only
-  // invites the question, and every generated lane is one - the checkbox and
-  // edit lanes hold the controls the grid needs, the tree column follows the
-  // grouping state, the row-number gutter follows `enableRowNumbers`. None of
-  // them is a setting.
   const columns = table
     .getAllLeafColumns()
     .filter((column) => column.getCanHide());

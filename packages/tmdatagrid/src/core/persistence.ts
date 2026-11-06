@@ -30,9 +30,6 @@ export const DATA_STATE_SLICES = [
   "globalFilter",
   "sorting",
   "pagination",
-  // Which groups are open. Keyed by group ids built from the values themselves
-  // (`department:Design`), so a restored entry for a group the data no longer
-  // produces is simply never looked up.
   "expanded",
 ] as const satisfies ReadonlyArray<keyof GridState>;
 
@@ -45,9 +42,6 @@ export const SETTINGS_STATE_SLICES = [
   "columnSizing",
   "columnOrder",
   "columnPinning",
-  // Which columns the rows are grouped by. A settings slice rather than a data
-  // one: it names columns, not values, so it survives the data changing under
-  // it the way the column layout does.
   "grouping",
 ] as const satisfies ReadonlyArray<keyof GridState>;
 
@@ -122,7 +116,6 @@ function resolveKey<TSlice extends string>(
 
   const [key, slices] = entry;
   if (!key) return null;
-  // An empty list means nothing was selected, which is not the same as "all".
   return { key, slices: slices as ReadonlyArray<keyof GridState> };
 }
 
@@ -164,7 +157,6 @@ function paramEntryKey(entry: string): string {
   try {
     return decodeURIComponent(raw);
   } catch {
-    // A malformed escape cannot be the grid's own key, which it encoded.
     return raw;
   }
 }
@@ -174,8 +166,6 @@ function resolveUrlStorage(
 ): TMDataGridUrlStorage | null {
   if (!persistence) return null;
   if (persistence.urlStorage) return persistence.urlStorage;
-  // Absent under SSR, like web storage. Access that throws is caught where the
-  // param is read or written.
   return typeof window === "undefined" ? null : defaultUrlStorage;
 }
 
@@ -249,8 +239,6 @@ const SLICE_GUARDS: Record<
   (value: unknown) => boolean
 > = {
   columnFilters: (value) => isArrayOf(value, hasStringId),
-  // TanStack leaves the global filter value untyped - the grid's own default
-  // filters on a string, but a consumer may store anything here.
   globalFilter: () => true,
   sorting: (value) =>
     isArrayOf(
@@ -345,8 +333,6 @@ function readSlices({
       return {};
     }
     const restored: Record<string, unknown> = {};
-    // Only copy the selected slices. A payload written before the selection was
-    // narrowed cannot reintroduce slices the caller has since opted out of.
     for (const slice of resolved.slices) {
       if (!(slice in record)) continue;
       // A `null` slice stands for `undefined` - see the writers. An own key
@@ -417,8 +403,6 @@ function writeUrlSlices({
   if (!urlStorage || !resolved) return;
   const payload: Record<string, unknown> = {};
   for (const slice of resolved.slices) {
-    // Both sides reduced the same way, so a change to an opted-out column or
-    // to a filter that narrows nothing does not put the param in the URL.
     const value =
       slice === "columnFilters"
         ? linkableColumnFilters(state.columnFilters, excludedFilterColumnIds)
@@ -428,10 +412,8 @@ function writeUrlSlices({
         ? linkableColumnFilters(baseline.columnFilters, excludedFilterColumnIds)
         : baseline[slice];
     if (sameStateValue(value, initial)) continue;
-    // `null` for a slice the user cleared to `undefined` - the global filter
-    // over an `initialState.globalFilter`. JSON drops an `undefined` key, and
-    // a missing slice means the initial state, so the link would reopen on
-    // the very value the user cleared. readSlices turns it back.
+    // `null` for a slice cleared to `undefined`, as in the storage writer
+    // above.
     payload[slice] = value === undefined ? null : value;
   }
   try {
@@ -474,8 +456,6 @@ function resolveKeys(persistence: TMDataGridPersistence | undefined) {
   const data = resolveKey(persistence?.dataKey, DATA_STATE_SLICES);
   return {
     url,
-    // A slice lives in one group. The URL takes what both keys list, so a
-    // stored copy can never override the link that was opened.
     data:
       data !== null && url !== null
         ? {
@@ -667,9 +647,6 @@ export function readPersistedState(
     versioned: false,
   });
   if (fromUrl.columnFilters) {
-    // The link never speaks for an opted-out column - the write leaves those
-    // out of both sides - so such a column keeps its initial filter, which
-    // the restored slice would otherwise replace along with the rest.
     const excluded = new Set(excludedFilterColumnIds);
     fromUrl.columnFilters = [
       ...(baseline.columnFilters ?? []).filter((filter) =>

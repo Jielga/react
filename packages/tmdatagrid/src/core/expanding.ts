@@ -20,7 +20,6 @@ function isTarget<TData extends RowData>(
   row: Row<TMDataGridFeatures, TData>,
   target: TMDataGridExpandTarget,
 ): boolean {
-  // A record a consumer's `getRowCanExpand` turns down has no panel to open.
   return target === "groups"
     ? row.getIsGrouped()
     : !row.getIsGrouped() && row.getCanExpand();

@@ -62,21 +62,17 @@ function PaginationPageSize({
   useSettledTableState(table.store);
   const paging = isPagingActive(table, features);
   const { pageSize } = table.store.state.pagination;
-  // A page size restored from storage, or set through `initialState`, need not
-  // be one of the offered sizes. Without it in the list the Select renders
-  // blank, so the current size is folded in rather than shown as nothing.
+  // A page size from storage or `initialState` need not be one of the offered
+  // sizes, and the Select renders blank without it in the list.
   const sizeOptions = pageSizeOptions.includes(pageSize)
     ? pageSizeOptions
     : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
 
   return (
     <Group gap="xs" wrap="nowrap">
-      {/* `span`, here and in every other label the grid renders: Mantine's
-          Text is a `<p>` by default, and a grid dropped into prose - a docs
-          page, a CMS body, Mantine's own Typography - picks up that context's
-          `p` margins. A bottom margin on a flex item shifts its border box up
-          off centre, which is how the pager came to sit a half-line below its
-          own label. Chrome labels are not prose. */}
+      {/* `span`, here and in every other label the grid renders: Mantine's Text
+          is a `<p>` by default, and a grid inside prose picks up that context's
+          `p` margins, which push a flex item off centre. */}
       <Text span size={controlSize} c="dimmed">
         {labels.rowsPerPage}
       </Text>
@@ -111,9 +107,8 @@ function PaginationRange() {
     <Text span size={controlSize} c="dimmed" data-dg-part="page-range">
       {paging
         ? labels.pageRange({ from, to, total })
-        : // Not a range: nothing is being sliced, so a range would be a lie.
-          // Counted before grouping too - `getRowCount()` would be counting
-          // the tree, so a collapsed grid would claim to hold eight rows.
+        : // `getRowCount()` would count the tree, so a collapsed grid would
+          // claim to hold eight rows.
           labels.groupedAllRows(table.getFilteredRowModel().rows.length)}
     </Text>
   );
@@ -132,9 +127,7 @@ function PaginationPageNumber() {
             page: pageIndex + 1,
             pageCount: table.getPageCount(),
           })
-        : // Same reasoning as the range label: nothing is being sliced, so a
-          // page number would be a lie.
-          labels.groupedAllRows(table.getFilteredRowModel().rows.length)}
+        : labels.groupedAllRows(table.getFilteredRowModel().rows.length)}
     </Text>
   );
 }
@@ -227,9 +220,6 @@ export function TMDataGridFooter({
 
   if (!getGridCapabilities(table, features).canPaginate) return null;
 
-  // Grouping suspends paging - see isPagingActive. The pager is greyed out
-  // rather than dropped, so that a footer going quiet reads as a state the grid
-  // is in rather than as something that broke.
   const paging = isPagingActive(table, features);
 
   if (renderPagination) {
@@ -256,8 +246,6 @@ export function TMDataGridFooter({
         data-paging-suspended={!paging || undefined}
         {...others}
       >
-        {/* The default render is the controls in order - which is what makes
-            `renderPagination` a rearrangement rather than a rebuild. */}
         <Controls.PageSize />
         <Controls.Range />
         <Controls.Pager />

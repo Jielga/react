@@ -154,8 +154,6 @@ export function formatExportValue(
   }
   if (typeof value === "string") return value;
   if (typeof value === "boolean") return value ? "true" : "false";
-  // A multiSelect cell holds an array of values; a spreadsheet cell holds one
-  // string, so the elements are joined the way they read on screen.
   if (Array.isArray(value)) {
     return value
       .map((entry) => formatExportValue(entry, { decimalComma }))
@@ -166,8 +164,6 @@ export function formatExportValue(
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? "" : value.toLocaleString("sv-SE");
   }
-  // An object in a cell is a shape the grid cannot know. JSON at least keeps
-  // what was there, where `String(value)` would write "[object Object]".
   if (typeof value === "object") {
     try {
       return JSON.stringify(value);
@@ -434,8 +430,6 @@ function allLeafColumns(table: ErasedTable): Array<ErasedColumn> {
     .getAllFlatColumns()
     .filter((column) => column.columns.length === 0 && !seen.has(column.id));
   if (missing.length === 0) return ordered;
-  // A removed grouped column goes first, where the tree lane showing its
-  // value sits. Anything else the lanes left out goes last.
   const grouping = table.store.state.grouping;
   const grouped = grouping.flatMap((id) =>
     missing.filter((column) => column.id === id),
@@ -504,8 +498,6 @@ function leafRows(table: ErasedTable): Array<ErasedRow> {
   const walk = (list: ReadonlyArray<ErasedRow>) => {
     for (const row of list) {
       if (row.getIsGrouped()) walk(row.subRows);
-      // A row marked for deletion under `editing.draft` is left out: the
-      // export is the data as the user means it, and they deleted that row.
       else if (!isRowMarkedDeleted(table, row.id)) rows.push(row);
     }
   };
@@ -576,11 +568,7 @@ export function buildExportData<TData extends RowData>({
   columns: which = "visible",
   bounds,
 }: BuildExportDataArgs<TData>): TMDataGridExportData {
-  // The same erasure the context provider performs: this only ever reads
-  // generic row and column APIs.
   const erased = table as unknown as ErasedTable;
-  // The bounds index into every visible column, lanes included, so under
-  // them the slice comes before the filter.
   const columns = bounds
     ? [
         ...erased.getStartVisibleLeafColumns(),
@@ -662,10 +650,10 @@ export async function exportGrid<TData extends RowData>({
   await writeExportFile(mapped, resolved);
 }
 
-// Keyed on the store for the same reason as the deletion marks: every copy of
-// the table `useTable` hands out shares it. Registered rather than read from
-// context so that `exportGrid`, which holds the table and nothing else, runs
-// the same mapper as the grid's own exports.
+// Registered rather than read from context so that `exportGrid`, which holds
+// only the table, runs the same mapper. Keyed on the store for the same reason
+// as the deletion marks: every copy of the table `useTable` hands out shares
+// it.
 const exportDataMappers = new WeakMap<object, TMDataGridExportDataMapper>();
 
 /**

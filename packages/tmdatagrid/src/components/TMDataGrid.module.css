@@ -1,8 +1,3 @@
-/* The grid root: the size scale every other module reads, and the frame.
-   Each component owns its own module; these variables cascade into all of
-   them, and the pinned-column boundary shared by header and body cells lives
-   in sticky.module.css. */
-
 /* Size scale. Row heights mirror SIZE_ROW_HEIGHT in core/sizes.ts - the
    virtualizer needs the number in JS, so the two have to agree. */
 .root[data-size="xs"] {
@@ -46,7 +41,6 @@
      <TMDataGrid style={{ "--dg-radius": 0 }} />
      The root clips its overflow, so the header and the last row follow it. */
   --dg-radius: var(--mantine-radius-md);
-  /* Fallbacks, so the parts still work if rendered outside a sized root. */
   --dg-row-height: 52px;
   --dg-header-height: 44px;
   --dg-font-size: var(--mantine-font-size-sm);

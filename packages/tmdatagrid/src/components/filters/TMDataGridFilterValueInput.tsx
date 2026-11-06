@@ -31,13 +31,10 @@ export function TMDataGridFilterValueInput(args: TMDataGridFilterControlArgs) {
     type === "number" ? "number" : type === "date" ? "date" : "text";
   const inHeader = layout === "header";
   const fills = layout !== "row";
-  // Portalled everywhere: drawn inline, the dropdown is clipped - by the
-  // header cell, by the grid frame's `overflow: hidden` (its corner radius)
-  // under the popup, or by the sidebar's scroller. The popup's click-away
-  // exempts portal nodes, so picking an option does not read as a click away.
+  // Portalled everywhere: drawn inline, the dropdown is clipped by the header
+  // cell, by the grid frame's `overflow: hidden` or by the sidebar's scroller.
+  // The popup's click-away exempts portal nodes.
   const comboboxProps = { withinPortal: true };
-  // No placeholder in a header cell: the column name is directly above the
-  // field, and "Filter value" only ever fits a wide column anyway.
   const placeholder =
     needsValue && !inHeader ? labels.filterValuePlaceholder : "";
 
@@ -46,8 +43,6 @@ export function TMDataGridFilterValueInput(args: TMDataGridFilterControlArgs) {
       ? [String(value[0] ?? ""), String(value[1] ?? "")]
       : ["", ""];
     return (
-      // The interval's two ends. Either may stay empty (an open end), and
-      // each writes its slot of the `[min, max]` pair.
       <Group
         gap={4}
         wrap="nowrap"
@@ -91,9 +86,6 @@ export function TMDataGridFilterValueInput(args: TMDataGridFilterControlArgs) {
   }
 
   if (operatorTakesArrayValue(operator)) {
-    // The set the cell is tested against. Options come from `meta.options`;
-    // a select column that declares none still gets the values present in
-    // the data, via the faceted index.
     return (
       <MultiSelect
         {...filterFieldProps(args, { label: labels.filterValue, width: 180 })}

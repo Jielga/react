@@ -29,26 +29,17 @@ export function DetailsCell<TData extends RowData>({
   const tabIndex = useBodyControlTabIndex();
   const expanded = useSelector(row.table.store, () => row.getIsExpanded());
 
-  // Group rows open into their children, not into a panel - see the body's
-  // `showsDetails`. Their cells are aggregated, so this lane is already blank
-  // on them; the guard is what makes that a decision rather than a side effect.
   if (row.getIsGrouped()) return null;
-  // A record the consumer's `getRowCanExpand` turns down has no panel, and
-  // TanStack refuses to expand it - a chevron here would do nothing.
   if (!row.getCanExpand()) return null;
 
   return (
     <UnstyledButton
       className={classes.detailsToggle}
-      // See useBodyControlTabIndex: under cell selection, reached by stepping
-      // into the cell or by the Tab walk within the row, not by the page.
       tabIndex={tabIndex}
       aria-expanded={expanded}
       aria-label={expanded ? labels.hideDetails : labels.showDetails}
       data-dg-part="details-toggle"
       data-row-id={row.id}
-      // The row underneath may select or highlight on click; opening a panel is
-      // its own gesture and must not also trigger those.
       onClick={(event) => {
         event.stopPropagation();
         row.toggleExpanded();
@@ -76,8 +67,6 @@ export function DetailsHeader<TData extends RowData>({
   table: TMDataGridTable<TData>;
 }) {
   const { labels } = useTMDataGridContext();
-  // Pre-paginated: expand-all means every row the filters left, not the page
-  // that happens to be on screen. Same model `getCanSomeRowsExpand` reads.
   const detailRows = () => table.getPrePaginatedRowModel().flatRows;
 
   const allExpanded = useSelector(table.store, (state) =>
@@ -96,8 +85,6 @@ export function DetailsHeader<TData extends RowData>({
         allExpanded ? labels.collapseAllDetails : labels.expandAllDetails
       }
       data-dg-part="details-toggle-all"
-      // Partly expanded opens the rest rather than closing what is already
-      // open - the same reading as an indeterminate select-all box.
       onClick={() =>
         table.setExpanded(
           resolveExpandAll({

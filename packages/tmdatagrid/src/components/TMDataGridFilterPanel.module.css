@@ -1,24 +1,15 @@
-/* A plain block of controls. Nothing here positions it - the popup and the
-   sidebar own their own placement, and a consumer placing the panel by hand
-   places it the way any other block. */
 .filterPanel {
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-xs);
 }
 
-/* Column, operator and value side by side, bottom-aligned so their fields line
-   up under labels of differing heights. */
 .filterRow {
   display: flex;
   align-items: flex-end;
   gap: var(--mantine-spacing-xs);
 }
 
-/* The narrow-host layout: the same three fields one under the other, each
-   filling the width, with the ✕ beside the column it removes. A card rather
-   than a bare stack, because without the side-by-side alignment there is
-   nothing else saying where one filter ends and the next begins. */
 .filterRow[data-layout="stacked"] {
   display: grid;
   grid-template-columns: 1fr auto;

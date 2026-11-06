@@ -206,7 +206,7 @@ Changesets, and a change under a `packages/*/src/` needs one - the pre-commit ho
 A comment, a test or a refactor with no observable effect is the case for `git commit --no-verify`.
 
 Keep a changeset short: what changed, in a line or a short list.
-Reasoning belongs in the code comments; the only thing worth spelling out is a workaround a consumer has to know about.
+Leave the reasoning out; the only thing worth spelling out is a workaround a consumer has to know about.
 
 Each package's `CHANGELOG.md` and the `library_version` in each `SKILL.md` are generated; `bun run version-packages` writes both.
 Never edit them by hand.
@@ -250,3 +250,13 @@ Before editing files for a substantial task:
 - If a listed skill matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` before changing files.
 - Use the loaded `SKILL.md` guidance while making the change.
 - Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
+
+## Code Style
+
+**Comments Guidelines:**
+- **Do not include inline comments** that describe logic or implementation details unless explicitly requested
+- **Always preserve documentation comments** on interfaces, types, and function parameters (JSDoc-style comments with `/** */`)
+- The codebase prefers clean, self-documenting code for implementation
+- Type definitions and public APIs should maintain their documentation comments
+- Keep an inline comment only for what the code cannot show: a browser or library workaround, an external constraint, or a trap that the obvious simplification would fall into
+- CSS follows the same rule, and a comment that documents a public `--dg-*` variable stays
