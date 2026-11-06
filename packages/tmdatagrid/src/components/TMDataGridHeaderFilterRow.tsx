@@ -84,8 +84,6 @@ function HeaderFilterControl({
   }
 
   function changeOperator(next: TMDataGridFilterOperator) {
-    // Same arity rule as the panel: keep the value across operators of the
-    // same shape, reset it across any shape boundary.
     write({
       operator: next,
       value:
@@ -95,10 +93,10 @@ function HeaderFilterControl({
     });
   }
 
-  // Memoized because this row re-renders with the table - on every scroll
-  // frame, for every column - while resolving faceted options walks the
-  // faceted map into a sorted set. TanStack swaps that map's identity whenever
-  // the values behind it change, so it is exactly the right key.
+  // Memoized because this row re-renders on every scroll frame, and resolving
+  // faceted options walks the faceted map into a sorted set. TanStack swaps
+  // that map's identity when the values behind it change, so it is the right
+  // key.
   const facetKey = filterOptionsUseFacets(column)
     ? column.getFacetedUniqueValues()
     : undefined;
@@ -183,8 +181,6 @@ function OperatorMenu({
           <ActionIcon
             className={classes.headerFilterOperator}
             variant="subtle"
-            // Tinted while the column is on anything but its default operator -
-            // the one part of the filter the value cannot show.
             color={isDefault ? "gray" : undefined}
             size="sm"
             aria-label={labels.filterOperatorFor(columnLabel)}
@@ -237,9 +233,6 @@ export function TMDataGridHeaderFilterRow({
   const focusColumnId = useSelector(ui, (state) => state.headerFilterColumnId);
   const rowRef = useRef<HTMLDivElement>(null);
 
-  // `openColumnFilter` under header filters means "put me in that column's
-  // control" - there is no panel to open. The column may be scrolled out
-  // sideways, so it is brought into view first.
   useEffect(() => {
     if (focusColumnId === null) return;
     const cell = rowRef.current?.querySelector<HTMLElement>(
@@ -259,13 +252,9 @@ export function TMDataGridHeaderFilterRow({
       ref={rowRef}
       role="row"
       aria-rowindex={ariaRowIndex}
-      // Counted by the same measurement the group rows are: it is part of what
-      // the body scrolls under.
       data-dg-header-row
       data-dg-header-filter-row
       data-dg-part="header-filter-row"
-      // The header/body boundary is this row once it exists, so it wears the
-      // scrolled-under shadow the last group row wears otherwise.
       className={`${classes.headerFilterRow} ${sticky.headerBoundary}`}
     >
       {leafHeaders.map((header) => {
@@ -275,8 +264,6 @@ export function TMDataGridHeaderFilterRow({
           <div
             key={header.id}
             role="columnheader"
-            // Named only where there is a filter: a generated lane or a column
-            // that does not filter holds no control to name.
             aria-label={
               column.getCanFilter()
                 ? labels.filterOn(getColumnLabel(column))

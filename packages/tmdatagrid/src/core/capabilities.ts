@@ -193,15 +193,9 @@ export function readFeatureFlags<TData extends RowData>(
   >,
 ): TMDataGridFeatureFlags {
   const selectionMode = options.selectionMode ?? "checkbox";
-  // Editing brings the cell cursor with it: Enter, F2 and type-to-edit all
-  // address "the focused cell", which only exists under cell selection. An
-  // explicit `cellSelection` still wins, `"range"` included.
   const cellSelectionMode =
     options.cellSelection ??
     (options.editing !== undefined ? "single" : "none");
-  // `"highlight"` is the master-detail mode: no selection to speak of, so the
-  // checkbox column and the click-to-select behaviour both fall away. Otherwise
-  // `enableRowSelection` still has the final say, including its predicate form.
   const rowSelection =
     selectionMode !== "highlight" && options.enableRowSelection !== false;
 
@@ -222,8 +216,6 @@ export function readFeatureFlags<TData extends RowData>(
         selectionMode === "checkboxAndHighlight"),
     rowClickSelects: rowSelection && selectionMode === "row",
     multiRowSelection: options.enableMultiRowSelection !== false,
-    // In "row" mode the highlight *is* the feedback for a click, so it is on.
-    // With checkboxes the box already says it, so it is off unless asked for.
     showSelectedBackground:
       options.showSelectedBackground ?? selectionMode === "row",
     highlightRow:
@@ -241,7 +233,6 @@ export function readFeatureFlags<TData extends RowData>(
     editNewRowsSticky:
       options.editing?.draft === true && options.editing.newRowsSticky === true,
     rowNumbers: options.enableRowNumbers === true,
-    // A predicate counts as on - some rows may still pin.
     rowPinning:
       options.enableRowPinning === true ||
       typeof options.enableRowPinning === "function",
@@ -282,7 +273,6 @@ export function getColumnCapabilities(
     canHide: features.hiding && column.getCanHide(),
     canPin: features.pinning && column.getCanPin(),
     canResize: features.resizing && column.getCanResize(),
-    // Ordering has no TanStack capability method - see isColumnReorderable.
     canReorder: features.ordering && isColumnReorderable(column),
     // `getCanGroup()` also insists on an accessor, which is what keeps the
     // generated checkbox and tree columns from offering to group on themselves.

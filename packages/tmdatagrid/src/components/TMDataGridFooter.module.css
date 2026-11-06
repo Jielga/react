@@ -9,10 +9,6 @@
   border-top: 1px solid var(--mantine-color-default-border);
 }
 
-/* Grouping suspends paging. The pager stays put and fades rather than
-   disappearing, so the footer reads as switched off rather than as having
-   vanished - and the row it holds does not change height under the grid. Its
-   controls carry their own `disabled`; this is the label half. */
 .footer[data-paging-suspended="true"] {
   opacity: 0.55;
 }

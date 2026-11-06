@@ -300,7 +300,7 @@ Both resolve `false` when the cell takes no edit - no such row or column, `editi
 | `meta.edit.mapValue`          | Column meta    | `({ value, previous, row, column }) => unknown`  | –                 | Maps each value an editor writes. See [Editors](/docs/editors#mapping-the-value-as-it-is-typed). |
 | `EDIT_COLUMN_ID`              | Export         | `"__edit__"`                                     | –                 | Id of the generated edit lane.                                                                   |
 | `clearedValueForType`         | Export         | `(type) => unknown`                              | –                 | What Delete writes for each column type.                                                         |
-| `TMDataGridEditState` · `TMDataGridEditRowProjection` | Types | – | – | The value of `edit.state` and `edit.store`, and one open row's entry in its `rows`. |
+| `TMDataGridEditState<TData>` · `TMDataGridEditRowProjection<TData>` | Types | – | – | The value of `edit.state` and `edit.store`, and one open row's entry in its `rows`. `TData` defaults to `TMDataGridRowData`. |
 | `TMDataGridEditRowSnapshot` | Type | `{ rowId, value, isNew, deleted }` | – | One row of `edit.getRows()`. |
 | `data-dirty`                  | Data attribute | –                                                | –                 | On a body row holding a dirty draft.                                                             |
 | `data-draft`                  | Data attribute | –                                                | –                 | On a body row or entry row committed into the draft store, waiting for a save.                   |

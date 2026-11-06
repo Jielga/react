@@ -109,8 +109,6 @@ export function boundsEdges(
   if (!isWithinBounds(bounds, rowIndex, columnIndex) || bounds === null) {
     return null;
   }
-  // A cell spanning columns up to `lastColumnIndex` is one box: the
-  // rectangle's right edge falling anywhere inside it is drawn on its side.
   return {
     top: rowIndex === bounds.top,
     bottom: rowIndex === bounds.bottom,

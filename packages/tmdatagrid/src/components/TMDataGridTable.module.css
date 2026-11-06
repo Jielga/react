@@ -1,4 +1,3 @@
-/* Anchors the filter popup, which floats over the first body rows. */
 .tableWrapper {
   position: relative;
   flex: 1;
@@ -7,9 +6,6 @@
   flex-direction: column;
 }
 
-/* The sidebar surface is a second column of the wrapper rather than a layer
-   over the rows, so the wrapper lays its children out side by side. The
-   sidebar's own module decides which side it lands on. */
 .tableWrapper[data-dg-filter-sidebar] {
   flex-direction: row;
 }
@@ -25,7 +21,6 @@
   container-type: inline-size;
 }
 
-/* Column tracks are set inline via gridTemplateColumns. */
 .grid {
   display: grid;
   /* The grid is the containing block every sticky row inside it is held by, so
@@ -37,10 +32,7 @@
   align-content: start;
 }
 
-/* The pair of focusable elements bracketing the body, which is how the body
-   stays one tab stop. Out of flow so neither claims a row track in the grid,
-   and zero-sized so neither can be seen or clicked; the outline is dropped
-   because focus only ever rests here for the instant of a Tab. */
+/* Out of flow so neither guard claims a row track in the grid. */
 .tabGuard {
   position: absolute;
   width: 0;
@@ -68,67 +60,47 @@
   align-items: stretch;
 }
 
-/* Every second row, under the Table's `striped` prop. Painted from the row's
-   own position (`data-striped`), never `:nth-child`: virtualization mounts a
-   moving window of rows, so document position says nothing about data
-   position. Declared before the hover rule, which is the stronger statement
-   and wins at equal specificity. */
+/* Painted from `data-striped`, never `:nth-child`: virtualization mounts a
+   moving window of rows, so document position says nothing about data position.
+   Declared before the hover rule, which wins at equal specificity. */
 .bodyRow[data-striped="true"] {
   --row-bg: var(--dg-row-striped-bg);
 }
 
-/* An entered row committed into the draft store, sorted in with the body.
-   The same tint the entry block gives it; declared before the hover and
-   selection rules, which win at equal specificity. */
+/* Declared before the hover and selection rules, which win at equal
+   specificity. */
 .bodyRow[data-new="true"] {
   --row-bg: var(--dg-row-new-bg, var(--mantine-color-body));
 }
 
-/* The hover tint, on the rows that carry `data-highlight-on-hover` - by default
-   the rows that answer a click or a right-click, see the Table's
-   `highlightOnHover`. `:where()` adds no specificity, so the rule stays at the
-   weight of the state rules around it: declared after the stripe and the entry
-   tint, which it wins, and before the selection and highlight rules, which win
-   over it. */
+/* `:where()` adds no specificity, so the rule stays at the weight of the state
+   rules around it: declared after the stripe and the entry tint, which it wins,
+   and before the selection and highlight rules, which win over it. */
 .bodyRow:where([data-highlight-on-hover="true"]):hover {
   --row-bg: var(--mantine-color-default-hover);
 }
 
-/* A group row takes no background of its own. Collapsed, every row on screen is
-   a group row, so a tint would grey out the whole grid and read as if
-   everything were selected. The bold label and the chevron carry the
-   distinction instead - and `--dg-row-group-bg` is there for a consumer who
-   wants the tint back. Declared before the selection rules, so a selected or
-   highlighted group still reads as one. */
+/* No background of its own: collapsed, every row on screen is a group row, so a
+   tint would grey out the whole grid. Declared before the selection rules, so a
+   selected or highlighted group still reads as one. */
 .bodyRow[data-grouped="true"] {
   --row-bg: var(--dg-row-group-bg);
 }
 
-/* The row an open context menu is about. The pointer has usually left it by
-   then, so without this the menu would be the only thing saying which row it
-   acts on. Declared before the selection rules, which are the stronger
-   statement and win at equal specificity. */
+/* Declared before the selection rules, which win at equal specificity. */
 .bodyRow[data-context-menu="true"] {
   --row-bg: var(--mantine-color-default-hover);
 }
 
-/* Being selected and being painted for it are separate: a row is always
-   `data-selected`, but only takes the background when `showSelectedBackground`
-   is on - the default under `"row"`, off with checkboxes. */
 .bodyRow[data-selected-bg="true"] {
   --row-bg: var(--dg-row-selected-bg);
 }
 
-/* The highlighted row wins over the selected background: under
-   `"checkboxAndHighlight"` the two coexist, and the highlighted row is the one
-   the detail panel is about, so it must stay distinguishable inside a
-   selection. Declared after, so the later rule takes it at equal specificity. */
+/* Declared after the selected rule, so it wins at equal specificity. */
 .bodyRow[data-highlighted="true"] {
   --row-bg: var(--dg-row-highlight-bg);
 }
 
-/* Row selection mode: the row is the control, so it takes focus and must not
-   start a text selection on the click that toggles it. */
 .bodyRow[data-selects-on-click="true"] {
   user-select: none;
 }
@@ -155,28 +127,19 @@
   font-size: var(--dg-font-size);
 }
 
-/* A control lane - the checkbox, the details chevron - is a fixed 36px track
-   holding a control of a known width, not text that can ellipsize. Cell padding
-   is sized for text and grows with the scale, so at `xl` its 18px a side left
-   12px for a 16px box and the checkbox was clipped. The lane centres its
-   control instead. */
+/* A control lane is a fixed 36px track, and cell padding grows with the scale:
+   at `xl` its 18px a side left 12px for a 16px box and the checkbox was
+   clipped. */
 .bodyCell[data-control-column="true"] {
   padding: 0;
 }
 
-/* A drag is laying down a range. Text selection would otherwise follow the
-   pointer across every cell it passes. */
 .grid[data-range-dragging] {
   user-select: none;
 }
 
-/* The selected block, under `cellSelection: "range"`.
-
-   A tint over the row's own background rather than instead of it, so a
-   selected cell on a highlighted row still reads as both. `color-mix` keeps
-   one declaration for light and dark: it thins the theme's primary colour into
-   whatever `--row-bg` the row resolved to. Painted as the cell's tint layer,
-   over the opaque base above, for the same reason `--row-bg` is. */
+/* A tint over the row's own background rather than instead of it, so a selected
+   cell on a highlighted row still reads as both. */
 .bodyCell[data-selected="true"] {
   --dg-range-tint: color-mix(
     in srgb,
@@ -186,15 +149,10 @@
   background-image: linear-gradient(var(--dg-range-tint), var(--dg-range-tint));
 }
 
-/* The outline around the block, drawn edge by edge: only the cells on a side
-   of the rectangle draw that side, so they add up to one border around the
-   whole thing however it is shaped. A single overlay box would have to be
-   positioned against a scrolling grid with sticky lanes in it.
-
-   Four shadows are always laid down and each is transparent until its edge
-   says otherwise. `box-shadow` does not accumulate across rules - a second
-   declaration replaces the first - so the alternative is one rule per corner
-   combination, and a cell can be on any of fifteen of them. */
+/* Drawn edge by edge, because a single overlay box would have to be positioned
+   against a scrolling grid with sticky lanes in it. `box-shadow` does not
+   accumulate across rules, so four shadows are always laid down and each is
+   transparent until its edge says otherwise. */
 .bodyCell[data-selected="true"] {
   --dg-edge-top: transparent;
   --dg-edge-bottom: transparent;
@@ -223,12 +181,9 @@
   --dg-edge-right: var(--mantine-primary-color-filled);
 }
 
-/* The cell the keyboard is on, under `cellSelection`.
-
-   Painted from `data-focused` rather than `:focus-visible`, because the ring
-   has to stay while the focus steps into a control inside the cell - that is
-   still where the arrow keys resume from. The offset keeps it inside the
-   cell's own box, so a pinned neighbour cannot clip it. */
+/* Painted from `data-focused` rather than `:focus-visible`: the ring has to
+   stay while the focus steps into a control inside the cell, which is where the
+   arrow keys resume from. */
 .bodyCell[data-focused="true"] {
   outline: 2px solid var(--mantine-primary-color-filled);
   outline-offset: -2px;
@@ -241,8 +196,6 @@
   text-overflow: ellipsis;
 }
 
-/* The editing cell hands its box to the editor: the text padding comes off so
-   the input can fill the track, and the input's own chrome takes over. */
 .bodyCell[data-editing] {
   padding: 0 calc(var(--dg-padding) / 2);
 }
@@ -255,8 +208,6 @@
   gap: 2px;
 }
 
-/* The editor's own box: the input fills it, and it is what the validation
-   tooltip is anchored to. */
 .cellEditorField {
   display: flex;
   align-items: center;
@@ -264,18 +215,14 @@
   min-width: 0;
 }
 
-/* cellConfirm's ✓ / ✕ pair, beside the input. */
 .cellEditorActions {
   display: flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-/* Corner triangles for a cell's edit state, drawn like a spreadsheet's: a
-   draft not yet saved is blue, a value failing validation is red. An entry
-   cell takes the red one only - everything in it is new. The cell needs a
-   positioning context; pinned and focused cells set their own inline
-   `position`, which wins over this. */
+/* Pinned and focused cells set their own inline `position`, which wins over
+   this. */
 .bodyCell[data-dirty],
 .bodyCell[data-invalid],
 .entryCell[data-invalid] {
@@ -294,7 +241,6 @@
   border-right-color: var(--mantine-primary-color-filled);
 }
 
-/* Invalid wins over dirty - a cell is usually both. */
 .bodyCell[data-invalid]::after,
 .entryCell[data-invalid]::after {
   border-top-color: var(--mantine-color-error);
@@ -309,36 +255,19 @@
   justify-content: center;
 }
 
-/* Only stretch to fill when left-aligned, so right/centre stay put. */
 .bodyCell[data-align="left"] .cellContent {
   flex: 1 1 auto;
 }
 
-/* The panel an expanded row opens. Its own grid row inside .bodyRow, spanning
-   every column track - so it is measured together with the row above it.
-
-   It takes `--row-bg` rather than a colour of its own: the panel belongs to its
-   row, and a selected or highlighted row whose panel stayed white would read as
-   two separate things. */
 .detailsCell {
   grid-column: 1 / -1;
   border-bottom: 1px solid var(--mantine-color-default-border);
-  /* Base and tint, exactly as .bodyCell paints them. */
   background-color: var(--mantine-color-body);
   background-image: linear-gradient(var(--row-bg), var(--row-bg));
-  /* No padding: the panel is the user's content, and a nested grid or a tab
-     strip wants the full width. Content that should line up with the cell
-     text pads itself with var(--dg-padding). */
-  /* The row above may be the selection control, which turns text selection off
-     for everything inside it. A panel is content, so it takes both back. */
   user-select: text;
   cursor: auto;
 }
 
-/* Spans every column track, but the rendered box is pinned to the scrollport:
-   sticky at the left edge and exactly one container-width wide, so the
-   centred content stays in the middle of the window however far the grid is
-   scrolled horizontally. */
 .messageRow {
   grid-column: 1 / -1;
   position: sticky;
@@ -353,12 +282,9 @@
   padding: var(--mantine-spacing-xl);
 }
 
-/* Marked deleted under draft: struck through and inert until saveDrafts
-   reports it - a row about to go away must not keep taking edits. Interaction
-   comes off the data cells, not the row: `pointer-events: none` on the row
-   would also kill the edit lane's Restore, which is the one control the row
-   still needs (jsdom does not enforce pointer-events, so only a real browser
-   ever saw that bug). */
+/* Interaction comes off the data cells, not the row: `pointer-events: none` on
+   the row would also kill the edit lane's Restore. jsdom does not enforce
+   pointer-events, so only a real browser shows that bug. */
 .bodyRow[data-deleted="true"] {
   text-decoration: line-through;
   opacity: 0.55;
@@ -368,12 +294,10 @@
   pointer-events: none;
 }
 
-/* The entry block - one row per edit.addRow(), under the header on the same
-   subgrid tracks as everything else. The *block* is the sticky element, not
-   the rows: sticky siblings would all compete for the same `top` and stack
-   onto one spot, while a single sticky wrapper lets its rows flow normally
-   inside it. Subgrid twice over keeps the cells on the outer tracks.
-   `--dg-header-height` is measured only while the block exists. */
+/* The block is the sticky element, not the rows: sticky siblings would all
+   compete for the same `top` and stack onto one spot, while a single sticky
+   wrapper lets its rows flow normally inside it. `--dg-header-height` is
+   measured only while the block exists. */
 .entryBlock {
   display: grid;
   grid-column: 1 / -1;
@@ -389,13 +313,9 @@
   grid-template-columns: subgrid;
 }
 
-/* The pinned edge blocks - user-pinned rows held at the top or bottom of the
-   body, on the entry block's sticky mechanics: the block is the sticky
-   element, its rows flow normally inside it. The top block stacks under the
-   entry block when both exist; `--dg-entry-height` is measured only then, so
-   the offset is otherwise the header alone. The bottom block stacks above the
-   summary row the same way. The cells inside paint an opaque base under
-   `--row-bg` already, so the blocks only add the edge borders. */
+/* The top block stacks under the entry block when both exist;
+   `--dg-entry-height` is measured only then. The bottom block stacks above the
+   summary row the same way. */
 .pinnedTopBlock {
   display: grid;
   grid-column: 1 / -1;
@@ -427,7 +347,6 @@
   align-items: center;
   padding: 0 calc(var(--dg-padding) / 2);
   border-bottom: 2px solid var(--mantine-primary-color-filled);
-  /* Opaque: the body scrolls underneath it. */
   background-color: var(--mantine-color-body);
   font-size: var(--dg-font-size);
 }
@@ -437,9 +356,6 @@
   justify-content: center;
 }
 
-/* A committed entry row - entered, awaiting Save all. It reads as a value
-   row: text padding, the body's border weight, and the "new" tint instead of
-   the editing underline. */
 .entryRow[data-committed="true"] .entryCell {
   padding: 0 var(--dg-padding);
   border-bottom: 1px solid var(--mantine-color-default-border);
@@ -456,8 +372,6 @@
   padding: 0;
 }
 
-/* Draft mode's change marker in the edit lane - dimmed beside the buttons
-   that act, red when validation blocks the row. */
 .rowStateIndicator {
   display: inline-flex;
   align-items: center;
@@ -480,10 +394,6 @@
   justify-content: center;
 }
 
-/* The matched slice of a cell's text, while `enableMatchHighlighting` is on
-   and a contains-family filter or the quick search is active. `mark` resets
-   the browser's default so the colour is the grid's to state - override with
-   `--dg-match-highlight-bg` on the grid. */
 .matchHighlight {
   background-color: var(--dg-match-highlight-bg, var(--mantine-color-yellow-2));
   color: inherit;
@@ -494,18 +404,12 @@
   background-color: var(--dg-match-highlight-bg, rgba(250, 176, 5, 0.35));
 }
 
-/* The summary row - one sticky row of column footers along the bottom edge,
-   rendered only while at least one column defines `footer`. Same subgrid
-   placement as the header, so its cells sit exactly on the body's tracks.
-
-   Both insets are set, so the row is on the scrollport's bottom edge whether
+/* Both insets are set, so the row is on the scrollport's bottom edge whether
    the body overflows or not. A percentage in a sticky inset resolves against
-   the scrollport: with too few rows to fill it, `top` pushes the row down
-   until `.grid` - which reaches the scrollport's bottom - stops it, flush with
-   the edge; with the body overflowing, `top` is already satisfied and
-   `bottom: 0` pins the row as it always did. Where the two conflict the top
-   one wins, which is why it has to be the row's own height short of 100% and
-   not 100%. `--dg-summary-height` is measured whenever this row exists. */
+   the scrollport: with too few rows, `top` pushes the row down until `.grid`
+   stops it; with the body overflowing, `bottom: 0` pins it. Where the two
+   conflict the top one wins, so it has to be the row's own height short of
+   100%. */
 .summaryRow {
   display: grid;
   grid-column: 1 / -1;
@@ -521,7 +425,6 @@
   align-items: center;
   padding: 0 var(--dg-padding);
   border-top: 1px solid var(--mantine-color-default-border);
-  /* Opaque: the body scrolls underneath it. */
   background-color: var(--mantine-color-body);
   font-size: var(--dg-font-size);
   font-weight: 600;

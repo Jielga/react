@@ -17,20 +17,17 @@ export type TMDataGridLabels = {
   /** Filter operator names, as shown in the operator dropdown and on pills. */
   operators: Record<TMDataGridFilterOperator, string>;
 
-  // Toolbar
   /** "Filters" - the funnel button and the filter panel's title. */
   filters: string;
   searchPlaceholder: string;
   searchLabel: string;
   clearSearch: string;
 
-  // Grid menu
   /** Tooltip and `aria-label` of `TMDataGrid.Menu`'s burger trigger. */
   menuButton: string;
   /** "Manage columns" - the header menu's submenu. */
   manageColumns: string;
 
-  // Columns panel
   columnsSearchPlaceholder: string;
   columnsNoMatch: (search: string) => string;
   columnsShowHideAll: string;
@@ -40,7 +37,6 @@ export type TMDataGridLabels = {
   /** Menu/panel name of the generated row-number gutter. */
   rowNumberColumnLabel: string;
 
-  // Saved views
   /** "Views" - the views heading, and the tooltip of `TMDataGrid.ViewsMenu`. */
   views: string;
   /** Heading over the developer's presets, when user views are listed too. */
@@ -76,7 +72,6 @@ export type TMDataGridLabels = {
    */
   noRows: string;
 
-  // Filter panel
   filterColumn: string;
   filterOperator: string;
   filterValue: string;
@@ -97,11 +92,9 @@ export type TMDataGridLabels = {
   /** Names the operator button in a column's header filter control. */
   filterOperatorFor: (column: string) => string;
 
-  // Filter pills
   activeFilters: string;
   clearFilter: (column: string) => string;
 
-  // Header menu
   sortAsc: string;
   sortDesc: string;
   /** The column menu item and the header button under `sortMode: "frozen"`. */
@@ -124,7 +117,6 @@ export type TMDataGridLabels = {
   sortColumn: (column: string) => string;
   columnMenu: (column: string) => string;
 
-  // Footer / pager
   rowsPerPage: string;
   pageRange: (args: { from: number; to: number; total: number }) => string;
   /** `pageCount` is `-1` when a manual grid declares an unknown total. */
@@ -134,11 +126,9 @@ export type TMDataGridLabels = {
   previousPage: string;
   nextPage: string;
 
-  // Body
   noResults: string;
   loading: string;
 
-  // Cell editing
   /** `aria-label` of an open cell editor's input. */
   editCell: (column: string) => string;
   /** cellConfirm's ✓ beside the input. */
@@ -181,7 +171,6 @@ export type TMDataGridLabels = {
   /** The lane's state icon on a row marked deleted (draft). */
   rowStateDeleted: string;
 
-  // Cell selection menu
   cellCount: (count: number) => string;
   copy: string;
   /**
@@ -191,7 +180,6 @@ export type TMDataGridLabels = {
   exportCells: string | ((format: string) => string);
   includeHeaders: string;
 
-  // Export
   exportAll: string;
   exportSelected: (count: number) => string;
   /** Title of the column picker `columns="custom"` opens; `format` is the file extension in upper case, "CSV". */
@@ -207,20 +195,17 @@ export type TMDataGridLabels = {
   /** Marks a column the grid hides at the moment. */
   exportPickerHidden: string;
 
-  // Generated checkbox lane
   selectColumnLabel: string;
   selectAllRows: string;
   selectRow: string;
   selectGroup: string;
 
-  // Generated details lane
   detailsColumnLabel: string;
   showDetails: string;
   hideDetails: string;
   expandAllDetails: string;
   collapseAllDetails: string;
 
-  // Generated tree lane
   groupColumnLabel: string;
   blankGroupValue: string;
   expandGroup: (label: string) => string;

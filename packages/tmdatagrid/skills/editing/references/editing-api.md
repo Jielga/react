@@ -71,14 +71,14 @@ path, which may be dotted.
 | `canDeleteRows` | `() => boolean` | Whether the delete control should be shown. |
 | `getForm` | `(rowId) => TMDataGridRowEditForm \| undefined` | The open row's live `FormApi`; `undefined` for a committed row. |
 | `getRowValues` | `(rowId) => TData \| undefined` | The row as shown: the open form's values, else the committed draft, else the `data` value. `undefined` for an unknown row. |
-| `getRows` | `() => ReadonlyArray<TMDataGridEditRowSnapshot>` | Every row as shown, from the core row model: drafts overlaid, entry rows appended, deletion-marked rows included and flagged `deleted`. |
-| `state` | `TMDataGridEditState` | Snapshot, for reads outside React. |
-| `store` | `Store<TMDataGridEditState>` | For `useSelector`. |
+| `getRows` | `() => ReadonlyArray<TMDataGridEditRowSnapshot<TData>>` | Every row as shown, from the core row model: drafts overlaid, entry rows appended, deletion-marked rows included and flagged `deleted`. |
+| `state` | `TMDataGridEditState<TData>` | Snapshot, for reads outside React. |
+| `store` | `Store<TMDataGridEditState<TData>>` | For `useSelector`. |
 
-`TMDataGridEditState`:
+`TMDataGridEditState<TData>`, where `TData` defaults to `TMDataGridRowData`:
 
 ```ts
-type TMDataGridEditState = {
+type TMDataGridEditState<TData> = {
   // The cell the last open gesture named - where the caret goes.
   active: { rowId: string; columnId: string | null } | null;
   // Every row the grid holds work for: open rows and committed rows. A row
@@ -93,7 +93,7 @@ type TMDataGridEditState = {
       hasRowError: boolean;
       isSubmitting: boolean;
       // The row as drafted, reference-stable while no value changes.
-      values: TMDataGridRowData;
+      values: TData;
     }
   >;
   // The draft store's edit slice: existing rows that passed their commit,
@@ -103,7 +103,7 @@ type TMDataGridEditState = {
   // snapshotted at each commit and kept across a reopen, so the row holds its
   // place until it commits again or is dropped. The grid feeds these to the
   // table in place of the consumer's records.
-  committedValues: Readonly<Record<string, TMDataGridRowData>>;
+  committedValues: Readonly<Record<string, TData>>;
   // `committed` is "in the store, awaiting the save". Without `editing.draft`
   // a commit adds through `onRowAdd`, so it stays `false`.
   newRows: ReadonlyArray<{ tempId: string; committed: boolean }>;

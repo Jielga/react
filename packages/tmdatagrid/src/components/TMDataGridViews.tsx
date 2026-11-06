@@ -119,7 +119,6 @@ function SaveViewForm({
         onKeyDown={keepKeysInField}
         error={error}
         data-dg-part="views-name"
-        // In the menu the field replaces the item that was clicked.
         autoFocus={inMenu}
         rightSectionPointerEvents="all"
         rightSection={
@@ -184,8 +183,6 @@ function ViewsMenuItems({
           )
         }
         rightSection={
-          // Only where the user could change a view: in a list of presets
-          // alone, every entry would carry it.
           entry.source === "preset" && views.allowUserViews ? (
             <LockIcon
               size={14}
@@ -195,8 +192,6 @@ function ViewsMenuItems({
             />
           ) : undefined
         }
-        // Selecting the selected view applies it again, which is how its
-        // changes are discarded.
         onClick={() => views.select(entry.id)}
         data-dg-part="views-item"
         data-view-id={entry.id}
@@ -212,8 +207,6 @@ function ViewsMenuItems({
     );
     if (!checked) return radio;
 
-    // The actions sit on the selected view, so which view they act on is
-    // never in doubt. Overwrite only shows when there is a change to save.
     const own = views.allowUserViews && entry.source === "user";
     return (
       <div key={entry.id} className={classes.selectedRow}>
@@ -359,8 +352,6 @@ export function TMDataGridMenuViewsSub() {
   const [naming, setNaming] = useState(false);
   if (!views.enabled) return null;
 
-  // Held open while the name field is in use, wherever the pointer goes, and
-  // still open once it is done, so the new view shows selected.
   const endNaming = (next: boolean) => {
     setNaming(next);
     if (!next) setOpened(true);

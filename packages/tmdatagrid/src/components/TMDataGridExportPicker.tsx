@@ -102,8 +102,6 @@ function PickerForm({ request }: { request: TMDataGridExportPickerRequest }) {
       )
     : columns;
 
-  // Select all works on the listed columns: with a search active it ticks the
-  // matches and leaves the rest as they are, the way a filtered list reads.
   const listedChecked = listed.filter((column) => checked.has(column.id));
   const allListed = listed.length > 0 && listedChecked.length === listed.length;
   const someListed = listedChecked.length > 0 && !allListed;
@@ -127,7 +125,6 @@ function PickerForm({ request }: { request: TMDataGridExportPickerRequest }) {
     });
 
   const confirm = async () => {
-    // Render order, whatever order the boxes were ticked in.
     const ids = columns
       .filter((column) => checked.has(column.id))
       .map((column) => column.id);

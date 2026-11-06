@@ -96,9 +96,6 @@ const NUMBER_OPERATORS = [
   "isNotEmpty",
 ] as const satisfies readonly TMDataGridFilterOperator[];
 
-// `equals` doubles as a date's "is": it compares by calendar day whenever the
-// cell holds a Date (see matchesFilter), so a separate `is` operator would be
-// the same comparison under a second name.
 const DATE_OPERATORS = [
   "equals",
   "notEquals",
@@ -118,8 +115,6 @@ const BOOLEAN_OPERATORS = [
   "isNotEmpty",
 ] as const satisfies readonly TMDataGridFilterOperator[];
 
-// One set for both select types: the operators are about membership in the
-// filter's set, which reads the same whether the cell holds one value or many.
 const SELECT_OPERATORS = [
   "isAnyOf",
   "isNoneOf",
@@ -415,8 +410,6 @@ export function matchesFilter(
   if (operator === "isEmpty") return isEmptyCell(cellValue);
   if (operator === "isNotEmpty") return !isEmptyCell(cellValue);
 
-  // Set membership. The cell side is also a list - a multiSelect cell holds an
-  // array - so "any of" is an intersection test and "none of" its complement.
   if (operator === "isAnyOf" || operator === "isNoneOf") {
     const set = (Array.isArray(value) ? value : [value])
       .map((entry) => String(entry).toLowerCase())
@@ -429,10 +422,6 @@ export function matchesFilter(
     return operator === "isAnyOf" ? hit : !hit;
   }
 
-  // A closed or half-open interval. Each present end must hold; an empty end
-  // is open - and a fully empty pair matches everything, the same way a blank
-  // needle does. Ends compare the way the single-ended operators would:
-  // numerically when both sides are numbers, by calendar day otherwise.
   if (operator === "between") {
     const [min, max] = Array.isArray(value)
       ? [String(value[0] ?? ""), String(value[1] ?? "")]
@@ -483,9 +472,6 @@ export function matchesFilter(
       break;
   }
 
-  // A Date compares by its calendar day, so `equals` on a date column means
-  // "is this day" rather than a string comparison against the Date's default
-  // stringification.
   const cellText = (
     cellValue instanceof Date
       ? (toIsoDay(cellValue) ?? "")

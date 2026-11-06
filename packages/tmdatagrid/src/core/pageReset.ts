@@ -93,16 +93,10 @@ export function withPageReset(
   return (updater) => {
     const table = getTable();
     const previous = table.store.state[slice];
-    // Resolved here rather than read back off the table afterwards: where the
-    // consumer owns the slice the write is their `setState`, so the table
-    // still holds the old value when this returns. The updater therefore runs
-    // twice per change - once here, once in the write path - which is safe
-    // for every updater the grid and table-core produce, and a requirement on
-    // the consumer's: an updater has to be a pure derivation of the previous
-    // value. The decision is also best-effort under batching: two writes to
-    // one slice in the same tick both read the same `previous`, so the second
-    // decision is computed from a stale base. A wrong reset decision at
-    // worst, never a wrong write.
+    // Resolved here rather than read back off the table: where the consumer
+    // owns the slice the write is their `setState`, so the table still holds
+    // the old value. The updater therefore runs twice per change, so it has to
+    // be a pure derivation of the previous value.
     const next = functionalUpdate(updater as Updater<unknown>, previous);
 
     (handler ?? (makeStateUpdater(slice, table as never) as QueryHandler))(
@@ -110,8 +104,6 @@ export function withPageReset(
     );
 
     if (!changesTheQuery(slice, previous, next)) return;
-    // Already on the first page: writing anyway would publish the store and
-    // re-render the grid for a value that did not move.
     if (table.store.state.pagination.pageIndex !== 0) table.setPageIndex(0);
   };
 }

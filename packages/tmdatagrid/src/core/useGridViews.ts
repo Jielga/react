@@ -93,7 +93,6 @@ export function useGridViews({
     const presetIds = new Set(presets.map((preset) => preset.id));
     return [
       ...presets.map((preset) => ({ ...preset, source: "preset" as const })),
-      // A user view cannot shadow a preset that took its id.
       ...userViews
         .filter((view) => !presetIds.has(view.id))
         .map(({ id, name, state }) => ({
@@ -105,8 +104,6 @@ export function useGridViews({
     ];
   }, [presets, userViews]);
 
-  // The verbs read the latest render through refs, so their identities never
-  // change and an awaited store call never acts on a stale list.
   const latest = useRef({ list, activeId, slices, store, allowUserViews });
   latest.current = { list, activeId, slices, store, allowUserViews };
   const applyRef = useRef(applyState);
@@ -157,8 +154,6 @@ export function useGridViews({
             setActiveId(null);
           }
         } else {
-          // Another tab changed the list. The selection is this tab's own,
-          // unless the view it points at is gone.
           setActiveId((current) => (known(current) ? current : null));
         }
         setStatus("ready");
@@ -259,8 +254,6 @@ export function useGridViews({
     };
   }, []);
 
-  // Only the settings slices: a sort, a filter or a scroll never re-renders
-  // the views, and never makes one modified.
   const layout = useSelector(
     tableStore,
     (state) => ({

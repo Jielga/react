@@ -65,7 +65,6 @@ export type TMDataGridMenuColumnsProps = {
   views?: boolean;
 };
 
-// Documented on the `TMDataGridMenu` export below.
 function TMDataGridMenuRoot({
   children,
   icon,
@@ -227,8 +226,6 @@ export function TMDataGridMenuShowHideAll() {
   if (columns.length === 0) return null;
 
   const all = shownCount === columns.length;
-  // Some shown but not all: an indeterminate box, and a click shows all - the
-  // same reading as the panel's checkbox.
   const some = shownCount > 0 && !all;
 
   return (

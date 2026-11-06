@@ -1,4 +1,4 @@
-import type { Row } from "@tanstack/react-table";
+import type { Row, RowData } from "@tanstack/react-table";
 import {
   getDefaultOperator,
   getOperatorsForType,
@@ -101,13 +101,18 @@ export function isColumnEditSwitchedOff(column: ColumnLike): boolean {
  * map to a field (`getEditFieldName`) and the row to take edits at all
  * (`isRowEditable`); `edit.canEditCell` is the whole question.
  */
-export function isColumnEditableForRow(
+export function isColumnEditableForRow<TData extends RowData>(
   column: ColumnLike,
-  row: Row<TMDataGridFeatures, TMDataGridRowData>,
+  row: Row<TMDataGridFeatures, TData>,
 ): boolean {
   const enabled = column.columnDef.meta?.edit?.enabled;
   if (enabled === false) return false;
-  if (typeof enabled === "function") return enabled(row);
+  // The feature registry types `meta` once, so it cannot carry the row type.
+  if (typeof enabled === "function") {
+    return enabled(
+      row as unknown as Row<TMDataGridFeatures, TMDataGridRowData>,
+    );
+  }
   return true;
 }
 

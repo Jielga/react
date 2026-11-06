@@ -49,10 +49,7 @@ export function columnCanQuickSearch<
     enableGlobalFilter?: boolean;
   };
   if (enableGlobalFilter === true) return true;
-  // A display column has no value to search.
   if (!column.accessorFn) return false;
-  // Off the table as a plain record, for the same generic-features reason as
-  // the options read in isRankingActive.
   const model = (
     column.table as unknown as {
       getCoreRowModel: () => RowModel<TFeatures, TData>;
@@ -121,8 +118,6 @@ function bestRank<TFeatures extends TableFeatures, TData extends RowData>(
   row: Row<TFeatures, TData>,
 ): RankingInfo | null {
   let best: RankingInfo | null = null;
-  // As a plain record, for the same generic-features reason as the options
-  // read in isRankingActive.
   const { columnFiltersMeta } = row as {
     columnFiltersMeta?: Record<string, unknown>;
   };
@@ -176,9 +171,6 @@ export function createFuzzyRankedSortedRowModel<
   const base = createSortedRowModel<TFeatures, TData>();
   return (table) => {
     const getSorted = base(table);
-    // One-slot memo: every input of the ordering - filter text, data, the
-    // sorting and grouping states - changes the sorted model's identity, so
-    // the model alone is the cache key.
     let lastModel: RowModel<TFeatures, TData> | null = null;
     let ranked: RowModel<TFeatures, TData> | null = null;
     return () => {
