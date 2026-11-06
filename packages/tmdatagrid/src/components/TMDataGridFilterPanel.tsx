@@ -9,14 +9,13 @@ import {
 } from "@mantine/core";
 import { useSelector } from "@tanstack/react-store";
 import { useEffect, useRef } from "react";
-import classes from "./TMDataGridFilterPanel.module.css";
-import { useTMDataGridContext } from "../TMDataGridContext";
 import {
   getColumnDefaultOperator,
-  getColumnOperators,
   getColumnLabel,
+  getColumnOperators,
   getColumnType,
 } from "../core/columnUtils";
+import type { TMDataGridFilterPanelLayout } from "../core/filterControls";
 import {
   type TMDataGridFilterOperator,
   type TMDataGridFilterValue,
@@ -27,10 +26,11 @@ import {
   isTMDataGridFilterValue,
   operatorNeedsValue,
 } from "../core/filterOperators";
-import type { TMDataGridFilterPanelLayout } from "../core/filterControls";
-import { CloseIcon } from "./icons";
+import { useTMDataGridContext } from "../TMDataGridContext";
 import { filterControlFor } from "./filters/filterControlFor";
 import { TMDataGridFilterValueInput } from "./filters/TMDataGridFilterValueInput";
+import { CloseIcon } from "./icons";
+import classes from "./TMDataGridFilterPanel.module.css";
 
 const FALLBACK_FILTER: TMDataGridFilterValue = {
   operator: "contains",
@@ -85,9 +85,6 @@ export function TMDataGridFilterPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const stacked = layout === "stacked";
 
-  // Whoever pointed at a column - the column menu, a pill, the toolbar button -
-  // meant "let me type here", so the value slot takes the focus. Cleared once
-  // taken, which is what lets the same column be pointed at twice.
   useEffect(() => {
     if (focusColumnId === null) return;
     const row = panelRef.current?.querySelector<HTMLElement>(
@@ -125,9 +122,6 @@ export function TMDataGridFilterPanel({
     const operator = target
       ? getColumnDefaultOperator(target)
       : getDefaultOperator("string");
-    // The typed value only survives the move while it still fits the new
-    // operator - a text needle has no meaning to an `isAnyOf` set, or a set
-    // to a text input.
     const value =
       filterValueShape(operator) === filterValueShape(current.operator)
         ? current.value
@@ -144,8 +138,6 @@ export function TMDataGridFilterPanel({
             : filter,
         ),
     );
-    // The row now names a different column; put the caret back in its value
-    // slot rather than leaving it on a dropdown whose meaning just changed.
     ui.actions.focusPanelFilter(toColumnId);
   }
 
@@ -169,8 +161,6 @@ export function TMDataGridFilterPanel({
     const current = asFilterValue(
       columnFilters.find((filter) => filter.id === columnId)?.value,
     );
-    // Same arity rule as changing the column: keep the value across operators
-    // of the same shape, reset it across any shape boundary.
     const value =
       filterValueShape(operator) === filterValueShape(current.operator)
         ? current.value
@@ -219,7 +209,6 @@ export function TMDataGridFilterPanel({
           const needsValue = operatorNeedsValue(value.operator);
           const scalarValue =
             typeof value.value === "string" ? value.value : "";
-          // The same options-and-control decision the header cells make.
           const { options, ValueControl } =
             column === undefined
               ? { options: [], ValueControl: TMDataGridFilterValueInput }
@@ -228,9 +217,6 @@ export function TMDataGridFilterPanel({
           return (
             <div
               key={filter.id}
-              // The row is the handle: a `meta.filter.control` renders whatever
-              // it likes in the value slot, so the one thing a test can always
-              // count on is which row it is in.
               data-dg-part="filter-row"
               data-column-id={filter.id}
               data-layout={layout}
@@ -254,9 +240,8 @@ export function TMDataGridFilterPanel({
                   size={controlSize}
                   w={stacked ? "100%" : 160}
                   allowDeselect={false}
-                  // Both dropdowns portal, like every dropdown in the panel:
-                  // drawn inline they are clipped by the grid frame's
-                  // `overflow: hidden` under the popup, or by the sidebar's
+                  // Portaled: drawn inline, both dropdowns are clipped by the
+                  // grid frame's `overflow: hidden` or by the sidebar's
                   // scroller. The popup's click-away exempts portal nodes.
                   data-dg-part="filter-column"
                   data={columnOptions}
@@ -289,17 +274,11 @@ export function TMDataGridFilterPanel({
                 />
               </div>
 
-              {/* What the focus effect above aims at. A `meta.filter.control`
-                  may render anything, so the slot is the only landmark the
-                  panel can count on. */}
               <div
                 className={classes.filterValueSlot}
                 data-dg-filter-value-slot
               >
                 {column ? (
-                  // `meta.filter.control` if the column declares one, the
-                  // built-in shape-by-operator input otherwise - both through
-                  // the same value-only contract.
                   <ValueControl
                     column={column}
                     table={table}
@@ -312,8 +291,6 @@ export function TMDataGridFilterPanel({
                     layout={layout}
                   />
                 ) : (
-                  // The column is gone from the definition; the row survives
-                  // only to be re-pointed or removed.
                   <TextInput
                     label={labels.filterValue}
                     size={controlSize}

@@ -1,5 +1,3 @@
-/* The details lane is a fixed track holding one control, so the button fills it
-   and the whole cell is the hit target. */
 .detailsToggle {
   display: flex;
   align-items: center;
@@ -24,8 +22,6 @@
   transform: rotate(90deg);
 }
 
-/* One icon rotated rather than two swapped: the turn is what reads as the
-   expand, and a swap would jump. */
 @media (prefers-reduced-motion: reduce) {
   .chevron {
     transition: none;

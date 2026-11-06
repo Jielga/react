@@ -46,8 +46,6 @@ export function TMDataGridSearch({
 }: TMDataGridSearchProps) {
   const { table, features, labels, controlSize } = useTMDataGridContext();
 
-  // A consumer can put anything in `globalFilter`; the input only mirrors the
-  // string form and treats the rest as empty.
   const globalFilter = useSelector(table.store, (state) =>
     typeof state.globalFilter === "string" ? state.globalFilter : "",
   );
@@ -60,24 +58,18 @@ export function TMDataGridSearch({
   // for an external change that should overwrite what is being typed.
   const lastWrittenRef = useRef(globalFilter);
 
-  // External writes - a consumer's `setGlobalFilter`, a persistence restore -
-  // win over the draft; the input is a mirror, not an owner.
   useEffect(() => {
     if (globalFilter === lastWrittenRef.current) return;
     lastWrittenRef.current = globalFilter;
     setDraft(globalFilter);
   }, [globalFilter]);
 
-  // An unmount mid-debounce drops the pending write rather than filtering a
-  // grid whose input no longer exists.
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   if (!getGridCapabilities(table, features).canSearch) return null;
 
   const commit = (value: string) => {
     lastWrittenRef.current = value;
-    // `undefined` rather than `""`: an empty filter is no filter, and this is
-    // what keeps the persisted slice and the funnel logic clean.
     table.setGlobalFilter(value === "" ? undefined : value);
   };
 

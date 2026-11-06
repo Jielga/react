@@ -29,13 +29,8 @@ export function createSelectColumn<TData extends RowData>(
     meta: {
       label,
       align: "center",
-      // Structurally the first column; it also anchors the left pinned lane, so
-      // no other column can be moved in front of it.
       enableOrdering: false,
     },
-    // A system lane: as wide as the control it holds and no wider. Fixed at
-    // every scale - the control does not grow with the font size, so neither
-    // should its track.
     size: 36,
     minSize: 36,
     maxSize: 36,
@@ -43,19 +38,13 @@ export function createSelectColumn<TData extends RowData>(
     enableSorting: false,
     enableColumnFilter: false,
     enableGlobalFilter: false,
-    // Not a column the user chose, so not one they can switch off: hiding the
-    // lane would take the grid's only way to select a row with it, with the
-    // row-selection state left behind and no way back to it. Keeping it out of
-    // "Manage columns" follows from this - the panel lists what can be hidden.
     enableHiding: false,
-    // Structurally pinned to the left; users shouldn't be able to move it.
     enablePinning: false,
     header: ({ table }) => <SelectAllHeader table={table} />,
     cell: ({ row }) => <SelectRowCheckbox row={row} />,
-    // Every cell on a group row that is not the grouped column is a group
-    // summary cell, this lane included, and a summary cell with nothing
-    // declared renders blank. Without this the checkbox would disappear from
-    // exactly the rows that select a whole group. See renderCellContent.
+    // A summary cell with nothing declared renders blank, so without this the
+    // checkbox disappears from the rows that select a whole group. See
+    // renderCellContent.
     aggregatedCell: ({ row }) => <SelectRowCheckbox row={row} />,
   };
 }
@@ -80,7 +69,6 @@ export function createGroupColumn<TData extends RowData>(
     id: GROUP_COLUMN_ID,
     meta: {
       label,
-      // Structurally the first column after the checkbox lane.
       enableOrdering: false,
     },
     size: 260,
@@ -88,16 +76,11 @@ export function createGroupColumn<TData extends RowData>(
     enableSorting: false,
     enableColumnFilter: false,
     enableGlobalFilter: false,
-    // Keeps it out of the columns panel and out of the header menu: its
-    // visibility is not the user's to set, it follows the grouping state.
     enableHiding: false,
-    // Structurally pinned to the left; users shouldn't be able to move it.
     enablePinning: false,
     cell: ({ row }) => <GroupCell row={row} />,
-    // Every cell on a group row that is not the grouped column is a group
-    // summary cell - this lane included. Without an `aggregatedCell` the body
-    // would take that as "nothing to summarise" and render the tree lane
-    // blank on exactly the rows it exists for. See renderCellContent.
+    // Without an `aggregatedCell` the tree lane renders blank on the rows it
+    // exists for. See renderCellContent.
     aggregatedCell: ({ row }) => <GroupCell row={row} />,
     header: ({ table }) => <GroupHeader table={table} />,
   };
@@ -125,12 +108,8 @@ export function createDetailsColumn<TData extends RowData>(
     meta: {
       label,
       align: "center",
-      // Structurally the innermost of the generated lanes.
       enableOrdering: false,
     },
-    // A system lane: as wide as the control it holds and no wider. Fixed at
-    // every scale - the control does not grow with the font size, so neither
-    // should its track.
     size: 36,
     minSize: 36,
     maxSize: 36,
@@ -138,16 +117,12 @@ export function createDetailsColumn<TData extends RowData>(
     enableSorting: false,
     enableColumnFilter: false,
     enableGlobalFilter: false,
-    // Its visibility is not the user's to set: hiding it would strand every
-    // panel behind a control that is no longer there.
     enableHiding: false,
-    // Structurally pinned to its edge; users shouldn't be able to move it.
     enablePinning: false,
     header: ({ table }) => <DetailsHeader table={table} />,
     cell: ({ row }) => <DetailsCell row={row} />,
-    // Deliberately no `aggregatedCell`: on a group row every cell outside the
-    // grouped column is a summary cell, and blank is the right answer here -
-    // groups expand into their rows, not into a panel.
+    // Deliberately no `aggregatedCell`: groups expand into their rows, not into
+    // a panel, so blank is right here.
   };
 }
 
@@ -169,7 +144,6 @@ export function createEditColumn<TData extends RowData>(
       align: "center",
       enableOrdering: false,
     },
-    // Wide enough for the pair (or draft's trio) it holds while editing.
     size: width,
     minSize: width,
     maxSize: width,
@@ -177,17 +151,10 @@ export function createEditColumn<TData extends RowData>(
     enableSorting: false,
     enableColumnFilter: false,
     enableGlobalFilter: false,
-    // The row's Save, Cancel and Delete live here, so hiding the lane would
-    // strand an open row with no way to commit or discard it. Same rule as the
-    // checkbox lane: chrome the grid generates is not a user setting.
     enableHiding: false,
-    // Structurally pinned to the right; not movable.
     enablePinning: false,
     header: () => null,
     cell: ({ row }) => <EditLaneCell row={row} />,
-    // Group rows: same reasoning as the checkbox lane - without this the
-    // cell renders blank on group rows, but here blank is also correct,
-    // so the aggregated cell renders the same (null for groups).
     aggregatedCell: ({ row }) => <EditLaneCell row={row} />,
   };
 }

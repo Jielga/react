@@ -42,9 +42,7 @@ export function TMDataGridDateEditor({
   const { labels } = useTMDataGridContext();
   const value = useFieldValue(field);
   const invalid = useFieldInvalid(field);
-  // The cell's original shape decides what the editor writes back: a `Date`
-  // cell keeps getting Dates, an ISO-string cell keeps getting strings -
-  // decided once at open, so clearing and retyping cannot flip the type.
+  // Decided once at open, so clearing and retyping cannot flip the cell's type.
   const writesDates = useRef(value instanceof Date);
 
   const text =

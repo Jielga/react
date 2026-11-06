@@ -53,11 +53,9 @@ export function TMDataGridSelectEditor({
       w="100%"
       searchable
       {...inputProps}
-      // The dropdown is Mantine's default, portalled: drawn inside the cell,
-      // the grid's scroll area clips it in a short grid or a low row. A pick
-      // is still not a click-away, because Mantine's options keep the focus
-      // in the input, and the host's handlers see the dropdown's events
-      // through the React tree.
+      // Portalled: inside the cell, the grid's scroll area clips it. A pick is
+      // still not a click-away, because Mantine's options keep the focus in the
+      // input, and the host sees the dropdown's events through the React tree.
       size={size}
       aria-label={labels.editCell(getColumnLabel(column))}
       data-dg-part="editor-input"
@@ -67,8 +65,6 @@ export function TMDataGridSelectEditor({
       value={typeof value === "string" ? value : null}
       onChange={(next) => {
         field.handleChange(next);
-        // Sheets semantics under `"cell"`: a pick is the edit, so it commits.
-        // The confirming modes leave the draft for their explicit commit.
         if (next !== null && features.editMode === "cell") void commit();
       }}
       onBlur={(event) => {

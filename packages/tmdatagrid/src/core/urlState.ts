@@ -30,10 +30,6 @@ import {
  * column brand is a type, never a property.
  */
 
-// ---------------------------------------------------------------------------
-// The column brand
-// ---------------------------------------------------------------------------
-
 /**
  * What a column built with `createTMDataGridColumnHelper` tells a typed link
  * about itself. Read from literal values in the column definition: a value
@@ -111,10 +107,6 @@ export type TMDataGridColumnInfoHints<
     filter?: { operators?: ReadonlyArray<TOperator>; url?: TUrl };
   };
 };
-
-// ---------------------------------------------------------------------------
-// Link input
-// ---------------------------------------------------------------------------
 
 /** A `Date`, or an ISO `YYYY-MM-DD` string. */
 export type TMDataGridDateInput = Date | string;
@@ -215,10 +207,6 @@ export type TMDataGridUrlInput<
   (Carries<TSlices, "pagination"> extends true
     ? { pagination?: { pageIndex: number; pageSize: number } }
     : unknown);
-
-// ---------------------------------------------------------------------------
-// The payload and the definition
-// ---------------------------------------------------------------------------
 
 /** What the grid keeps in its URL param: the data slices, in the grid's own state shape. */
 export type TMDataGridUrlPayload = {
@@ -349,10 +337,6 @@ export function createTMDataGridUrlState<
   };
 }
 
-// ---------------------------------------------------------------------------
-// Runtime
-// ---------------------------------------------------------------------------
-
 type LooseFilterInput = { operator: TMDataGridFilterOperator; value?: unknown };
 
 type LooseUrlInput = {
@@ -430,7 +414,6 @@ function toFilterString(
 ): string {
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return localIsoDay(value);
-  // The date controls write `YYYY-MM-DD`; a full ISO timestamp is cut to it.
   if (type === "date" && typeof value === "string") return value.slice(0, 10);
   return String(value);
 }
@@ -455,7 +438,6 @@ function toUrlStorage(
     get: (name) => {
       const value = storage.get(name);
       if (value === undefined || value === null) return null;
-      // A router that left the value as text hands back what the grid wrote.
       return typeof value === "string" ? value : JSON.stringify(value);
     },
     set: (name, value) => {

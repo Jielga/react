@@ -70,9 +70,8 @@ export function TMDataGridFilterPopup() {
   const popupRef = useRef<HTMLDivElement>(null);
   useCloseWhenEmptied(opened);
 
-  // Clicking away hides the popup, the way any floating surface behaves. On
-  // pointerdown rather than click, so a press that starts outside dismisses it
-  // even when the pointer is released somewhere else.
+  // On pointerdown rather than click, so a press that starts outside dismisses
+  // it even when the pointer is released somewhere else.
   useEffect(() => {
     if (!opened) return;
 
@@ -83,10 +82,9 @@ export function TMDataGridFilterPopup() {
       // The toolbar button toggles the popup itself. Closing from here first
       // would leave its click reopening what the user meant to close.
       if (target.closest('[data-dg-part="filter-button"]')) return;
-      // A portalled overlay - a header filter's dropdown, a custom control's
-      // portalled picker - is outside the popup in the DOM but not in meaning:
-      // a press in one is a press in a control, not a click away. Mantine
-      // stamps `data-portal` on every portal node it creates.
+      // Mantine stamps `data-portal` on every portal node. A press in a
+      // portalled overlay is outside the popup in the DOM, but it is a press in
+      // a control, not a click away.
       if (target.closest("[data-portal]")) return;
       ui.actions.closeFilterPanel();
     };
@@ -107,8 +105,6 @@ export function TMDataGridFilterPopup() {
       data-dg-part="filter-popup"
       className={classes.filterPopup}
       aria-label={labels.filters}
-      // Escape is what closes a floating surface, and every control that can
-      // hold focus in here sits inside this element.
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
         event.stopPropagation();
@@ -154,12 +150,7 @@ export function TMDataGridFilterSidebar() {
       }}
     >
       <FilterSurfaceHeader />
-      {/* The panel's rows are as tall as the filters put in them, and the
-          sidebar is as tall as the table beside it - so the overflow is the
-          sidebar's to scroll, not the page's. */}
       <ScrollArea type="auto" className={classes.filterSidebarBody}>
-        {/* Stacked, not side by side: a filter row wants about 550px laid out
-            in a line, and the sidebar is 280. */}
         <TMDataGridFilterPanel layout="stacked" />
       </ScrollArea>
     </div>

@@ -146,6 +146,7 @@ export type TMDataGridViewsApi = {
 const ownIds = (ids: ReadonlyArray<string> | undefined): string[] =>
   (ids ?? []).filter((id) => !isGeneratedColumn(id));
 
+// Keys that are not from the generated lanes (e.g. like the "select" etc)
 const ownKeys = <T>(record: Record<string, T> | undefined): Record<string, T> =>
   Object.fromEntries(
     Object.entries(record ?? {}).filter(([id]) => !isGeneratedColumn(id)),

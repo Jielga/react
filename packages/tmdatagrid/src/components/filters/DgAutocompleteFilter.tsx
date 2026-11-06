@@ -22,9 +22,6 @@ export function DgAutocompleteFilter(args: TMDataGridFilterControlArgs) {
     return <TMDataGridFilterValueInput {...args} />;
   }
   const needsValue = operatorNeedsValue(operator);
-  // `options` arrives pre-resolved only for declared or select-shaped
-  // columns; on a plain string column the suggestions come from the faceted
-  // values, resolved here.
   const suggestions =
     options.length > 0
       ? options

@@ -67,8 +67,6 @@ export function TMDataGridFilterPills<TData extends RowData>({
   ...others
 }: TMDataGridFilterPillsProps<TData>) {
   const { table, labels } = api;
-  // The options readers take the row-type-erased table, like the rest of the
-  // chrome does through context.
   const erased = table as unknown as TMDataGridTable<TMDataGridRowData>;
   const columnFilters = useSelector(
     table.store,
@@ -94,7 +92,6 @@ export function TMDataGridFilterPills<TData extends RowData>({
           const erasedColumn = erased.getColumn(filter.id);
           const label = column ? getColumnLabel(column) : filter.id;
           const value = filter.value;
-          // isFilterActive already vouched for the shape; this narrows it.
           if (!isTMDataGridFilterValue(value)) return null;
           // Mantine types `removeButtonProps` as `CloseButtonProps`, which
           // has no room for `data-*` in an object literal. Spread in from a
@@ -156,8 +153,6 @@ export function TMDataGridFilterPills<TData extends RowData>({
       </Pill.Group>
 
       {showClearAll && activeFilters.length > 1 && (
-        // Below two pills their own ✕ is the shorter path, so the button would
-        // only be a second way to do the same thing.
         <Button
           variant="subtle"
           color="gray"

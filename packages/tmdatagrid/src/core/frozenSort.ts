@@ -88,8 +88,6 @@ function release(state: FrozenSortState) {
 function frozenKey<TFeatures extends TableFeatures, TData extends RowData>(
   table: Table<TFeatures, TData>,
 ): string | null {
-  // Off the options and the store as plain records, for the same
-  // generic-features reason as the reads in quickSearch.ts.
   const { sortMode, manualSorting } = table.options as {
     sortMode?: TMDataGridSortMode;
     manualSorting?: boolean;
@@ -163,9 +161,6 @@ function reorder(
   const rank = (row: AnyRow) => level.get(row.id) ?? 0;
   held.sort((a, b) => rank(a) - rank(b));
 
-  // New ranks go between the neighbours they were placed between, so they
-  // never collide with a held one. Fractions only accumulate until the next
-  // take, which ranks every row by its index again.
   const first = held.length > 0 ? rank(held[0]!) : 0;
   leading.forEach((row, index) =>
     level.set(row.id, first - (leading.length - index)),
@@ -321,7 +316,6 @@ export function isFrozenSortStale<
     if (state !== undefined) release(state);
     return false;
   }
-  // Brings the held order up to date with the current rows first.
   (
     table as unknown as { getSortedRowModel: () => unknown }
   ).getSortedRowModel();

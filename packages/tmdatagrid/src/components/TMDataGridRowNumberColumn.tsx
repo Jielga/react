@@ -24,7 +24,6 @@ export function createRowNumberColumn<TData extends RowData>(
     meta: {
       label,
       align: "center",
-      // Anchors the left edge with the checkbox lane; nothing moves past it.
       enableOrdering: false,
     },
     size: 48,
@@ -37,8 +36,6 @@ export function createRowNumberColumn<TData extends RowData>(
     enablePinning: false,
     enableHiding: false,
     header: () => "#",
-    // The body substitutes the number; a row without one - a group row -
-    // falls through to this.
     cell: () => null,
   };
 }

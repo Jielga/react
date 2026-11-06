@@ -23,8 +23,6 @@ function useDraftCount(): number {
   const { edit } = useTMDataGridContext();
   return useSelector(edit.store, (state) => {
     const deleted = new Set(state.deletedRowIds);
-    // An edited row that was then marked counts once: Save sends the
-    // deletion and leaves the edit behind.
     const edited =
       deleted.size === 0
         ? state.committedRowIds.length
@@ -66,8 +64,6 @@ function useOpenRowIds(): ReadonlyArray<string> {
 function EditSaveButton() {
   const { edit, labels } = useTMDataGridContext();
   const draftCount = useDraftCount();
-  // Save sends the draft store, so its loading state is the save in flight,
-  // not an open row's submit.
   const isSaving = useSelector(edit.store, (state) => state.isSaving);
 
   return (
@@ -103,8 +99,6 @@ function EditOpenRowsNote() {
 
 function EditDiscardButton() {
   const { edit, labels } = useTMDataGridContext();
-  // Discard drops everything the grid is holding, open rows included, so it
-  // stays live while anything is uncommitted.
   const uncommittedCount = useDraftCount() + useOpenCount();
 
   return (
@@ -277,8 +271,8 @@ export function TMDataGridDraftActions({
         discard: () => edit.cancelAll(),
         scrollToRow,
         scrollToFirstOpenRow: (align) => {
-          // Read through the store rather than closing over this render's
-          // arrays: display order is only decided here, at the click.
+          // Read through the store: display order is only decided here, at the
+          // click.
           const state = edit.state;
           const openIds = getOpenRowIds(state);
           if (openIds.length === 0) return false;
@@ -289,9 +283,6 @@ export function TMDataGridDraftActions({
           if (first !== undefined) {
             return scrollToRow({ rowId: first.id, align });
           }
-          // Nothing left in the scrolling order, which does not mean nothing
-          // is visible: an entry row is sticky under the header, and a pinned
-          // row is parked at an edge - `scrollToRow` answers for that one.
           return openIds.some(
             (rowId) =>
               state.newRows.some((newRow) => newRow.tempId === rowId) ||
