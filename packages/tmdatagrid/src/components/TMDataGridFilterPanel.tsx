@@ -9,14 +9,13 @@ import {
 } from "@mantine/core";
 import { useSelector } from "@tanstack/react-store";
 import { useEffect, useRef } from "react";
-import classes from "./TMDataGridFilterPanel.module.css";
-import { useTMDataGridContext } from "../TMDataGridContext";
 import {
   getColumnDefaultOperator,
-  getColumnOperators,
   getColumnLabel,
+  getColumnOperators,
   getColumnType,
 } from "../core/columnUtils";
+import type { TMDataGridFilterPanelLayout } from "../core/filterControls";
 import {
   type TMDataGridFilterOperator,
   type TMDataGridFilterValue,
@@ -27,10 +26,11 @@ import {
   isTMDataGridFilterValue,
   operatorNeedsValue,
 } from "../core/filterOperators";
-import type { TMDataGridFilterPanelLayout } from "../core/filterControls";
-import { CloseIcon } from "./icons";
+import { useTMDataGridContext } from "../TMDataGridContext";
 import { filterControlFor } from "./filters/filterControlFor";
 import { TMDataGridFilterValueInput } from "./filters/TMDataGridFilterValueInput";
+import { CloseIcon } from "./icons";
+import classes from "./TMDataGridFilterPanel.module.css";
 
 const FALLBACK_FILTER: TMDataGridFilterValue = {
   operator: "contains",

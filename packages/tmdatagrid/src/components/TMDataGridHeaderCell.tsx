@@ -1,21 +1,13 @@
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
-import { flexRender, type Header } from "@tanstack/react-table";
 import { useSelector } from "@tanstack/react-store";
+import { flexRender, type Header } from "@tanstack/react-table";
 import { shallow } from "@tanstack/store";
 import { type DragEvent, type ReactNode, useRef, useState } from "react";
-import classes from "./TMDataGridHeaderCell.module.css";
-import sticky from "./sticky.module.css";
-import {
-  type TMDataGridRowData,
-  useTMDataGridContext,
-} from "../TMDataGridContext";
-import type { TMDataGridColumnLayout } from "./TMDataGridTable";
+import { autosizeColumn } from "../core/autosize";
 import {
   getColumnCapabilities,
   getGridCapabilities,
 } from "../core/capabilities";
-import { autosizeColumn } from "../core/autosize";
-import { isNode } from "../core/dom";
 import {
   getColumnRegion,
   getStepTargetColumn,
@@ -30,8 +22,14 @@ import {
   getColumnLabel,
   isControlColumn,
 } from "../core/columnUtils";
+import { isNode } from "../core/dom";
 import { resolveExpandAll } from "../core/expanding";
 import { isFilterActive } from "../core/filterOperators";
+import {
+  type TMDataGridRowData,
+  useTMDataGridContext,
+} from "../TMDataGridContext";
+import { openColumnFilter, type TMDataGridFeatures } from "../useTMDataGrid";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -51,9 +49,11 @@ import {
   SortAgainIcon,
   UngroupIcon,
 } from "./icons";
+import sticky from "./sticky.module.css";
 import { GROUP_COLUMN_ID } from "./TMDataGridGroupColumn";
+import classes from "./TMDataGridHeaderCell.module.css";
 import { TMDataGridMenuColumns } from "./TMDataGridMenu";
-import { type TMDataGridFeatures, openColumnFilter } from "../useTMDataGrid";
+import type { TMDataGridColumnLayout } from "./TMDataGridTable";
 
 /** The table as the header cell sees it, after the context type erasure. */
 type TMDataGridTableInstance = ReturnType<typeof useTMDataGridContext>["table"];

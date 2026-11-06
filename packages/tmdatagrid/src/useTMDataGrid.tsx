@@ -1,15 +1,14 @@
 import { useCreateStore, useSelector } from "@tanstack/react-store";
-import { shallow } from "@tanstack/store";
 import {
   type AccessorFn,
   type AccessorFnColumnDef,
   type AccessorKeyColumnDef,
   aggregationFns,
   type ColumnDef,
-  type ColumnHelper,
   columnFacetingFeature,
   columnFilteringFeature,
   columnGroupingFeature,
+  type ColumnHelper,
   columnOrderingFeature,
   columnPinningFeature,
   type ColumnPinningState,
@@ -29,13 +28,13 @@ import {
   type DisplayColumnDef,
   filterFns,
   getInitialTableState,
-  type GroupColumnDef,
   globalFilteringFeature,
+  type GroupColumnDef,
   type IdentifiedColumnDef,
   metaHelper,
   type Row,
-  type RowData,
   rowAggregationFeature,
+  type RowData,
   rowExpandingFeature,
   rowPaginationFeature,
   rowPinningFeature,
@@ -49,6 +48,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import type { Store } from "@tanstack/store";
+import { shallow } from "@tanstack/store";
 import {
   type MutableRefObject,
   type ReactNode,
@@ -60,45 +60,81 @@ import {
   useState,
 } from "react";
 import type { TMDataGridRowData } from "./TMDataGridContext";
+import { DETAILS_COLUMN_ID } from "./components/TMDataGridDetailsColumn";
+import { EDIT_COLUMN_ID } from "./components/TMDataGridEditColumn";
+import { GROUP_COLUMN_ID } from "./components/TMDataGridGroupColumn";
+import {
+  createRowNumberColumn,
+  ROW_NUMBER_COLUMN_ID,
+} from "./components/TMDataGridRowNumberColumn";
+import { SELECT_COLUMN_ID } from "./components/TMDataGridSelectColumn";
+import {
+  createDetailsColumn,
+  createEditColumn,
+  createGroupColumn,
+  createSelectColumn,
+} from "./components/generatedColumns";
+import {
+  readFeatureFlags,
+  type TMDataGridCellSelectionMode,
+  type TMDataGridFeatureFlags,
+  type TMDataGridSelectionMode,
+} from "./core/capabilities";
+import { isSameCell, type TMDataGridCellPosition } from "./core/cellNavigation";
+import type { TMDataGridCellRange } from "./core/cellRange";
 import type { TMDataGridOptionsSource } from "./core/columnOptions";
-import {
-  createEditEngine,
-  type TMDataGridEditApi,
-  type TMDataGridEditCommitArgs,
-  type TMDataGridSaveDraftsArgs,
-  type TMDataGridSaveDraftsResponse,
-  type TMDataGridEditEngineContext,
-  type TMDataGridColumnEditOptions,
-  type TMDataGridEditMode,
-  type TMDataGridRowAddArgs,
-  type TMDataGridRowDeleteArgs,
-  type TMDataGridRowValidators,
-  type TMDataGridTableValidators,
-} from "./core/editEngine";
-import {
-  emptyValueForOperator,
-  type TMDataGridColumnType,
-  type TMDataGridFilterOperator,
-  tmDataGridFilterFn,
-} from "./core/filterOperators";
 import {
   DEFAULT_COLUMN_MIN_SIZE,
   getColumnDefaultOperator,
   isControlColumn,
   isGeneratedColumn,
 } from "./core/columnUtils";
+import {
+  findFrozenStateSlices,
+  stabilizeControlledState,
+  withoutUndefinedSlices,
+} from "./core/controlledState";
+import {
+  beginControlledStateSync,
+  deferControlledStateSyncPublishes,
+  endControlledStateSync,
+} from "./core/controlledStateSync";
+import { registerDeletedRows } from "./core/deletedRows";
+import {
+  createEditEngine,
+  type TMDataGridColumnEditOptions,
+  type TMDataGridEditApi,
+  type TMDataGridEditCommitArgs,
+  type TMDataGridEditEngineContext,
+  type TMDataGridEditMode,
+  type TMDataGridRowAddArgs,
+  type TMDataGridRowDeleteArgs,
+  type TMDataGridRowValidators,
+  type TMDataGridSaveDraftsArgs,
+  type TMDataGridSaveDraftsResponse,
+  type TMDataGridTableValidators,
+} from "./core/editEngine";
+import {
+  registerExportDataMapper,
+  resolveExportOptions,
+  type TMDataGridExportDataMapper,
+  type TMDataGridExportOptions,
+  type TMDataGridExportPickerRequest,
+  type TMDataGridExportSettings,
+  type TMDataGridExportValueGetter,
+} from "./core/export";
 import type { TMDataGridColumnFilterOptions } from "./core/filterControls";
+import {
+  emptyValueForOperator,
+  type TMDataGridColumnType,
+  tmDataGridFilterFn,
+  type TMDataGridFilterOperator,
+} from "./core/filterOperators";
 import {
   resolveFilterOptions,
   type TMDataGridFiltersOptions,
   type TMDataGridFiltersSettings,
 } from "./core/filterSurface";
-import {
-  columnCanQuickSearch,
-  createFuzzyRankedSortedRowModel,
-  fuzzyGlobalFilterFn,
-  type TMDataGridQuickSearchMode,
-} from "./core/quickSearch";
 import {
   isFrozenSortStale,
   requestSortAgain,
@@ -110,6 +146,7 @@ import {
   type TMDataGridLabels,
   type TMDataGridLabelsOverride,
 } from "./core/labels";
+import { type TMDataGridQueryTable, withPageReset } from "./core/pageReset";
 import {
   collectLeafColumnIds,
   collectUrlExcludedColumnIds,
@@ -122,62 +159,25 @@ import {
   writePersistedState,
 } from "./core/persistence";
 import {
-  readFeatureFlags,
-  type TMDataGridCellSelectionMode,
-  type TMDataGridFeatureFlags,
-  type TMDataGridSelectionMode,
-} from "./core/capabilities";
-import { isSameCell, type TMDataGridCellPosition } from "./core/cellNavigation";
-import {
-  findFrozenStateSlices,
-  stabilizeControlledState,
-  withoutUndefinedSlices,
-} from "./core/controlledState";
-import {
-  beginControlledStateSync,
-  deferControlledStateSyncPublishes,
-  endControlledStateSync,
-} from "./core/controlledStateSync";
-import { registerDeletedRows } from "./core/deletedRows";
-import { resolveStartingView, useGridViews } from "./core/useGridViews";
-import {
-  captureViewState,
-  pickViewSlices,
-  type TMDataGridViewState,
-  type TMDataGridViewsApi,
-  type TMDataGridViewsOptions,
-} from "./core/views";
-import { withPageReset, type TMDataGridQueryTable } from "./core/pageReset";
-import type { TMDataGridCellRange } from "./core/cellRange";
+  columnCanQuickSearch,
+  createFuzzyRankedSortedRowModel,
+  fuzzyGlobalFilterFn,
+  type TMDataGridQuickSearchMode,
+} from "./core/quickSearch";
 import type {
   TMDataGridAccessorColumnId,
   TMDataGridColumnInfoHints,
   TMDataGridColumnInfoOf,
   TMDataGridTypedColumn,
 } from "./core/urlState";
+import { resolveStartingView, useGridViews } from "./core/useGridViews";
 import {
-  registerExportDataMapper,
-  resolveExportOptions,
-  type TMDataGridExportDataMapper,
-  type TMDataGridExportOptions,
-  type TMDataGridExportPickerRequest,
-  type TMDataGridExportSettings,
-  type TMDataGridExportValueGetter,
-} from "./core/export";
-import { SELECT_COLUMN_ID } from "./components/TMDataGridSelectColumn";
-import { GROUP_COLUMN_ID } from "./components/TMDataGridGroupColumn";
-import { DETAILS_COLUMN_ID } from "./components/TMDataGridDetailsColumn";
-import { EDIT_COLUMN_ID } from "./components/TMDataGridEditColumn";
-import {
-  createDetailsColumn,
-  createEditColumn,
-  createGroupColumn,
-  createSelectColumn,
-} from "./components/generatedColumns";
-import {
-  createRowNumberColumn,
-  ROW_NUMBER_COLUMN_ID,
-} from "./components/TMDataGridRowNumberColumn";
+  captureViewState,
+  pickViewSlices,
+  type TMDataGridViewsApi,
+  type TMDataGridViewsOptions,
+  type TMDataGridViewState,
+} from "./core/views";
 
 /**
  * How long the grid waits after the last state change before writing to
