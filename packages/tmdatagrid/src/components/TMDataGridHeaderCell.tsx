@@ -597,7 +597,7 @@ export function TMDataGridHeaderCell({
 
       {isLeaf && (
         <div className={classes.headerActions}>
-          {isFiltered && !filters.inHeader && (
+          {column.getCanFilter() && isFiltered && !filters.inHeader && (
             <ActionIcon
               className={classes.headerAction}
               data-pinned-visible="true"
