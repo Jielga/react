@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { z } from "zod";
 import { MantineWrapper } from "../../test/gridHarness";
 import {
@@ -10,6 +10,7 @@ import {
   hasPendingEdits,
   normalizeFieldValidate,
   type TMDataGridEditCommitArgs,
+  type TMDataGridEditRowProjection,
   type TMDataGridEditState,
   type TMDataGridTableValidateArgs,
   type TMDataGridTableValidators,
@@ -19,7 +20,6 @@ import {
   useTMDataGrid,
   type TMDataGridApi,
   type TMDataGridEditingOptions,
-  type TMDataGridRowData,
   type UseTMDataGridOptions,
 } from "../index";
 
@@ -921,10 +921,7 @@ describe("edit engine", () => {
     const grid = renderEditGrid({
       isRowEditable: (row) => row.original.id !== 2,
     });
-    const { edit } = grid.current;
-    // The same erasure the context provider performs - canEditCell is chrome.
-    const table = grid.current
-      .table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
+    const { edit, table } = grid.current;
 
     edit.begin({ rowId: "2", columnId: "name" });
     expect(edit.state.openRowIds).toEqual([]);
@@ -1962,10 +1959,6 @@ describe("the draft store", () => {
  * that a cell which takes no edit refuses it outright.
  */
 describe("writing a cell from outside an editor", () => {
-  /** The erasure the context provider performs - `canEditCell` is chrome. */
-  const erasedTable = (api: TMDataGridApi<Person>) =>
-    api.table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
-
   it("setCellValue writes the cell and commits the row", async () => {
     const onCommit = vi.fn();
     const grid = renderEditGrid({ onCommit });
@@ -2019,7 +2012,7 @@ describe("writing a cell from outside an editor", () => {
   it("setCellValue writes a row inside a collapsed group", async () => {
     const onCommit = vi.fn();
     const grid = renderEditGrid({ onCommit });
-    const table = erasedTable(grid.current);
+    const table = grid.current.table;
     act(() => {
       table.setGrouping(["city"]);
     });
@@ -2459,11 +2452,8 @@ describe("editing.columns", () => {
     return result;
   }
 
-  /** The erasure the context provider performs - `canEditCell` is chrome. */
   const columnOf = (api: TMDataGridApi<Person>, columnId: string) => {
-    const table =
-      api.table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
-    const column = table.getColumn(columnId);
+    const column = api.table.getColumn(columnId);
     if (column === undefined) throw new Error(`no column "${columnId}"`);
     return column;
   };
@@ -2496,9 +2486,7 @@ describe("editing.columns", () => {
 
   it("canEditCell agrees with isColumnEditable where no row predicate speaks", () => {
     const grid = renderGatedGrid();
-    const { edit } = grid.current;
-    const table = grid.current
-      .table as unknown as TMDataGridApi<TMDataGridRowData>["table"];
+    const { edit, table } = grid.current;
     const row = table.getRow("1");
 
     for (const columnId of ["name", "age", "city"]) {
@@ -3559,5 +3547,19 @@ describe("meta.edit.mapCommitValue", () => {
     };
     expect(args.value.name).toBe("Nils");
     expect(args.value.address.city).toBe("Lund");
+  });
+});
+
+describe("the row type", () => {
+  it("reaches `edit.state` and the row checks", () => {
+    const { edit, table } = renderEditGrid().current;
+
+    expectTypeOf(edit.state.committedValues).toEqualTypeOf<
+      Readonly<Record<string, Person>>
+    >();
+    expectTypeOf(edit.state.rows).toEqualTypeOf<
+      Record<string, TMDataGridEditRowProjection<Person>>
+    >();
+    expect(edit.canEditRow(table.getRow("1"))).toBe(true);
   });
 });

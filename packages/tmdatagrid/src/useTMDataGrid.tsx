@@ -1653,11 +1653,13 @@ export function useTMDataGrid<TData extends RowData>({
   // `data` reads its store. Everything it needs later is read through a ref
   // updated every render, so forms created at `begin()` always call the latest
   // `onEditCommit`.
-  const editContextRef = useRef<TMDataGridEditEngineContext>(null as never);
+  const editContextRef = useRef<TMDataGridEditEngineContext<TData>>(
+    null as never,
+  );
   const [engine] = useState(() =>
     createEditEngine(() => editContextRef.current),
   );
-  const edit = engine as unknown as TMDataGridEditApi<TData>;
+  const edit: TMDataGridEditApi<TData> = engine;
 
   // Keyed on identities the engine keeps stable while nothing is decided, so a
   // keystroke in an open editor never rebuilds the model. `committedValues`
@@ -1690,13 +1692,13 @@ export function useTMDataGrid<TData extends RowData>({
   consumerGetRowIdRef.current = options.getRowId;
   const shown = useMemo(() => {
     const consumerGetRowId = consumerGetRowIdRef.current;
-    const idOf = new Map<object, string>();
+    const idOf = new Map<TData, string>();
     const created: Array<TData> = [];
     for (const tempId of editCreatedIds) {
       const values = editCommittedValues[tempId];
       if (values === undefined) continue;
       idOf.set(values, tempId);
-      created.push(values as TData);
+      created.push(values);
     }
     const snapshots = Object.keys(editCommittedValues).length;
     if (snapshots === 0) return { rows: options.data, idOf };
@@ -1709,7 +1711,7 @@ export function useTMDataGrid<TData extends RowData>({
             const values = editCommittedValues[rowId];
             if (values === undefined) return record;
             idOf.set(values, rowId);
-            return values as TData;
+            return values;
           });
     return {
       rows: created.length === 0 ? rows : [...created, ...rows],
@@ -1879,28 +1881,22 @@ export function useTMDataGrid<TData extends RowData>({
     selectSettledState,
   );
   endControlledStateSync();
-  tableRef.current = table as unknown as TMDataGridTable<TData>;
+  tableRef.current = table;
   deferControlledStateSyncPublishes(table.store);
 
   editContextRef.current = {
-    table: table as unknown as TMDataGridTable<TMDataGridRowData>,
+    table,
     editMode: editMode ?? "cell",
     draft: editDraft,
     rowValidators: editing?.rowValidators,
-    tableValidators:
-      editing?.tableValidators as TMDataGridEditEngineContext["tableValidators"],
+    tableValidators: editing?.tableValidators,
     editableColumnIds: editing?.columns,
-    isRowEditable:
-      editing?.isRowEditable as TMDataGridEditEngineContext["isRowEditable"],
-    onEditCommit:
-      editing?.onCommit as TMDataGridEditEngineContext["onEditCommit"],
-    onSaveDrafts:
-      editing?.onSaveDrafts as TMDataGridEditEngineContext["onSaveDrafts"],
-    newRowDefaults:
-      editing?.newRowDefaults as TMDataGridEditEngineContext["newRowDefaults"],
-    onRowAdd: editing?.onRowAdd as TMDataGridEditEngineContext["onRowAdd"],
-    onRowDelete:
-      editing?.onRowDelete as TMDataGridEditEngineContext["onRowDelete"],
+    isRowEditable: editing?.isRowEditable,
+    onEditCommit: editing?.onCommit,
+    onSaveDrafts: editing?.onSaveDrafts,
+    newRowDefaults: editing?.newRowDefaults,
+    onRowAdd: editing?.onRowAdd,
+    onRowDelete: editing?.onRowDelete,
   };
 
   // Switching either axis mid-flight drops every draft: the policies disagree

@@ -157,7 +157,9 @@ export type TMDataGridEditCommitArgs<TData extends RowData> = {
 };
 
 /** What one open row's form looks like from outside - the cell markers. */
-export type TMDataGridEditRowProjection = {
+export type TMDataGridEditRowProjection<
+  TData extends RowData = TMDataGridRowData,
+> = {
   /** Field names whose value differs from the original. */
   dirtyFields: ReadonlyArray<string>;
   /** Field names carrying a validation error, live or from a failed commit. */
@@ -179,7 +181,7 @@ export type TMDataGridEditRowProjection = {
    * value changes, so a cell may subscribe to it and repaint only when its
    * row's draft actually moves.
    */
-  values: TMDataGridRowData;
+  values: TData;
 };
 
 /**
@@ -188,7 +190,7 @@ export type TMDataGridEditRowProjection = {
  * dirty/error markers instead of one store per form. Only the editor host
  * reads a form's store directly - it is mounted for one cell at a time.
  */
-export type TMDataGridEditState = {
+export type TMDataGridEditState<TData extends RowData = TMDataGridRowData> = {
   /**
    * The cell the last open gesture named - where the caret goes. In row mode
    * the whole row is editing whatever this says, so there it is only the
@@ -203,7 +205,7 @@ export type TMDataGridEditState = {
    * entry row, not flagged `committed` in {@link newRows}.
    */
   openRowIds: ReadonlyArray<string>;
-  rows: Record<string, TMDataGridEditRowProjection>;
+  rows: Record<string, TMDataGridEditRowProjection<TData>>;
   /**
    * The draft store's edit slice: existing rows that passed their commit and
    * wait for `saveDrafts`. A committed row is data, not a form: its values
@@ -223,7 +225,7 @@ export type TMDataGridEditState = {
    * consumer's records, which is how sorting, filtering, grouping and
    * aggregates see a draft.
    */
-  committedValues: Readonly<Record<string, TMDataGridRowData>>;
+  committedValues: Readonly<Record<string, TData>>;
   /**
    * Rows being created, not yet in `data`. `committed` is the draft store's
    * add slice: the entry row passed its submit and renders as a value row
@@ -244,7 +246,7 @@ export type TMDataGridEditState = {
   isSaving: boolean;
 };
 
-const EMPTY_EDIT_STATE: TMDataGridEditState = {
+const EMPTY_EDIT_STATE: TMDataGridEditState<never> = {
   active: null,
   openRowIds: [],
   rows: {},
@@ -265,8 +267,8 @@ const EMPTY_EDIT_STATE: TMDataGridEditState = {
  *
  * The order is the engine's: the order the forms were opened.
  */
-export function getOpenRowIds(
-  state: TMDataGridEditState,
+export function getOpenRowIds<TData extends RowData>(
+  state: TMDataGridEditState<TData>,
 ): ReadonlyArray<string> {
   const committed = new Set(state.committedRowIds);
   const entered = new Map(
@@ -291,7 +293,9 @@ export function getOpenRowIds(
  * `isSaving` counts because the default per-row loop takes the deletion
  * marks out of the store before its `onRowDelete` calls settle.
  */
-export function hasPendingEdits(state: TMDataGridEditState): boolean {
+export function hasPendingEdits<TData extends RowData>(
+  state: TMDataGridEditState<TData>,
+): boolean {
   return (
     state.isSaving ||
     state.committedRowIds.length > 0 ||
@@ -303,8 +307,15 @@ export function hasPendingEdits(state: TMDataGridEditState): boolean {
   );
 }
 
-type ErasedRow = Row<TMDataGridFeatures, TMDataGridRowData>;
-type ErasedColumn = Column<TMDataGridFeatures, TMDataGridRowData, unknown>;
+type GridRow<TData extends RowData = TMDataGridRowData> = Row<
+  TMDataGridFeatures,
+  TData
+>;
+type GridColumn<TData extends RowData = TMDataGridRowData> = Column<
+  TMDataGridFeatures,
+  TData,
+  unknown
+>;
 
 /**
  * What a cell editor is handed - deliberately both vocabularies at once. The
@@ -323,8 +334,8 @@ export type TMDataGridEditorArgs = {
   /** The whole row form, for the rare editor that reads sibling fields. */
   form: TMDataGridRowEditForm;
   cell: Cell<TMDataGridFeatures, TMDataGridRowData, unknown>;
-  row: ErasedRow;
-  column: ErasedColumn;
+  row: GridRow;
+  column: GridColumn;
   table: TMDataGridTable<TMDataGridRowData>;
   /** What Enter would do - commit the edit. For the editor's own UI. */
   commit: () => Promise<boolean>;
@@ -351,8 +362,8 @@ export type TMDataGridEditValueMapArgs = {
   value: unknown;
   /** What the field held before this write - for length-aware masks. */
   previous: unknown;
-  row: ErasedRow;
-  column: ErasedColumn;
+  row: GridRow;
+  column: GridColumn;
   table: TMDataGridTable<TMDataGridRowData>;
 };
 
@@ -374,8 +385,8 @@ export type TMDataGridEditCommitMapArgs = {
   /** What the field held when editing began. */
   previous: unknown;
   /** The row being committed. `undefined` for a row that is being added. */
-  row: ErasedRow | undefined;
-  column: ErasedColumn;
+  row: GridRow | undefined;
+  column: GridColumn;
   table: TMDataGridTable<TMDataGridRowData>;
 };
 
@@ -503,6 +514,13 @@ export type TMDataGridSaveDraftsResponse = {
   deleted?: TMDataGridSaveOutcomes;
 };
 
+/** Whether `newRowDefaults` is the per-row function rather than a row. */
+function isDefaultsFactory<TData extends RowData>(
+  defaults: TData | (() => TData) | undefined,
+): defaults is () => TData {
+  return typeof defaults === "function";
+}
+
 /** Whether one id of a bucket saved. Unnamed ids saved. */
 function isSaved(
   outcomes: TMDataGridSaveOutcomes | undefined,
@@ -514,24 +532,26 @@ function isSaved(
 }
 
 /** What the engine reads fresh on every call - see `createEditEngine`. */
-export type TMDataGridEditEngineContext = {
-  table: TMDataGridTable<TMDataGridRowData>;
+export type TMDataGridEditEngineContext<
+  TData extends RowData = TMDataGridRowData,
+> = {
+  table: TMDataGridTable<TData>;
   editMode: TMDataGridEditMode;
   /** `editing.draft` - whether a commit parks instead of reaching out. */
   draft: boolean;
   rowValidators?: TMDataGridRowValidators;
-  tableValidators?: TMDataGridTableValidators;
+  tableValidators?: TMDataGridTableValidators<TData>;
   /**
    * `editing.columns` - the allowlist, or `undefined` for "every column that
    * maps to a field".
    */
   editableColumnIds?: ReadonlyArray<string>;
-  isRowEditable?: (row: ErasedRow) => boolean;
+  isRowEditable?: (row: GridRow<TData>) => boolean;
   onEditCommit?: (
-    args: TMDataGridEditCommitArgs<TMDataGridRowData>,
+    args: TMDataGridEditCommitArgs<TData>,
   ) => void | Promise<void>;
   onSaveDrafts?: (
-    args: TMDataGridSaveDraftsArgs<TMDataGridRowData>,
+    args: TMDataGridSaveDraftsArgs<TData>,
   ) =>
     | void
     | TMDataGridSaveDraftsResponse
@@ -540,13 +560,9 @@ export type TMDataGridEditEngineContext = {
    * Seed values for `addRow`, under the values it is called with. A function
    * is called per added row.
    */
-  newRowDefaults?: TMDataGridRowData | (() => TMDataGridRowData);
-  onRowAdd?: (
-    args: TMDataGridRowAddArgs<TMDataGridRowData>,
-  ) => void | Promise<void>;
-  onRowDelete?: (
-    args: TMDataGridRowDeleteArgs<TMDataGridRowData>,
-  ) => void | Promise<void>;
+  newRowDefaults?: TData | (() => TData);
+  onRowAdd?: (args: TMDataGridRowAddArgs<TData>) => void | Promise<void>;
+  onRowDelete?: (args: TMDataGridRowDeleteArgs<TData>) => void | Promise<void>;
 };
 
 /**
@@ -693,9 +709,9 @@ export type TMDataGridEditRowSnapshot<
  */
 export type TMDataGridEditApi<TData extends RowData = TMDataGridRowData> = {
   /** The projection store - subscribe with `useSelector(edit.store, …)`. */
-  store: Store<TMDataGridEditState>;
+  store: Store<TMDataGridEditState<TData>>;
   /** Current snapshot, for reads outside React. */
-  readonly state: TMDataGridEditState;
+  readonly state: TMDataGridEditState<TData>;
   /**
    * rowId → the open row's live form, the source of truth for everything
    * mid-edit. `undefined` for a row that is not open, a committed row
@@ -720,16 +736,16 @@ export type TMDataGridEditApi<TData extends RowData = TMDataGridRowData> = {
    * Whether this cell may open an editor: the column maps to a field, nothing
    * switched it off, and the row takes edits at all.
    */
-  canEditCell: (row: ErasedRow, column: ErasedColumn) => boolean;
+  canEditCell: (row: GridRow<TData>, column: GridColumn<TData>) => boolean;
   /** Whether the row takes edits at all - the edit lane's pencil gate. */
-  canEditRow: (row: ErasedRow) => boolean;
+  canEditRow: (row: GridRow<TData>) => boolean;
   /**
    * Whether the column takes edits at all, with no row in hand: it maps to a
    * field, `editing.columns` lists it if that option is set, and
    * `meta.edit.enabled` is not `false`. A per-row `enabled` predicate is the
    * row's half of the question - `canEditCell` asks both.
    */
-  isColumnEditable: (column: ErasedColumn) => boolean;
+  isColumnEditable: (column: GridColumn<TData>) => boolean;
   /**
    * Opens an editor. In row mode the whole row opens either way and `columnId`
    * only says which cell takes the caret; `null` (the lane's pencil) leaves it
@@ -995,26 +1011,27 @@ async function runFieldValidator(
  * The engine as the hook holds it: the public `edit` API plus the verbs the
  * grid calls on its own behalf and does not document.
  */
-export type TMDataGridEditEngine = TMDataGridEditApi & {
-  /** See the implementation. `rowsById` is the core row model's. */
-  forgetMissingRows: (rowsById: Record<string, unknown>) => void;
-  /**
-   * Whether the row carries a deletion mark - the set behind
-   * `state.deletedRowIds`, for a check per row from a predicate the table
-   * calls per row.
-   */
-  isRowDeleted: (rowId: string) => boolean;
-  /**
-   * Settles once every commit running now has, or `null` when none is - so a
-   * caller can act at once in the common case. Read by `sortAgain`.
-   */
-  commitsSettled: () => Promise<void> | null;
-};
+export type TMDataGridEditEngine<TData extends RowData = TMDataGridRowData> =
+  TMDataGridEditApi<TData> & {
+    /** See the implementation. `rowsById` is the core row model's. */
+    forgetMissingRows: (rowsById: Record<string, unknown>) => void;
+    /**
+     * Whether the row carries a deletion mark - the set behind
+     * `state.deletedRowIds`, for a check per row from a predicate the table
+     * calls per row.
+     */
+    isRowDeleted: (rowId: string) => boolean;
+    /**
+     * Settles once every commit running now has, or `null` when none is - so a
+     * caller can act at once in the common case. Read by `sortAgain`.
+     */
+    commitsSettled: () => Promise<void> | null;
+  };
 
-export function createEditEngine(
-  getContext: () => TMDataGridEditEngineContext,
-): TMDataGridEditEngine {
-  const store = new Store<TMDataGridEditState>(EMPTY_EDIT_STATE);
+export function createEditEngine<TData extends RowData>(
+  getContext: () => TMDataGridEditEngineContext<TData>,
+): TMDataGridEditEngine<TData> {
+  const store = new Store<TMDataGridEditState<TData>>(EMPTY_EDIT_STATE);
 
   /**
    * One open row's editor state. Only an open row has one: a row that
@@ -1023,7 +1040,7 @@ export function createEditEngine(
    */
   type FormEntry = {
     form: TMDataGridRowEditForm;
-    original: TMDataGridRowData;
+    original: TData;
     /** An entry-block row - a form with no backing row yet. */
     isNew: boolean;
     /** Set by the wrapped onSubmit when the consumer's commit resolved. */
@@ -1047,6 +1064,8 @@ export function createEditEngine(
   };
   const forms = new Map<string, FormEntry>();
 
+  const valuesOf = (entry: FormEntry): TData => entry.form.state.values;
+
   /**
    * One committed row in the draft store. A committed row is plain data:
    * it passed its validators, the user left it, and nothing can change its
@@ -1056,9 +1075,9 @@ export function createEditEngine(
    */
   type Committed = {
     /** The data row, or the entry row's seed - what `changes` diffs against. */
-    original: TMDataGridRowData;
+    original: TData;
     /** The committed values; `committedValues[rowId]` holds this same object. */
-    values: TMDataGridRowData;
+    values: TData;
     /** `diff(original, values)` as it stood at commit time. */
     dirtyFields: Array<string>;
     isNew: boolean;
@@ -1073,7 +1092,7 @@ export function createEditEngine(
    * `meta.edit.enabled` has not switched it off outright. A per-row predicate
    * on `enabled` is the row's half and is not asked here.
    */
-  const isColumnEditable = (column: ErasedColumn): boolean => {
+  const isColumnEditable = (column: GridColumn<TData>): boolean => {
     if (isControlColumn(column.id)) return false;
     if (getEditFieldName(column) === null) return false;
     const allowed = getContext().editableColumnIds;
@@ -1081,7 +1100,7 @@ export function createEditEngine(
     return !isColumnEditSwitchedOff(column);
   };
 
-  const editableColumns = (): Array<ErasedColumn> =>
+  const editableColumns = (): Array<GridColumn<TData>> =>
     getContext().table.getAllLeafColumns().filter(isColumnEditable);
 
   /**
@@ -1095,7 +1114,7 @@ export function createEditEngine(
    * `{ fields }` shape, which plants each error on its own field.
    */
   const validateColumnFields = async (
-    values: TMDataGridRowData,
+    values: TData,
     rowId: string,
     isNew: boolean,
   ): Promise<Record<string, unknown> | undefined> => {
@@ -1127,10 +1146,10 @@ export function createEditEngine(
    * The draft the grid is holding for a row: an open form's live values, or
    * a committed row's snapshot. `undefined` for a row it holds nothing for.
    */
-  const draftValues = (rowId: string): TMDataGridRowData | undefined => {
+  const draftValues = (rowId: string): TData | undefined => {
     const entry = forms.get(rowId);
     if (entry !== undefined) {
-      return entry.form.state.values as TMDataGridRowData;
+      return valuesOf(entry);
     }
     return committed.get(rowId)?.values;
   };
@@ -1145,11 +1164,11 @@ export function createEditEngine(
    */
   const mergedRows = (committing?: {
     rowId: string;
-    value: TMDataGridRowData;
+    value: TData;
     isNew: boolean;
-  }): Array<{ rowId: string; value: TMDataGridRowData }> => {
+  }): Array<{ rowId: string; value: TData }> => {
     const deleted = working.deletedRowIds;
-    const rows: Array<{ rowId: string; value: TMDataGridRowData }> = [];
+    const rows: Array<{ rowId: string; value: TData }> = [];
     const model = getContext().table.getCoreRowModel();
     for (const row of model.flatRows) {
       if (deleted.has(row.id)) continue;
@@ -1159,7 +1178,7 @@ export function createEditEngine(
       }
       rows.push({
         rowId: row.id,
-        value: draftValues(row.id) ?? (row.original as TMDataGridRowData),
+        value: draftValues(row.id) ?? row.original,
       });
     }
     for (const tempId of working.newRows.keys()) {
@@ -1190,10 +1209,10 @@ export function createEditEngine(
    * one. Left out, this builds the view for the committing row itself.
    */
   const runTableValidators = async (
-    value: TMDataGridRowData,
+    value: TData,
     rowId: string,
     isNew: boolean,
-    rows?: ReadonlyArray<{ rowId: string; value: TMDataGridRowData }>,
+    rows?: ReadonlyArray<{ rowId: string; value: TData }>,
   ): Promise<unknown> => {
     const validators = getContext().tableValidators;
     if (
@@ -1202,7 +1221,7 @@ export function createEditEngine(
     ) {
       return undefined;
     }
-    const args: TMDataGridTableValidateArgs = {
+    const args: TMDataGridTableValidateArgs<TData> = {
       value,
       rowId,
       isNew,
@@ -1274,8 +1293,8 @@ export function createEditEngine(
     const consumerAsync = rowValidators["onSubmitAsync"];
     return {
       ...rowValidators,
-      onSubmitAsync: async (args: { value: unknown }) => {
-        const value = args.value as TMDataGridRowData;
+      onSubmitAsync: async (args: { value: TData }) => {
+        const { value } = args;
         const fromConsumer =
           consumerAsync === undefined
             ? undefined
@@ -1289,8 +1308,8 @@ export function createEditEngine(
 
   /** What moved between a row as it was and a row as drafted. */
   const diff = (
-    original: TMDataGridRowData,
-    values: TMDataGridRowData,
+    original: TData,
+    values: TData,
   ): Array<TMDataGridEditChange> => {
     const changes: Array<TMDataGridEditChange> = [];
     for (const column of editableColumns()) {
@@ -1305,9 +1324,9 @@ export function createEditEngine(
     return changes;
   };
 
-  const project = (entry: FormEntry): TMDataGridEditRowProjection => {
+  const project = (entry: FormEntry): TMDataGridEditRowProjection<TData> => {
     const state = entry.form.state;
-    const values = state.values as TMDataGridRowData;
+    const values: TData = state.values;
     const live = Object.entries(state.fieldMeta).flatMap(([name, meta]) => {
       if (name === "") return [];
       const errors = (meta as { errors: ReadonlyArray<unknown> }).errors;
@@ -1341,7 +1360,7 @@ export function createEditEngine(
    */
   const projectCommitted = (
     snapshot: Committed,
-  ): TMDataGridEditRowProjection => ({
+  ): TMDataGridEditRowProjection<TData> => ({
     dirtyFields: snapshot.dirtyFields,
     errorFields: [],
     errorMessages: [],
@@ -1377,9 +1396,9 @@ export function createEditEngine(
      * row's place.
      */
     openRowIds: new Set<string>(),
-    rows: new Map<string, TMDataGridEditRowProjection>(),
+    rows: new Map<string, TMDataGridEditRowProjection<TData>>(),
     committedRowIds: new Set<string>(),
-    committedValues: new Map<string, TMDataGridRowData>(),
+    committedValues: new Map<string, TData>(),
     /** `tempId` to its committed flag, in the order the rows were opened. */
     newRows: new Map<string, boolean>(),
     deletedRowIds: new Set<string>(),
@@ -1621,9 +1640,9 @@ export function createEditEngine(
    */
   const createForm = (
     rowId: string,
-    original: TMDataGridRowData,
+    original: TData,
     isNew: boolean,
-    values?: TMDataGridRowData,
+    values?: TData,
   ): FormEntry => {
     const entry: FormEntry = {
       original,
@@ -1638,9 +1657,9 @@ export function createEditEngine(
         validators: composeValidators(rowId, isNew) as never,
         onSubmit: async ({ value }) => {
           if (entry.isNew) {
-            const addArgs: TMDataGridRowAddArgs<TMDataGridRowData> = {
+            const addArgs: TMDataGridRowAddArgs<TData> = {
               tempId: rowId,
-              value: value as TMDataGridRowData,
+              value,
             };
             if (entry.parkOnly) {
               entry.lastSubmitOk = true;
@@ -1657,10 +1676,10 @@ export function createEditEngine(
             }
             return;
           }
-          const changes = diff(entry.original, value as TMDataGridRowData);
-          const args: TMDataGridEditCommitArgs<TMDataGridRowData> = {
+          const changes = diff(entry.original, value);
+          const args: TMDataGridEditCommitArgs<TData> = {
             rowId,
-            value: value as TMDataGridRowData,
+            value,
             original,
             changes,
             source: getContext().editMode,
@@ -1747,8 +1766,7 @@ export function createEditEngine(
     // answer lands on the form it has rather than being lost.
     const entry = snapshot === undefined ? forms.get(rowId) : reopen(rowId);
     if (entry === undefined) return;
-    const values =
-      snapshot?.values ?? (entry.form.state.values as TMDataGridRowData);
+    const values = snapshot?.values ?? valuesOf(entry);
     const shape =
       typeof error === "object" && error !== null
         ? (error as { form?: unknown; fields?: Record<string, unknown> })
@@ -1775,13 +1793,16 @@ export function createEditEngine(
     publishRow(rowId);
   };
 
-  const canEditRow = (row: ErasedRow): boolean => {
+  const canEditRow = (row: GridRow<TData>): boolean => {
     if (row.getIsGrouped()) return false;
     if (working.deletedRowIds.has(row.id)) return false;
     return getContext().isRowEditable?.(row) !== false;
   };
 
-  const canEditCell = (row: ErasedRow, column: ErasedColumn): boolean => {
+  const canEditCell = (
+    row: GridRow<TData>,
+    column: GridColumn<TData>,
+  ): boolean => {
     const context = getContext();
     if (row.getIsGrouped()) return false;
     if (working.deletedRowIds.has(row.id)) return false;
@@ -1793,7 +1814,7 @@ export function createEditEngine(
     return true;
   };
 
-  const getRow = (rowId: string): ErasedRow | undefined => {
+  const getRow = (rowId: string): GridRow<TData> | undefined => {
     try {
       return getContext().table.getRow(rowId);
     } catch {
@@ -1810,7 +1831,7 @@ export function createEditEngine(
   const takeFieldErrors = (
     entry: FormEntry,
   ): Array<{ field: string; value: unknown; message: string }> => {
-    const values = entry.form.state.values as TMDataGridRowData;
+    const values = valuesOf(entry);
     return Object.entries(entry.form.state.fieldMeta).flatMap(
       ([field, meta]) => {
         if (field === "") return [];
@@ -1839,7 +1860,7 @@ export function createEditEngine(
     callerFields: ReadonlySet<string>,
   ) => {
     const { table } = getContext();
-    const values = entry.form.state.values as TMDataGridRowData;
+    const values = valuesOf(entry);
     const changed = entry.isNew
       ? null
       : new Set(diff(entry.original, values).map((change) => change.columnId));
@@ -1850,16 +1871,14 @@ export function createEditEngine(
       if (changed !== null && !changed.has(column.id)) continue;
       const field = getEditFieldName(column);
       if (field === null || callerFields.has(field)) continue;
-      const value: unknown = getBy(
-        entry.form.state.values as TMDataGridRowData,
-        field,
-      );
+      const value: unknown = getBy(valuesOf(entry), field);
+      // The feature registry types `meta` once, so it cannot carry the row type.
       const mapped = map({
         value,
         previous: getBy(entry.original, field),
-        row,
-        column,
-        table,
+        row: row as unknown as GridRow | undefined,
+        column: column as unknown as GridColumn,
+        table: table as unknown as TMDataGridTable<TMDataGridRowData>,
       });
       if (sameValue(value, mapped)) continue;
       entry.form.setFieldValue(field as never, mapped as never, {
@@ -1890,11 +1909,7 @@ export function createEditEngine(
     // Before the pristine check: a value mapped back to the original leaves
     // nothing to commit.
     if (callerFields !== "all") applyCommitMaps(entry, rowId, callerFields);
-    if (
-      !entry.isNew &&
-      diff(entry.original, entry.form.state.values as TMDataGridRowData)
-        .length === 0
-    ) {
+    if (!entry.isNew && diff(entry.original, valuesOf(entry)).length === 0) {
       forget(rowId);
       return true;
     }
@@ -1926,7 +1941,7 @@ export function createEditEngine(
       }
       if (entry.parkOnly) {
         heldSync(() => {
-          const values = entry.form.state.values as TMDataGridRowData;
+          const values = valuesOf(entry);
           committed.set(rowId, {
             original: entry.original,
             values,
@@ -1978,7 +1993,7 @@ export function createEditEngine(
     });
   };
 
-  const begin: TMDataGridEditApi["begin"] = ({ rowId, columnId }) => {
+  const begin: TMDataGridEditApi<TData>["begin"] = ({ rowId, columnId }) => {
     const { editMode } = getContext();
     // A committed row holds no form, so the sweep never sees it. An entry row
     // is skipped: its ✓ is the decision, so the sweep must not add a half-typed
@@ -2021,7 +2036,7 @@ export function createEditEngine(
   };
 
   /** Opens one entry row - the form and its `newRows` entry, in one write. */
-  const openEntryRow = (values?: TMDataGridRowData): string => {
+  const openEntryRow = (values?: Partial<TData>): string => {
     newRowCounter += 1;
     const tempId = `${NEW_ROW_ID_PREFIX}${newRowCounter}`;
     createForm(tempId, seedNewRow(values), true);
@@ -2030,21 +2045,20 @@ export function createEditEngine(
     return tempId;
   };
 
-  const addRow = (values?: TMDataGridRowData): string =>
+  const addRow = (values?: Partial<TData>): string =>
     heldSync(() => openEntryRow(values));
 
   /** Seeds one entry row's values - `newRowDefaults` under `values`. */
-  const seedNewRow = (values?: TMDataGridRowData): TMDataGridRowData => {
+  const seedNewRow = (values?: Partial<TData>): TData => {
     const { newRowDefaults } = getContext();
-    const defaults =
-      typeof newRowDefaults === "function"
-        ? newRowDefaults()
-        : (newRowDefaults ?? {});
-    return { ...defaults, ...values };
+    const defaults = isDefaultsFactory(newRowDefaults)
+      ? newRowDefaults()
+      : newRowDefaults;
+    return { ...defaults, ...values } as TData;
   };
 
   const addRows = async (
-    rows: ReadonlyArray<TMDataGridRowData>,
+    rows: ReadonlyArray<Partial<TData>>,
     options?: TMDataGridAddRowsOptions,
   ): Promise<TMDataGridAddRowsResult> =>
     held(async () => {
@@ -2158,7 +2172,7 @@ export function createEditEngine(
   const commitArgsFor = (
     rowId: string,
     snapshot: Committed,
-  ): TMDataGridEditCommitArgs<TMDataGridRowData> => ({
+  ): TMDataGridEditCommitArgs<TData> => ({
     rowId,
     value: snapshot.values,
     original: snapshot.original,
@@ -2260,8 +2274,8 @@ export function createEditEngine(
       return report();
     }
 
-    type CommitArgs = TMDataGridEditCommitArgs<TMDataGridRowData>;
-    type AddArgs = TMDataGridRowAddArgs<TMDataGridRowData>;
+    type CommitArgs = TMDataGridEditCommitArgs<TData>;
+    type AddArgs = TMDataGridRowAddArgs<TData>;
     const collected: Array<CommitArgs> = [];
     const added: Array<AddArgs> = [];
     const sent: Array<{ id: string; isNew: boolean }> = [];
@@ -2431,18 +2445,17 @@ export function createEditEngine(
     return writeFields(rowId, writes);
   };
 
-  const getRowValues = (rowId: string): TMDataGridRowData | undefined =>
-    draftValues(rowId) ??
-    (getRow(rowId)?.original as TMDataGridRowData | undefined);
+  const getRowValues = (rowId: string): TData | undefined =>
+    draftValues(rowId) ?? getRow(rowId)?.original;
 
-  const getRows = (): ReadonlyArray<TMDataGridEditRowSnapshot> => {
+  const getRows = (): ReadonlyArray<TMDataGridEditRowSnapshot<TData>> => {
     const deleted = working.deletedRowIds;
-    const rows: Array<TMDataGridEditRowSnapshot> = [];
+    const rows: Array<TMDataGridEditRowSnapshot<TData>> = [];
     const model = getContext().table.getCoreRowModel();
     for (const row of model.flatRows) {
       rows.push({
         rowId: row.id,
-        value: draftValues(row.id) ?? (row.original as TMDataGridRowData),
+        value: draftValues(row.id) ?? row.original,
         isNew:
           forms.get(row.id)?.isNew ?? committed.get(row.id)?.isNew ?? false,
         deleted: deleted.has(row.id),
