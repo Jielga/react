@@ -1,5 +1,15 @@
 # @jielga/tmdatagrid
 
+## 2.8.0
+
+### Minor Changes
+
+- [#195](https://github.com/Jielga/react/pull/195) [`4270c3a`](https://github.com/Jielga/react/commit/4270c3a32a6a48dfda67866bded7768ca5614371) Thanks [@Psvensso](https://github.com/Psvensso)! - `edit.state`, `edit.store`, `edit.canEditCell`, `edit.canEditRow` and `edit.isColumnEditable` use the grid's row type. `TMDataGridEditState` and `TMDataGridEditRowProjection` take a `TData`, which defaults to `TMDataGridRowData`.
+
+### Patch Changes
+
+- [#194](https://github.com/Jielga/react/pull/194) [`95c7efc`](https://github.com/Jielga/react/commit/95c7efc52ca82de052c151d73ba5eeba1fa45924) Thanks [@Psvensso](https://github.com/Psvensso)! - The header funnel no longer shows on a column with `enableColumnFilter: false` when a filter on it was set from code.
+
 ## 2.7.0
 
 ### Minor Changes
