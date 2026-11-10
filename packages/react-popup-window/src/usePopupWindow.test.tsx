@@ -220,6 +220,38 @@ describe("usePopupWindow", () => {
     vi.useRealTimers();
   });
 
+  it("detects a navigation that pagehide did not report", () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const getApi = renderHarness({ onClose });
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.navigate("http://localhost/elsewhere");
+      vi.advanceTimersByTime(250);
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(fake.win.closed).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("detects a navigation to another origin that pagehide did not report", () => {
+    vi.useFakeTimers();
+    const getApi = renderHarness();
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.makeUnscriptable();
+      vi.advanceTimersByTime(250);
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(fake.win.closed).toBe(false);
+    vi.useRealTimers();
+  });
+
   it("opens a new popup after the previous one navigated to another origin", () => {
     vi.useFakeTimers();
     const getApi = renderHarness();

@@ -416,7 +416,13 @@ export function mirrorStyles(
     stop: () => {
       headObserver.disconnect();
       rootObserver.disconnect();
-      if (frame !== undefined) view?.cancelAnimationFrame(frame);
+      if (frame !== undefined) {
+        try {
+          view?.cancelAnimationFrame(frame);
+        } catch {
+          // A SecurityError once the target window has navigated to another origin.
+        }
+      }
       for (const sync of ruleSyncs.values()) sync.stop();
       for (const remove of [...unbridgeLinks.values()]) remove();
       ruleSyncs.clear();
