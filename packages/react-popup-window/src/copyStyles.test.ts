@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { copyStyles, mirrorStyles } from "./copyStyles";
 
 const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -219,6 +219,18 @@ describe("copyStyles", () => {
 
     stop();
     style.remove();
+    remove();
+  });
+
+  it("stop() does not throw once the target window is no longer scriptable", () => {
+    const { target, remove } = createWindowTarget();
+    const { stop } = mirrorStyles(document, target);
+    vi.spyOn(target.defaultView!, "cancelAnimationFrame").mockImplementation(
+      () => {
+        throw new DOMException("Blocked a frame", "SecurityError");
+      },
+    );
+    expect(stop).not.toThrow();
     remove();
   });
 

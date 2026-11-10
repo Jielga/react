@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { FC } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { mirrorStyles } from "./copyStyles";
 import type {
   PopupProps,
@@ -109,6 +109,18 @@ function loadedDocument(popupWindow: Window): Document | null {
   return doc;
 }
 
+/**
+ * Whether the popup still shows `doc`. `false` once it has navigated
+ * elsewhere, including to a page the opener cannot script.
+ */
+function showsDocument(popupWindow: Window, doc: Document): boolean {
+  try {
+    return popupWindow.document === doc;
+  } catch {
+    return false;
+  }
+}
+
 function createPopupComponent(store: PopupStore): FC<PopupProps> {
   function Popup({ children }: PopupProps) {
     const { container } = useSyncExternalStore(
@@ -164,12 +176,17 @@ export function usePopupWindow(
   const closePopup = useCallback(
     (userClosed: boolean) => {
       const { popupWindow } = store.getSnapshot();
-      cleanupRef.current?.();
+      const cleanup = cleanupRef.current;
       cleanupRef.current = null;
-      if (!popupWindow) return;
-      if (!userClosed && !popupWindow.closed) popupWindow.close();
-      store.setState({ popupWindow: null, container: null });
-      optionsRef.current.onClose?.();
+      try {
+        cleanup?.();
+      } finally {
+        if (popupWindow) {
+          if (!userClosed && !popupWindow.closed) popupWindow.close();
+          store.setState({ popupWindow: null, container: null });
+          optionsRef.current.onClose?.();
+        }
+      }
     },
     [store],
   );
@@ -210,25 +227,34 @@ export function usePopupWindow(
       return null;
     }
 
-    const handleExternalClose = () => closePopup(true);
-    const onPopupPagehide = () => {
-      // pagehide also fires on navigation; only treat it as a close when the
-      // window really is gone a tick later.
-      setTimeout(() => {
-        if (popupWindow.closed) handleExternalClose();
-      }, 0);
+    const handleExternalClose = () => {
+      if (store.getSnapshot().popupWindow === popupWindow) closePopup(true);
     };
+    // The prepared document is going away: the window closed, reloaded or
+    // navigated elsewhere. The content returns to the opener and a window
+    // still open is left alone. The portal unmounts synchronously, while the
+    // popup is still scriptable: after a cross-origin navigation, cleanup
+    // code that touches the popup window (cancelAnimationFrame, observers)
+    // would throw a SecurityError.
+    const onPopupPagehide = () => {
+      flushSync(handleExternalClose);
+    };
+
+    let preparedDoc: Document | undefined;
 
     // Belt and braces: some browsers don't fire pagehide reliably for popups.
     const closePoll = window.setInterval(() => {
-      if (popupWindow.closed) handleExternalClose();
+      if (
+        popupWindow.closed ||
+        (preparedDoc && !showsDocument(popupWindow, preparedDoc))
+      )
+        handleExternalClose();
     }, 250);
 
     const onOpenerPagehide = () => popupWindow.close();
     window.addEventListener("pagehide", onOpenerPagehide);
 
     let loadPoll: number | undefined;
-    let prepared = false;
     let stopStyleSync: (() => void) | undefined;
     let stopStylesWait: (() => void) | undefined;
 
@@ -236,8 +262,13 @@ export function usePopupWindow(
       window.clearInterval(closePoll);
       window.clearInterval(loadPoll);
       window.removeEventListener("pagehide", onOpenerPagehide);
-      if (prepared)
-        popupWindow.removeEventListener("pagehide", onPopupPagehide);
+      if (preparedDoc) {
+        try {
+          popupWindow.removeEventListener("pagehide", onPopupPagehide);
+        } catch {
+          // A SecurityError once the popup has navigated to another origin.
+        }
+      }
       stopStyleSync?.();
       stopStylesWait?.();
     };
@@ -245,7 +276,7 @@ export function usePopupWindow(
     // Title, styles and the portal container go into the document that
     // stays: `about:blank` itself, or the page `url` loads in its place.
     const prepare = (doc: Document) => {
-      prepared = true;
+      preparedDoc = doc;
       popupWindow.addEventListener("pagehide", onPopupPagehide);
       doc.title = opts.title ?? document.title;
       let links: HTMLLinkElement[] = [];
