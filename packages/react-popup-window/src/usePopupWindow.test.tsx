@@ -10,11 +10,13 @@ interface FakePopup {
   doc: Document;
   /** Simulate the user closing the window. */
   closeByUser: () => void;
+  /** Simulate the user leaving the page while the window stays open, such as typing a URL into its address bar. */
+  leaveByUser: () => void;
   /** Simulate the window navigating to `url`; the new document starts out parsing. */
   navigate: (url: string) => Document;
   /** Finish parsing the document `navigate` created. */
   finishLoading: () => void;
-  /** Make the document throw on access, as after a cross-origin redirect. */
+  /** Make the document and window listeners throw on access, as after a cross-origin navigation. */
   makeUnscriptable: () => void;
 }
 
@@ -47,18 +49,31 @@ function createFakePopup(): FakePopup {
       listeners.get(type)!.add(listener);
     },
     removeEventListener(type: string, listener: EventListener) {
+      if (unscriptable) {
+        throw new DOMException(
+          "Blocked a frame from accessing a cross-origin frame.",
+          "SecurityError",
+        );
+      }
       listeners.get(type)?.delete(listener);
     },
   } as unknown as Window;
+
+  const firePagehide = () => {
+    for (const listener of listeners.get("pagehide") ?? []) {
+      listener(new Event("pagehide"));
+    }
+  };
 
   return {
     win,
     doc,
     closeByUser() {
       closed = true;
-      for (const listener of listeners.get("pagehide") ?? []) {
-        listener(new Event("pagehide"));
-      }
+      firePagehide();
+    },
+    leaveByUser() {
+      firePagehide();
     },
     navigate(url) {
       const next = document.implementation.createHTMLDocument("popup");
@@ -184,6 +199,95 @@ describe("usePopupWindow", () => {
     expect(getApi().isOpen).toBe(false);
     expect(onClose).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
+  });
+
+  it("returns the content to the opener when the popup page navigates away, leaving the window open", () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const getApi = renderHarness({ onClose });
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.leaveByUser();
+      vi.runOnlyPendingTimers();
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(getApi().popupWindow).toBeNull();
+    expect(fake.win.closed).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(fake.doc.body.textContent).not.toContain("hello from popup");
+    vi.useRealTimers();
+  });
+
+  it("detects a navigation that pagehide did not report", () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const getApi = renderHarness({ onClose });
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.navigate("http://localhost/elsewhere");
+      vi.advanceTimersByTime(250);
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(fake.win.closed).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("detects a navigation to another origin that pagehide did not report", () => {
+    vi.useFakeTimers();
+    const getApi = renderHarness();
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.makeUnscriptable();
+      vi.advanceTimersByTime(250);
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(fake.win.closed).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("opens a new popup after the previous one navigated to another origin", () => {
+    vi.useFakeTimers();
+    const getApi = renderHarness();
+    act(() => {
+      getApi().open();
+    });
+    act(() => {
+      fake.leaveByUser();
+      fake.makeUnscriptable();
+      vi.runOnlyPendingTimers();
+    });
+    expect(getApi().isOpen).toBe(false);
+
+    const next = createFakePopup();
+    vi.spyOn(window, "open").mockReturnValue(next.win);
+    act(() => {
+      getApi().open();
+    });
+    expect(getApi().popupWindow).toBe(next.win);
+    expect(next.doc.body.textContent).toContain("hello from popup");
+    vi.useRealTimers();
+  });
+
+  it("close() works after the popup navigated to another origin", () => {
+    const onClose = vi.fn();
+    const getApi = renderHarness({ onClose });
+    act(() => {
+      getApi().open();
+    });
+    fake.makeUnscriptable();
+    act(() => {
+      getApi().close();
+    });
+    expect(getApi().isOpen).toBe(false);
+    expect(fake.win.closed).toBe(true);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("reports blocked popups", () => {

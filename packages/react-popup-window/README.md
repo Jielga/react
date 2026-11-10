@@ -85,8 +85,9 @@ return (
 )
 ```
 
-`isOpen` also updates when the user closes the window directly, so the
-inline branch is restored in every case.
+`isOpen` also updates when the user closes the window directly, or reloads
+it or navigates it to another page, so the inline branch is restored in
+every case. A window the user navigated away is left open.
 
 ### Show your own URL in the address bar
 
@@ -153,7 +154,7 @@ interface UsePopupWindowOptions {
   copyStyles?: boolean
   /** Called when Popup starts rendering into the popup window. */
   onOpen?: (popupWindow: Window) => void
-  /** Called when the popup closes: close(), user close, or opener unload. */
+  /** Called when the popup closes: close(), user close or navigation, or opener unload. */
   onClose?: () => void
   /** Called when the popup is blocked or its document is not scriptable. */
   onBlocked?: () => void

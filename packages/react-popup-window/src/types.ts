@@ -49,7 +49,11 @@ export interface UsePopupWindowOptions {
    * loaded.
    */
   onOpen?: (popupWindow: Window) => void;
-  /** Called when the popup closes — via `close()`, the user, or the opener unloading. */
+  /**
+   * Called when the popup closes — via `close()`, the user, or the opener
+   * unloading — and when the user reloads the popup or navigates it to another
+   * page. The window is then left open, and `Popup` stops rendering into it.
+   */
   onClose?: () => void;
   /**
    * Called when the popup cannot be used: `window.open` returned `null`
