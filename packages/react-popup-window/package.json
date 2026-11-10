@@ -1,6 +1,6 @@
 {
   "name": "@jielga/react-popup-window",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "React hook to open part of your UI in a separate browser popup window — live portal rendering, style syncing and cross-window messaging.",
   "license": "MIT",
   "author": "jielga",

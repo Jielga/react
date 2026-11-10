@@ -1,5 +1,11 @@
 # @jielga/react-popup-window
 
+## 0.3.2
+
+### Patch Changes
+
+- [#198](https://github.com/Jielga/react/pull/198) [`30c4ce3`](https://github.com/Jielga/react/commit/30c4ce3efde21a15a7153e2c63b85e4bf7f1c9dd) Thanks [@Psvensso](https://github.com/Psvensso)! - Reloading the popup or navigating it to another page now ends the popup session like a close: `Popup` renders back in the opener, `onClose` is called, and the window is left open. `close()` and `open()` no longer break after the popup navigated to another origin.
+
 ## 0.3.1
 
 ### Patch Changes
