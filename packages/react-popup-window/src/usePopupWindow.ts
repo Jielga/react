@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { FC } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { mirrorStyles } from "./copyStyles";
 import type {
   PopupProps,
@@ -210,13 +210,17 @@ export function usePopupWindow(
       return null;
     }
 
-    const handleExternalClose = () => closePopup(true);
+    const handleExternalClose = () => {
+      if (store.getSnapshot().popupWindow === popupWindow) closePopup(true);
+    };
+    // The prepared document is going away: the window closed, reloaded or
+    // navigated elsewhere. The content returns to the opener and a window
+    // still open is left alone. The portal unmounts synchronously, while the
+    // popup is still scriptable: after a cross-origin navigation, cleanup
+    // code that touches the popup window (cancelAnimationFrame, observers)
+    // would throw a SecurityError.
     const onPopupPagehide = () => {
-      // pagehide also fires on navigation; only treat it as a close when the
-      // window really is gone a tick later.
-      setTimeout(() => {
-        if (popupWindow.closed) handleExternalClose();
-      }, 0);
+      flushSync(handleExternalClose);
     };
 
     // Belt and braces: some browsers don't fire pagehide reliably for popups.
@@ -236,8 +240,13 @@ export function usePopupWindow(
       window.clearInterval(closePoll);
       window.clearInterval(loadPoll);
       window.removeEventListener("pagehide", onOpenerPagehide);
-      if (prepared)
-        popupWindow.removeEventListener("pagehide", onPopupPagehide);
+      if (prepared) {
+        try {
+          popupWindow.removeEventListener("pagehide", onPopupPagehide);
+        } catch {
+          // A SecurityError once the popup has navigated to another origin.
+        }
+      }
       stopStyleSync?.();
       stopStylesWait?.();
     };

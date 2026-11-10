@@ -122,6 +122,35 @@ test("closing the popup window itself restores the main window grid", async ({
   await expect(page.getByTestId("table-detached-note")).toHaveCount(0);
 });
 
+test("navigating the popup to another page restores the main window grid and leaves the window open", async ({
+  page,
+}) => {
+  const server = createServer((_req, res) => {
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end("<!DOCTYPE html><title>Elsewhere</title><p>elsewhere</p>");
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const popup = await openPopup(page, "open-table");
+    await expect(popup.getByTestId("people-grid")).toBeVisible();
+
+    await popup.goto(
+      `http://127.0.0.1:${(server.address() as AddressInfo).port}/`,
+    );
+
+    await expect(page.getByTestId("people-grid")).toBeVisible();
+    await expect(page.getByTestId("table-detached-note")).toHaveCount(0);
+    expect(popup.isClosed()).toBe(false);
+
+    const reopened = await openPopup(page, "open-table");
+    await expect(reopened.getByTestId("people-grid")).toBeVisible();
+    await expect(page.getByTestId("table-detached-note")).toBeVisible();
+  } finally {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("panels: popped-out grid follows filters edited in the main window", async ({
   page,
 }) => {
