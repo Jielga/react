@@ -1,17 +1,23 @@
 {
   "entries": [
     {
-      "path": "v2.7",
-      "label": "2.7.0",
-      "version": "2.7.0",
+      "path": "v2.8",
+      "label": "2.8.0",
+      "version": "2.8.0",
       "kind": "stable",
       "latest": true
     },
     {
       "path": "next",
       "label": "next",
-      "version": "2.7.0",
+      "version": "2.8.0",
       "kind": "dev"
+    },
+    {
+      "path": "v2.7",
+      "label": "2.7.0",
+      "version": "2.7.0",
+      "kind": "stable"
     },
     {
       "path": "v2.6",

@@ -2,15 +2,15 @@
   "entries": [
     {
       "path": "v0.3",
-      "label": "0.3.1",
-      "version": "0.3.1",
+      "label": "0.3.2",
+      "version": "0.3.2",
       "kind": "stable",
       "latest": true
     },
     {
       "path": "next",
       "label": "next",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "kind": "dev"
     }
   ]
