@@ -6,6 +6,7 @@ import type { TMDataGridRowData } from "../TMDataGridContext";
 import {
   getDisplayedRows,
   getSelectableRowIds,
+  isPagingActive,
   resolveRowSelectionClick,
   type ResolveRowSelectionClickArgs,
   type TMDataGridRowClickModifiers,
@@ -413,5 +414,31 @@ describe("getDisplayedRows and row pinning", () => {
     expect(ids).toHaveLength(10);
     expect(ids).not.toContain("2");
     expect(ids).not.toContain("5");
+  });
+});
+
+describe("without the feature flags", () => {
+  const pageOfFive = {
+    initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
+  };
+
+  it("reads them off the table, so a cell can pass row.table alone", () => {
+    const api = erased(
+      renderGrid({ ...pageOfFive, enablePagination: true }).result.current,
+    );
+    const row = api.table.getRow("1");
+
+    expect(isPagingActive(row.table)).toBe(true);
+    expect(getDisplayedRows(row.table).map((r) => r.id)).toEqual(
+      getDisplayedRows(api.table, api.features).map((r) => r.id),
+    );
+    expect(getDisplayedRows(row.table)).toHaveLength(5);
+  });
+
+  it("ignores the page state while pagination is off", () => {
+    const api = erased(renderGrid(pageOfFive).result.current);
+
+    expect(isPagingActive(api.table)).toBe(false);
+    expect(getDisplayedRows(api.table)).toHaveLength(12);
   });
 });

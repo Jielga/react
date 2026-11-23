@@ -91,6 +91,27 @@ const rows = useSelector(table.store, () => getDisplayedRows(table, features), {
 });
 ```
 
+`features` is optional.
+Without it, `getDisplayedRows` uses the flags the grid last rendered with, so an event handler in a cell needs only `row.table`:
+
+```tsx
+cell: ({ row }) => (
+  <Button
+    onClick={() => {
+      const rows = getDisplayedRows(row.table);
+      openGallery(
+        rows.map((r) => r.original),
+        rows.findIndex((r) => r.id === row.id),
+      );
+    }}
+  >
+    Open
+  </Button>
+),
+```
+
+In a selector, pass `features`: the selector then changes when the options do.
+
 ## What the hook returns
 
 `useTMDataGrid` returns the table instance, the UI store, the edit engine, the
@@ -115,5 +136,5 @@ stops updating.
 | `data-testid`                                                                        | Prop      | `string`                       | –       | Names the grid for tests.                            |
 | `aria-label` · `aria-labelledby`                                                     | Props     | `string`                       | –       | The grid's accessible name.                          |
 | `useTMDataGridContext`                                                               | Hook      | `() => TMDataGridContextValue` | –       | The grid, from inside any child.                     |
-| `getDisplayedRows`                                                                   | Export    | `(table, features) => Array<Row>` | –    | The rows the body renders: the current page when paging is active, pinned rows left out. |
+| `getDisplayedRows`                                                                   | Export    | `(table, features?) => Array<Row>` | –    | The rows the body renders: the current page when paging is active, pinned rows left out. |
 | `TMDataGridApi` · `TMDataGridTable` · `TMDataGridUiStore` · `TMDataGridFeatureFlags` | Exports   | types                          | –       | The hook's result and its parts.                     |

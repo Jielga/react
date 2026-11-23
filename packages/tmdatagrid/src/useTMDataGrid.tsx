@@ -75,6 +75,7 @@ import {
   createSelectColumn,
 } from "./components/generatedColumns";
 import {
+  bindFeatureFlags,
   readFeatureFlags,
   type TMDataGridCellSelectionMode,
   type TMDataGridFeatureFlags,
@@ -1882,6 +1883,7 @@ export function useTMDataGrid<TData extends RowData>({
   );
   endControlledStateSync();
   tableRef.current = table;
+  bindFeatureFlags(table, features);
   deferControlledStateSyncPublishes(table.store);
 
   editContextRef.current = {
