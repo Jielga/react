@@ -16,8 +16,8 @@ Reference for the `rows` skill.
 | `getSelectableRowIds` | Export | `(table) => string[]` | – | Ids the header checkbox would select. |
 | `resolveRowSelectionClick` | Export | `(args: ResolveRowSelectionClickArgs) => ResolvedRowSelection` | – | The desktop-list click rules, for a custom surface. |
 | `ResolveRowSelectionClickArgs` · `TMDataGridRowClickModifiers` | Types | `{ rows, rowId, anchorRowId, modifiers, selection }` · `{ toggle, extend }` | – | What `resolveRowSelectionClick` takes, and its `modifiers`. |
-| `getDisplayedRows` | Export | `(table) => Row[]` | – | The rows currently on screen, paging respected. |
-| `isPagingActive` | Export | `(table) => boolean` | – | Whether a pager is in play. |
+| `getDisplayedRows` | Export | `(table, features?) => Row[]` | – | The rows currently on screen, paging respected. |
+| `isPagingActive` | Export | `(table, features?) => boolean` | – | Whether a pager is in play. |
 
 The highlight lives on the ui store, not in `rowSelection`:
 `useSelector(grid.ui, (state) => state.highlightedRowId)`.
