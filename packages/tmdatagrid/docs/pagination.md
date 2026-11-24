@@ -160,4 +160,4 @@ paging is switched on at all. The two differ while a grouping is active.
 | `data-paging-suspended` | Data attribute | – | – | On the default footer bar while grouping suspends paging. |
 | `getTMDataGridPaginationApi` | Export | `(table, isPaging?) => { state, actions }` | `isPaging`: `true` | The pager API, outside the Footer. Pass `isPagingActive(table, features)` as `isPaging`. |
 | `TMDataGridPaginationState` · `TMDataGridPaginationActions` · `TMDataGridPaginationControls` | Exports | types | – | The three parts of the slot's argument. |
-| `isPagingActive` | Export | `(table, features) => boolean` | – | Whether the pager is slicing anything right now. |
+| `isPagingActive` | Export | `(table, features?) => boolean` | – | Whether the pager is slicing anything right now. |

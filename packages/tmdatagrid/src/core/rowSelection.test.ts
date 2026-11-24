@@ -1,8 +1,16 @@
 import type { RowSelectionState } from "@tanstack/react-table";
-import { act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { erased, renderGrid } from "../../test/gridHarness";
+import {
+  erased,
+  MantineWrapper,
+  renderGrid,
+  testColumns,
+  testRows,
+  type TestRow,
+} from "../../test/gridHarness";
 import type { TMDataGridRowData } from "../TMDataGridContext";
+import { useTMDataGrid, type UseTMDataGridOptions } from "../useTMDataGrid";
 import {
   getDisplayedRows,
   getSelectableRowIds,
@@ -433,6 +441,27 @@ describe("without the feature flags", () => {
       getDisplayedRows(api.table, api.features).map((r) => r.id),
     );
     expect(getDisplayedRows(row.table)).toHaveLength(5);
+  });
+
+  it("follows the options of the latest render, for a row.table read earlier", () => {
+    const { result, rerender } = renderHook(
+      ({ enablePagination }: { enablePagination: boolean }) =>
+        useTMDataGrid<TestRow>({
+          ...pageOfFive,
+          data: testRows,
+          columns: testColumns,
+          getRowId: (row) => String(row.id),
+          enablePagination,
+        } as UseTMDataGridOptions<TestRow>),
+      { wrapper: MantineWrapper, initialProps: { enablePagination: true } },
+    );
+    const rowTable = erased(result.current).table.getRow("1").table;
+    expect(getDisplayedRows(rowTable)).toHaveLength(5);
+
+    rerender({ enablePagination: false });
+
+    expect(isPagingActive(rowTable)).toBe(false);
+    expect(getDisplayedRows(rowTable)).toHaveLength(12);
   });
 
   it("ignores the page state while pagination is off", () => {

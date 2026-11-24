@@ -259,7 +259,9 @@ export function bindFeatureFlags<TData extends RowData>(
 
 /**
  * The flags the grid last rendered with. A table built without
- * `useTMDataGrid` gets the flags its own options imply.
+ * `useTMDataGrid` has none recorded and falls back to its TanStack options,
+ * which carry none of the grid's own (`enablePagination`, `selectionMode`,
+ * `editing`, ...); pass `features` explicitly for such a table.
  *
  * @internal
  */
