@@ -277,7 +277,7 @@ Source: `packages/tmdatagrid/docs/grouping.md` (Server-side grids).
 | `GROUP_COLUMN_ID` | Export | `"__group__"` | – | Id of the generated tree column. |
 | `formatGroupValue` | Export | `(value, blankLabel?, { type?, options?, labels? }?) => string` | – | How the tree lane writes a group's value: `blankLabel` for an empty value, an option's label for a value with an option, `labels.booleanTrue` / `booleanFalse` for a boolean, and `toLocaleDateString()` for a `Date`. |
 | `getGroupDataRows` | Export | `(row) => Row[]` | – | Every record under a group row, at any depth. |
-| `isPagingActive` | Export | `(table, features) => boolean` | – | Whether the pager is slicing anything. `false` while grouped. |
+| `isPagingActive` | Export | `(table, features?) => boolean` | – | Whether the pager is slicing anything. `false` while grouped. |
 | `--dg-row-group-bg` | CSS variable | colour | Themed | Group row background. |
 | `--dg-summary-height` | CSS variable | length | From `size` | Height of the summary row. |
 | `data-grouped` · `data-depth` | Data attributes | – | – | `"true"` on group rows (absent on the rest), and the nesting level on every row. |

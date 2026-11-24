@@ -240,6 +240,40 @@ export function readFeatureFlags<TData extends RowData>(
   };
 }
 
+// Keyed on the store, not the table: `useTable` hands out a fresh shallow
+// copy of the table on every render, and every copy shares the one store.
+const flagsByStore = new WeakMap<object, TMDataGridFeatureFlags>();
+
+/**
+ * Records the flags a grid rendered with, so a reader that holds only the
+ * table - `row.table` in a cell, say - resolves the same flags.
+ *
+ * @internal Written by `useTMDataGrid` on every render.
+ */
+export function bindFeatureFlags<TData extends RowData>(
+  table: TMDataGridTable<TData>,
+  features: TMDataGridFeatureFlags,
+): void {
+  flagsByStore.set(table.store, features);
+}
+
+/**
+ * The flags the grid last rendered with. A table built without
+ * `useTMDataGrid` has none recorded and falls back to its TanStack options,
+ * which carry none of the grid's own (`enablePagination`, `selectionMode`,
+ * `editing`, ...); pass `features` explicitly for such a table.
+ *
+ * @internal
+ */
+export function resolveFeatureFlags<TData extends RowData>(
+  table: TMDataGridTable<TData>,
+): TMDataGridFeatureFlags {
+  return (
+    flagsByStore.get(table.store) ??
+    readFeatureFlags(table.options as Parameters<typeof readFeatureFlags>[0])
+  );
+}
+
 /**
  * What one column's header may offer.
  *

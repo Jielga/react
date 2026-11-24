@@ -429,7 +429,7 @@ Source: `packages/tmdatagrid/docs/pagination.md` (Grouping).
 | `getTMDataGridPaginationApi` | Export | `(table, isPaging?) => TMDataGridPaginationApi` | `isPaging`: `true` | The pager API, outside the Footer. Pass `isPagingActive(table, features)` as `isPaging`. |
 | `TMDataGridPaginationApi` | Type | `{ state, actions }` | – | What `getTMDataGridPaginationApi` returns. |
 | `TMDataGridPaginationState` · `TMDataGridPaginationActions` · `TMDataGridPaginationControls` | Exports | types | – | The three parts of the slot argument. |
-| `isPagingActive` | Export | `(table, features) => boolean` | – | Whether the pager is slicing anything right now. |
+| `isPagingActive` | Export | `(table, features?) => boolean` | – | Whether the pager is slicing anything right now. |
 | `overscan` | Option | `number` | `6` | Rows kept mounted beyond each edge of the viewport. |
 | `meta.rowHeight` | Option | `number` | `52` at the default `md` size; see the `size` scale in the `appearance` skill | Row height in pixels. The virtualizer needs a number. |
 | `scrollToRow` | Hook return | `({ rowId, align? }) => boolean` | `align: "auto"` | Scrolls a row into view, mounted or not. |

@@ -1,5 +1,8 @@
 import type { Row, RowData, RowSelectionState } from "@tanstack/react-table";
-import type { TMDataGridFeatureFlags } from "./capabilities";
+import {
+  resolveFeatureFlags,
+  type TMDataGridFeatureFlags,
+} from "./capabilities";
 import { getGroupDataRows } from "./grouping";
 import type { TMDataGridFeatures, TMDataGridTable } from "../useTMDataGrid";
 
@@ -18,10 +21,13 @@ import type { TMDataGridFeatures, TMDataGridTable } from "../useTMDataGrid";
  * Rows pinned to an edge leave this list - they render in their own sticky
  * blocks, outside the scrolling order a shift-click range or the virtualizer
  * walks. See `readPinnedRows`.
+ *
+ * `features` defaults to the flags the grid last rendered with, so a cell or
+ * an event handler can pass `row.table` alone.
  */
 export function getDisplayedRows<TData extends RowData>(
   table: TMDataGridTable<TData>,
-  features: TMDataGridFeatureFlags,
+  features: TMDataGridFeatureFlags = resolveFeatureFlags(table),
 ): Array<Row<TMDataGridFeatures, TData>> {
   const rows = isPagingActive(table, features)
     ? table.getPaginatedRowModel().rows
@@ -46,10 +52,12 @@ export function getDisplayedRows<TData extends RowData>(
  *
  * `TMDataGrid.Footer` reads this too, and greys the pager out rather than
  * hiding it, so the pager going quiet is visible instead of mysterious.
+ *
+ * `features` defaults to the flags the grid last rendered with.
  */
 export function isPagingActive<TData extends RowData>(
   table: TMDataGridTable<TData>,
-  features: TMDataGridFeatureFlags,
+  features: TMDataGridFeatureFlags = resolveFeatureFlags(table),
 ): boolean {
   return features.pagination && table.store.state.grouping.length === 0;
 }
