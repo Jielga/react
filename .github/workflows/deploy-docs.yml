@@ -29,8 +29,8 @@ name: Deploy docs
 # Only a push to main, and a build asked for by hand. Not `pull_request`: such
 # a run's ref is `refs/pull/<n>/merge`, which is not a branch and so matches no
 # deployment branch policy on the `github-pages` environment - not even a `*`
-# entry. The job is rejected at the environment gate before its first step,
-# whatever it was going to publish, so a pull request cannot deploy to Pages
+# entry. The deploy job is rejected at the environment gate before its first
+# step, whatever the build produced, so a pull request cannot deploy to Pages
 # under this flow at all. A branch is previewed with a `workflow_dispatch` into
 # a `b/<name>` slug instead, and a back version is published the same way.
 on:
@@ -66,11 +66,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      work: ${{ steps.plan.outputs.work }}
     env:
       PAGES_ROOT: /react/
     steps:
@@ -280,6 +279,16 @@ jobs:
         with:
           path: site
 
+  # Its own job: in the job that uploads it, deploy-pages can look the artifact
+  # up before GitHub lists it and fail with "No artifacts named github-pages".
+  # A re-run of this job alone also deploys the artifact the build uploaded.
+  deploy:
+    needs: build
+    if: needs.build.outputs.work == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
-        if: steps.plan.outputs.work == 'true'
         uses: actions/deploy-pages@v4
