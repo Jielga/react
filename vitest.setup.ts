@@ -82,9 +82,13 @@ function installBrowserStubs() {
   // tall, and the grid measures those to place the rows - a viewport of
   // headers, and nothing is left to scroll.
   const VIEWPORT = { width: 1200, height: 600 };
+  // TanStack Virtual 3.19 measures the container's content box
+  // (`clientWidth` / `clientHeight`); earlier versions read `offset*`.
   for (const [name, value] of [
     ["offsetWidth", VIEWPORT.width],
     ["offsetHeight", VIEWPORT.height],
+    ["clientWidth", VIEWPORT.width],
+    ["clientHeight", VIEWPORT.height],
   ] as const) {
     Object.defineProperty(window.HTMLElement.prototype, name, {
       configurable: true,
