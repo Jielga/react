@@ -47,11 +47,6 @@ Peer dependencies: `react` and `react-dom` (19.1 or later), `@mantine/core`,
 `@tanstack/react-table` (v9), `@tanstack/react-store`, `@tanstack/store`,
 `@tanstack/react-virtual` and `@tabler/icons-react`.
 
-> **TanStack Table v9 is still in beta.** The grid is built against
-> `^9.0.0-beta.21` and uses its feature-registry API, which beta releases may
-> change without a major bump. Pin `@tanstack/react-table` and
-> `@tanstack/table-core` to an exact version if you need reproducible installs.
-
 Import both stylesheets once in your app, Mantine's first:
 
 ```ts
