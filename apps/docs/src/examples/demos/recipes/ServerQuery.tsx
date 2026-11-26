@@ -271,7 +271,6 @@ export function ServerQuery() {
 
   const [rows, setRows] = useState<Array<OrderRow>>([]);
   const [page, setPage] = useState<OrderSearchResponse["page"] | null>(null);
-  const [loading, setLoading] = useState(true);
 
   /**
    * The request as text, and the request as an object parsed back out of it.
@@ -295,9 +294,12 @@ export function ServerQuery() {
     [requestJson],
   );
 
+  // Loading until the rows on screen are the answer to the current request.
+  const [answered, setAnswered] = useState<OrderSearchRequest | null>(null);
+  const loading = answered !== request;
+
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     const timer = setTimeout(() => {
       void searchOrders(request).then((response) => {
@@ -305,7 +307,7 @@ export function ServerQuery() {
         if (cancelled) return;
         setRows(response.items.map(toRow));
         setPage(response.page);
-        setLoading(false);
+        setAnswered(request);
       });
     }, DEBOUNCE_MS);
 

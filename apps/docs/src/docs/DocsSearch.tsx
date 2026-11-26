@@ -8,7 +8,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import classes from "./DocsSearch.module.css";
 import {
   excerpt,
@@ -52,15 +52,16 @@ export function DocsSearch({
 
   const results = searchDocs(query);
 
-  // A fresh query starts at the top; without this the cursor can point past
-  // the end of a shorter result list.
-  useEffect(() => setCursor(0), [query]);
-
   // Reopening should not show the last search. Clearing on close instead
   // would empty the list while the modal is still fading out.
-  useEffect(() => {
-    if (opened) setQuery("");
-  }, [opened]);
+  const [wasOpened, setWasOpened] = useState(opened);
+  if (opened !== wasOpened) {
+    setWasOpened(opened);
+    if (opened) {
+      setQuery("");
+      setCursor(0);
+    }
+  }
 
   const go = (entry: SearchEntry | undefined) => {
     if (!entry) return;
@@ -94,7 +95,12 @@ export function DocsSearch({
         size="md"
         placeholder="Search the documentation…"
         value={query}
-        onChange={(event) => setQuery(event.currentTarget.value)}
+        onChange={(event) => {
+          setQuery(event.currentTarget.value);
+          // A fresh query starts at the top; otherwise the cursor can point
+          // past the end of a shorter result list.
+          setCursor(0);
+        }}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();

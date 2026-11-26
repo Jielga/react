@@ -20,8 +20,8 @@ type GridState = TableState<TMDataGridFeatures>;
 
 /**
  * The `onXChange` option that owns each controlled slice - every slice v9
- * defines. `globalFilterFn` is not among them: in this beta it is a table
- * option, not state.
+ * defines. `globalFilterFn` is not among them: in v9 it is a table option,
+ * not state.
  */
 export const CONTROLLED_SLICE_HANDLERS = {
   columnFilters: "onColumnFiltersChange",
