@@ -127,7 +127,7 @@ describe("filters.surface", () => {
 
     const sidebar = part("filter-sidebar");
     expect(sidebar).toHaveAttribute("data-side", "left");
-    expect(sidebar).toHaveStyle({ width: "20rem" });
+    expect(sidebar.style.width).toBe("20rem");
   });
 
   it("closes the popup and the sidebar on Escape", async () => {
