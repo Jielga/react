@@ -162,17 +162,21 @@ Two things the effect owes the server:
 - **Debounce.** The filter value input updates on every keystroke, so a request per keystroke is what you get without it.
 - **Cancel.** A response that arrived after the query moved on is not this query's. A `cancelled` flag in the cleanup is enough; an `AbortController` on a real `fetch` is better.
 
+The grid is loading until the rows it shows answer the current request, so `meta.loading` is derived rather than set from the effect:
+
 ```tsx
+const [answered, setAnswered] = useState<OrderSearchRequest | null>(null);
+const loading = answered !== request;
+
 useEffect(() => {
   let cancelled = false;
-  setLoading(true);
 
   const timer = setTimeout(() => {
     void searchOrders(request).then((response) => {
       if (cancelled) return;
       setRows(response.items.map(toRow));
       setPage(response.page);
-      setLoading(false);
+      setAnswered(request);
     });
   }, 300);
 
