@@ -1,5 +1,15 @@
 # @jielga/tmdatagrid
 
+## 2.9.0
+
+### Minor Changes
+
+- [#199](https://github.com/Jielga/react/pull/199) [`72ddc2d`](https://github.com/Jielga/react/commit/72ddc2d68939249e6ea85cc76fea1d7853704a7b) Thanks [@Psvensso](https://github.com/Psvensso)! - `getDisplayedRows` and `isPagingActive` take `features` as an optional second argument. Without it they use the flags the grid last rendered with, so a cell can call `getDisplayedRows(row.table)`.
+
+### Patch Changes
+
+- [#202](https://github.com/Jielga/react/pull/202) [`6d5e682`](https://github.com/Jielga/react/commit/6d5e68233c37fbec62ce341332dfd96b74fa255e) Thanks [@Psvensso](https://github.com/Psvensso)! - Depends on `@tanstack/match-sorter-utils` 9, which is ESM-only and needs Node 20 or later.
+
 ## 2.8.0
 
 ### Minor Changes
