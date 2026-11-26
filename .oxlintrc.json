@@ -15,7 +15,33 @@
     {
       "files": ["packages/*/test/**", "apps/*/src/test/**", "**/*.test.tsx"],
       "rules": {
-        "react/only-export-components": "off"
+        "react/only-export-components": "off",
+        // Test components write to variables in the test's scope to hand
+        // values back to the assertions.
+        "react/globals": "off"
+      }
+    },
+    {
+      // These hooks read refs during render on purpose: the latest table,
+      // options and callbacks, read where a stale closure would be wrong.
+      "files": [
+        "packages/tmdatagrid/src/useTMDataGrid.tsx",
+        "packages/tmdatagrid/src/core/useGridViews.ts",
+        "packages/react-popup-window/src/usePopupWindow.ts"
+      ],
+      "rules": {
+        "react/refs": "off"
+      }
+    },
+    {
+      // useVirtualizer returns a mutable instance the React Compiler cannot
+      // memoize around; it skips the component, which is what these need.
+      "files": [
+        "packages/tmdatagrid/src/components/TMDataGridTable.tsx",
+        "apps/docs/src/examples/demos/recipes/CardView.tsx"
+      ],
+      "rules": {
+        "react/incompatible-library": "off"
       }
     }
   ]

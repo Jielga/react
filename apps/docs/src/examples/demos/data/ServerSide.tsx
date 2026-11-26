@@ -68,32 +68,38 @@ export function ServerSide() {
 
   const [rows, setRows] = useState<Array<Order>>([]);
   const [rowCount, setRowCount] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const sort = sorting[0];
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    void fetchOrders({
+  const query = useMemo(
+    () => ({
       pageIndex: pagination.pageIndex,
       pageSize: pagination.pageSize,
       search: search || undefined,
       sortBy: sort?.id as keyof Order | undefined,
       sortDesc: sort?.desc,
-    }).then((page) => {
+    }),
+    [pagination.pageIndex, pagination.pageSize, search, sort?.id, sort?.desc],
+  );
+
+  // Loading until the rows on screen are the answer to the current query.
+  const [answered, setAnswered] = useState<typeof query | null>(null);
+  const loading = answered !== query;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetchOrders(query).then((page) => {
       // A page that arrived after the query moved on is not this page.
       if (cancelled) return;
       setRows(page.rows);
       setRowCount(page.totalRowCount);
-      setLoading(false);
+      setAnswered(query);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [pagination.pageIndex, pagination.pageSize, search, sort?.id, sort?.desc]);
+  }, [query]);
 
   // A narrower result set makes the current page index meaningless, and under
   // `manualPagination` the grid takes itself back to page 1 - so this is the

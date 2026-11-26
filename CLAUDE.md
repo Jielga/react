@@ -3,7 +3,7 @@
 The bun workspaces monorepo for the `@jielga` React packages, each published on npm on its own.
 `packages/<name>/` is a library with its docs and skills, `apps/` holds the sites that render them, and `scripts/` is the tooling they share.
 
-- `@jielga/tmdatagrid` - a React data grid built on TanStack Table v9 (beta) and Mantine v9; `apps/docs/` is its site.
+- `@jielga/tmdatagrid` - a React data grid built on TanStack Table v9 and Mantine v9; `apps/docs/` is its site.
 - `@jielga/tmdatagrid-xlsx` - xlsx export for the grid.
 - `@jielga/react-popup-window` - a hook that renders part of the UI in a separate browser window; `apps/popup-docs/` is its demo site.
 - `@jielga/nordic-map` - an offline map of Sweden with GPS pins, areas and paths; `apps/nordic-map-docs/` is its site.
@@ -99,7 +99,7 @@ The `tmdatagrid` CSS layer name in `styles.layer.css` is public API - never rena
 
 Styling is co-located CSS Modules (`Component.module.css`), not Emotion.
 
-TanStack Table v9 is beta and the grid uses its feature-registry API; check `useTMDataGrid.tsx` before assuming a v8 shape carries over.
+The grid uses TanStack Table v9's feature-registry API; check `useTMDataGrid.tsx` before assuming a v8 shape carries over.
 
 The React Compiler runs in both Vite configs and in the Playwright gallery but not under Vitest, so a jsdom component test proves the wiring, not the memoization; a Playwright spec sees the compiled output.
 
